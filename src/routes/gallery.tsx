@@ -19,7 +19,11 @@ function Gallery() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
+  useEffect(() => {
+  if (!loading && !user) {
+    navigate({ to: "/auth", search: { mode: "login" } as never });
+  }
+}, [user, loading, navigate]);
 
   const { data: approved } = useQuery({
     queryKey: ["gallery-approved"],
