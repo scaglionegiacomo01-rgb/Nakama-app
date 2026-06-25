@@ -417,7 +417,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
       )}
 
-      <footer className="border-t border-border mt-12">
+      <footer className={cn("border-t border-border mt-12", user ? "pb-24 md:pb-0" : "")}>
         <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-muted-foreground flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2">
             <img
