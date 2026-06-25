@@ -50,7 +50,7 @@ export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spo
       className="group relative block overflow-hidden rounded-3xl border border-border/70 surface-elevated p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-[0_24px_60px_-20px_oklch(0.40_0.17_5/0.45)]"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="flex items-center gap-1.5 text-xs flex-wrap">
+      <div className="flex items-center gap-2.5 text-xs flex-wrap">
         <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary-foreground/90 font-semibold tracking-wide uppercase text-[10px] border border-primary/30">
           {typeLabel[event.type] ?? event.type}
         </span>
