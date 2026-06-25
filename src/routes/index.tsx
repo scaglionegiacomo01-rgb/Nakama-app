@@ -371,31 +371,45 @@ function Dashboard() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
           {t("home.my_next_trip")}
         </h2>
+
         {nextTrip && nextTrip.events ? (
           <div className="rounded-3xl border border-border bg-card p-5 md:p-6">
             <div className="flex items-start gap-3">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary grid place-items-center shrink-0">
                 <MountainSnowSmall />
               </div>
+
               <div className="min-w-0 flex-1">
-                <div className="font-display font-bold text-lg leading-tight truncate">
+                <div className="font-display font-bold text-lg leading-tight">
                   {nextTrip.events.title}
                 </div>
-                <div className="mt-3 text-sm text-muted-foreground inline-flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {nextTrip.events.destination}
-                </div>
-                <div className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {fmtDate(nextTrip.events.date)}
-                </div>
-                <div className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-secondary capitalize">
-                  {t(`status.${nextTrip.status}`)}
+
+                <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span>{nextTrip.events.destination}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 shrink-0" />
+                    <span>{fmtDate(nextTrip.events.date)}</span>
+                  </div>
+
+                  <div>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#9b0646]/15 text-white border border-[#9b0646]/25 capitalize">
+                      {t(`status.${nextTrip.status}`)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="mt-5 flex flex-col sm:flex-row gap-2">
-              <Link to="/trips/$id" params={{ id: nextTrip.events.id }} className="flex-1">
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-2">
+              <Link
+                to="/trips/$id"
+                params={{ id: nextTrip.events.id }}
+                className="flex-1"
+              >
                 <Button className="w-full" variant={isTripDay ? "default" : "outline"}>
                   {isTripDay ? t("home.check_in_today") : t("home.open_trip")}
                 </Button>
@@ -406,6 +420,7 @@ function Dashboard() {
           <div className="rounded-3xl border border-dashed border-border bg-card p-6 text-center">
             <Compass className="w-7 h-7 mx-auto text-muted-foreground" />
             <p className="mt-3 text-muted-foreground">{t("home.no_planned")}</p>
+
             <Link to="/trips">
               <Button className="mt-4">{t("home.find_next")}</Button>
             </Link>
