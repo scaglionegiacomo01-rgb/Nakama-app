@@ -381,11 +381,11 @@ function Dashboard() {
                 <div className="font-display font-bold text-lg leading-tight truncate">
                   {nextTrip.events.title}
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground inline-flex items-center gap-1">
+                <div className="mt-3 text-sm text-muted-foreground inline-flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" />
                   {nextTrip.events.destination}
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground inline-flex items-center gap-1">
+                <div className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
                   {fmtDate(nextTrip.events.date)}
                 </div>
