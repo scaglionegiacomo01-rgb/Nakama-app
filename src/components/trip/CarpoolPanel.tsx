@@ -28,13 +28,13 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
     if (rows.length === 0) return rows as (T & { profile?: { full_name: string | null; username: string | null; profile_picture_url: string | null } })[];
     const ids = Array.from(new Set(rows.map(r => r[key] as unknown as string)));
     const { data: profs } = await supabase.from("profiles").select("user_id, full_name, username, profile_picture_url").in("user_id", ids);
-    return rows.map(r => ({ ...r, profile: (profs as never[] | null)?.find((p: { user_id: string }) => p.user_id === (r[key] as unknown as string)) }));
+    return rows.map(r => ({ ...r, profile: profs?.find((p: { user_id: string }) => p.user_id === (r[key] as unknown as string)) }));
   };
 
   const { data: cars } = useQuery({
     queryKey: ["trip-cars", eventId],
     queryFn: async () => {
-      const { data } = await supabase.from("trip_cars" as never).select("*").eq("event_id", eventId);
+      const { data } = await supabase.from("trip_cars").select("*").eq("event_id", eventId);
       return attachProfiles((data ?? []) as unknown as Car[], "driver_user_id");
     },
   });
@@ -42,7 +42,7 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
   const { data: seekers } = useQuery({
     queryKey: ["seat-seekers", eventId],
     queryFn: async () => {
-      const { data } = await supabase.from("seat_seekers" as never).select("*").eq("event_id", eventId);
+      const { data } = await supabase.from("seat_seekers").select("*").eq("event_id", eventId);
       return attachProfiles((data ?? []) as unknown as Seeker[], "user_id");
     },
   });
@@ -50,7 +50,7 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
   const { data: requests } = useQuery({
     queryKey: ["seat-requests", eventId],
     queryFn: async () => {
-      const { data } = await supabase.from("seat_requests" as never).select("*").eq("event_id", eventId);
+      const { data } = await supabase.from("seat_requests").select("*").eq("event_id", eventId);
       return attachProfiles((data ?? []) as unknown as Req[], "passenger_user_id");
     },
   });
@@ -66,7 +66,7 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
 
   const offerCar = async () => {
     if (!user) return;
-    const { error } = await supabase.from("trip_cars" as never).insert({ event_id: eventId, driver_user_id: user.id, ...carForm } as never);
+    const { error } = await supabase.from("trip_cars").insert({ event_id: eventId, driver_user_id: user.id, ...carForm });
     if (error) { toast.error(error.message); return; }
     toast.success("Car offer posted");
     setShowCarForm(false);
@@ -74,14 +74,14 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
   };
 
   const removeCar = async (id: string) => {
-    await supabase.from("trip_cars" as never).delete().eq("id", id);
+    await supabase.from("trip_cars").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["trip-cars", eventId] });
     qc.invalidateQueries({ queryKey: ["seat-requests", eventId] });
   };
 
   const postSeeker = async () => {
     if (!user) return;
-    const { error } = await supabase.from("seat_seekers" as never).insert({ event_id: eventId, user_id: user.id, ...seekerForm } as never);
+    const { error } = await supabase.from("seat_seekers").insert({ event_id: eventId, user_id: user.id, ...seekerForm });
     if (error) { toast.error(error.message); return; }
     toast.success("Posted as needing a seat");
     setShowSeekerForm(false);
@@ -89,20 +89,20 @@ export function CarpoolPanel({ eventId, isAdmin }: { eventId: string; isAdmin: b
   };
 
   const removeSeeker = async (id: string) => {
-    await supabase.from("seat_seekers" as never).delete().eq("id", id);
+    await supabase.from("seat_seekers").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["seat-seekers", eventId] });
   };
 
   const requestSeat = async (car: Car) => {
     if (!user) return;
-    const { error } = await supabase.from("seat_requests" as never).insert({ event_id: eventId, car_id: car.id, passenger_user_id: user.id } as never);
+    const { error } = await supabase.from("seat_requests").insert({ event_id: eventId, car_id: car.id, passenger_user_id: user.id });
     if (error) { toast.error(error.message); return; }
     toast.success("Seat requested");
     qc.invalidateQueries({ queryKey: ["seat-requests", eventId] });
   };
 
-  const updateRequest = async (id: string, status: string) => {
-    await supabase.from("seat_requests" as never).update({ status } as never).eq("id", id);
+  const updateRequest = async (id: string, status: "accepted" | "rejected") => {
+    await supabase.from("seat_requests").update({ status }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["seat-requests", eventId] });
   };
 

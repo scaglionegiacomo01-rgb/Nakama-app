@@ -18,7 +18,7 @@ export function BeginnerChecklistPanel({ eventId }: { eventId: string }) {
     queryKey: ["checklist", eventId, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("trip_checklists" as never)
+      const { data } = await supabase.from("trip_checklists")
         .select("*").eq("event_id", eventId).eq("user_id", user!.id).maybeSingle();
       return data as { id: string; progress_percentage: number; ready_status: "preparing"|"ready" } | null;
     },
@@ -28,7 +28,7 @@ export function BeginnerChecklistPanel({ eventId }: { eventId: string }) {
     queryKey: ["checklist-items", checklist?.id],
     enabled: !!checklist?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("trip_checklist_items" as never)
+      const { data } = await supabase.from("trip_checklist_items")
         .select("*").eq("checklist_id", checklist!.id);
       return (data ?? []) as { id: string; item_key: string; checked: boolean }[];
     },
@@ -43,8 +43,8 @@ export function BeginnerChecklistPanel({ eventId }: { eventId: string }) {
     if (!checklist?.id) return;
     const newStatus = checkedCount === TOTAL_CHECKLIST_COUNT ? "ready" : "preparing";
     if (pct !== checklist.progress_percentage || newStatus !== checklist.ready_status) {
-      supabase.from("trip_checklists" as never)
-        .update({ progress_percentage: pct, ready_status: newStatus } as never)
+      supabase.from("trip_checklists")
+        .update({ progress_percentage: pct, ready_status: newStatus })
         .eq("id", checklist.id)
         .then(() => qc.invalidateQueries({ queryKey: ["checklist", eventId, user?.id] }));
     }
@@ -52,8 +52,8 @@ export function BeginnerChecklistPanel({ eventId }: { eventId: string }) {
 
   const ensureChecklist = async () => {
     if (checklist || !user) return checklist;
-    const { data, error } = await supabase.from("trip_checklists" as never)
-      .insert({ event_id: eventId, user_id: user.id } as never)
+    const { data, error } = await supabase.from("trip_checklists")
+      .insert({ event_id: eventId, user_id: user.id })
       .select().single();
     if (error) { toast.error(error.message); return null; }
     qc.invalidateQueries({ queryKey: ["checklist", eventId, user.id] });
@@ -68,12 +68,12 @@ export function BeginnerChecklistPanel({ eventId }: { eventId: string }) {
       if (!c) return;
       const existing = (items ?? []).find(i => i.item_key === key);
       if (existing) {
-        await supabase.from("trip_checklist_items" as never)
-          .update({ checked: value, updated_at: new Date().toISOString() } as never)
+        await supabase.from("trip_checklist_items")
+          .update({ checked: value, updated_at: new Date().toISOString() })
           .eq("id", existing.id);
       } else {
-        await supabase.from("trip_checklist_items" as never)
-          .insert({ checklist_id: c.id, item_key: key, checked: value } as never);
+        await supabase.from("trip_checklist_items")
+          .insert({ checklist_id: c.id, item_key: key, checked: value });
       }
       qc.invalidateQueries({ queryKey: ["checklist-items", c.id] });
     } finally { setBusy(false); }

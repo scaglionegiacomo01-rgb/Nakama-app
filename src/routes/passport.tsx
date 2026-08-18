@@ -6,8 +6,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Mountain, Heart, Sparkles, Trophy, Compass, Snowflake, Award } from "lucide-react";
 import { getRank } from "@/lib/ranks";
+import { PassportMap, type PassportMapPlace } from "@/components/PassportMap";
 
 export const Route = createFileRoute("/passport")({ component: Passport });
+
+const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 type Trip = {
   id: string;
@@ -59,19 +62,20 @@ function Passport() {
 
   const stats = useMemo(() => {
     if (!trips || trips.length === 0) return null;
-    const dests = new Map<string, { count: number; first: string; last: string; types: Set<string> }>();
+    const dests = new Map<string, { count: number; first: string; last: string; types: Set<string>; lat: number | null; lng: number | null }>();
     const typeCounts: Record<string, number> = { snowboard: 0, mountain_walk: 0, skate: 0, surf: 0 };
     for (const t of trips) {
       const e = t.events!;
       typeCounts[e.type] = (typeCounts[e.type] ?? 0) + 1;
       const key = e.destination;
       const cur = dests.get(key);
-      if (!cur) dests.set(key, { count: 1, first: e.date, last: e.date, types: new Set([e.type]) });
+      if (!cur) dests.set(key, { count: 1, first: e.date, last: e.date, types: new Set([e.type]), lat: e.latitude, lng: e.longitude });
       else {
         cur.count++;
         cur.types.add(e.type);
         if (e.date < cur.first) cur.first = e.date;
         if (e.date > cur.last) cur.last = e.date;
+        if (cur.lat == null && e.latitude != null) { cur.lat = e.latitude; cur.lng = e.longitude; }
       }
     }
     const places = Array.from(dests.entries())
@@ -104,6 +108,13 @@ function Passport() {
     return { typeCounts, places, heartSpot, first, latest, mainActivity, total: trips.length, uniqueDests: places.length, seasons };
   }, [trips]);
 
+  const mapPlaces = useMemo<PassportMapPlace[]>(() => {
+    if (!stats) return [];
+    return stats.places
+      .filter((p) => p.lat != null && p.lng != null)
+      .map((p) => ({ name: p.name, count: p.count, last: fmt(p.last), lat: p.lat as number, lng: p.lng as number }));
+  }, [stats]);
+
   if (loading || isLoading) return <div className="max-w-4xl mx-auto px-4 py-12">Loading...</div>;
 
   if (!trips || trips.length === 0) {
@@ -120,7 +131,6 @@ function Passport() {
   }
 
   const s = stats!;
-  const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
@@ -222,20 +232,15 @@ function Passport() {
         </div>
       </Section>
 
-      {/* Map (placeholder) */}
+      {/* Map */}
       <Section icon={Compass} title="Passport map">
-        <div className="rounded-2xl bg-gradient-to-br from-ice/40 to-secondary border border-border p-5 relative overflow-hidden min-h-[260px]">
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, hsl(var(--primary)) 0, transparent 2px), radial-gradient(circle at 70% 60%, hsl(var(--primary)) 0, transparent 2px), radial-gradient(circle at 40% 80%, hsl(var(--primary)) 0, transparent 2px)", backgroundSize: "60px 60px" }} />
-          <div className="relative grid sm:grid-cols-2 md:grid-cols-3 gap-2">
-            {s.places.map(p => (
-              <div key={p.name} className="rounded-xl bg-background/80 backdrop-blur border border-border p-3">
-                <div className="flex items-center gap-2 font-medium text-sm"><MapPin className="w-3.5 h-3.5 text-primary" />{p.name}</div>
-                <div className="text-xs text-muted-foreground mt-1">{p.count} {p.count === 1 ? "visit" : "visits"} · last {fmt(p.last)}</div>
-              </div>
-            ))}
+        {mapPlaces.length > 0 ? (
+          <PassportMap places={mapPlaces} />
+        ) : (
+          <div className="rounded-2xl bg-gradient-to-br from-ice/40 to-secondary border border-border p-5 text-sm text-muted-foreground">
+            No location data yet for your visited places — new trips will show up here as pins on the map once their coordinates are set.
           </div>
-          <p className="relative text-xs text-muted-foreground mt-4">Real map coming soon — coordinates are already being collected.</p>
-        </div>
+        )}
       </Section>
 
       {/* Trip history */}
@@ -273,7 +278,7 @@ function TripMemoryPreview({ eventId }: { eventId: string }) {
     queryKey: ["passport-memory", eventId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("trip_media" as never)
+        .from("trip_media")
         .select("id, media_url, media_type, is_trip_cover")
         .eq("event_id", eventId)
         .eq("status", "approved")

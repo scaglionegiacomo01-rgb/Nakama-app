@@ -1,0 +1,94 @@
+import { useEffect, useRef, useState } from "react";
+
+export type PassportMapPlace = {
+  name: string;
+  count: number;
+  last: string;
+  lat: number;
+  lng: number;
+};
+
+function escapeHtml(value: string) {
+  return value.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
+}
+
+// Leaflet touches `document`/`navigator` at module scope, so it can only ever
+// be imported on the client — never as a static import (that would crash SSR).
+export function PassportMap({ places }: { places: PassportMapPlace[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (places.length === 0) return;
+    let cancelled = false;
+    let map: import("leaflet").Map | undefined;
+
+    (async () => {
+      const [leafletModule] = await Promise.all([
+        import("leaflet"),
+        import("leaflet/dist/leaflet.css"),
+      ]);
+      const L = ((leafletModule as unknown as { default?: typeof import("leaflet") }).default ??
+        leafletModule) as typeof import("leaflet");
+      if (cancelled || !containerRef.current) return;
+
+      map = L.map(containerRef.current, { scrollWheelZoom: false });
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+
+      const icon = L.divIcon({
+        className: "nakama-pin",
+        html: '<span class="nakama-pin-dot"></span>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        popupAnchor: [0, -10],
+      });
+
+      const points: [number, number][] = places.map((p) => [p.lat, p.lng]);
+      for (const p of places) {
+        L.marker([p.lat, p.lng], { icon })
+          .addTo(map)
+          .bindPopup(
+            `<div><strong>${escapeHtml(p.name)}</strong><br/>${p.count} ${p.count === 1 ? "visit" : "visits"} · last ${escapeHtml(p.last)}</div>`,
+          );
+      }
+
+      if (points.length === 1) {
+        map.setView(points[0], 8);
+      } else {
+        map.fitBounds(L.latLngBounds(points), { padding: [32, 32] });
+      }
+
+      if (!cancelled) setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      map?.remove();
+    };
+  }, [places]);
+
+  if (places.length === 0) return null;
+
+  return (
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className="nakama-passport-map h-[280px] sm:h-[380px] w-full rounded-2xl overflow-hidden border border-border"
+      />
+      {!ready && (
+        <div className="absolute inset-0 grid place-items-center rounded-2xl bg-secondary text-sm text-muted-foreground">
+          Loading map…
+        </div>
+      )}
+    </div>
+  );
+}

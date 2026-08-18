@@ -128,7 +128,7 @@ function Profile() {
     const url = pub.publicUrl;
     const { error } = await supabase
       .from("profiles")
-      .update({ profile_picture_url: url } as never)
+      .update({ profile_picture_url: url })
       .eq("user_id", user.id);
     setUploading(false);
     if (error) {
@@ -171,7 +171,7 @@ function Profile() {
         favorite_brands: (form.favorite_brands as string[]) ?? [],
         accepted_liability: !!form.accepted_liability,
         accepted_rules: !!form.accepted_rules,
-      } as never)
+      })
       .eq("user_id", user!.id);
     setBusy(false);
     if (error) {

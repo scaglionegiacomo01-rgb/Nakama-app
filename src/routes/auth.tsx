@@ -9,7 +9,9 @@ import { toast } from "sonner";
 import { Mountain } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ mode: (s.mode as string) ?? "login" }),
+  validateSearch: (s: Record<string, unknown>): { mode?: "login" | "signup" } => ({
+    mode: s.mode === "signup" ? "signup" : s.mode === "login" ? "login" : undefined,
+  }),
   component: AuthPage,
 });
 

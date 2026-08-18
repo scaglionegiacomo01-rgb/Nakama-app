@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,10 +188,10 @@ function QuickAction({ tab, icon: Icon, label, onJump }: { tab: string; icon: Re
 // ---------- Trips (CRUD) ----------
 type EventInput = {
   title: string; destination: string; date: string; meeting_point: string;
-  departure_time: string; return_time: string; type: string; difficulty: string;
+  departure_time: string; return_time: string; type: Database["public"]["Enums"]["event_type"]; difficulty: Database["public"]["Enums"]["event_difficulty"];
   max_participants: number; price_estimate: number; lunch_plan: string;
   rental_available: boolean; required_equipment: string; description: string;
-  safety_notes: string; status: string; organizer_name: string; tags: string[];
+  safety_notes: string; status: Database["public"]["Enums"]["event_status"]; organizer_name: string; tags: string[];
 };
 const blankEvent: EventInput = {
   title: "", destination: "", date: "", meeting_point: "",
@@ -212,15 +213,15 @@ function TripsSection({ userId }: { userId: string }) {
   const save = async () => {
     if (!editing) return;
     const { id, form } = editing;
-    const payload = { ...form, organizer_id: userId } as never;
+    const payload = { ...form, organizer_id: userId };
     const { error } = id
       ? await supabase.from("events").update(payload).eq("id", id)
       : await supabase.from("events").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(id ? "Trip updated" : "Trip created"); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-events-all"] }); }
   };
-  const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("events").update({ status } as never).eq("id", id);
+  const setStatus = async (id: string, status: EventInput["status"]) => {
+    const { error } = await supabase.from("events").update({ status }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Status updated"); qc.invalidateQueries({ queryKey: ["admin-events-all"] }); }
   };
   const remove = async (id: string) => {
@@ -249,9 +250,9 @@ function TripsSection({ userId }: { userId: string }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Select value={e.status} onValueChange={(v) => setStatus(e.id, v)}>
+                <Select value={e.status} onValueChange={(v: EventInput["status"]) => setStatus(e.id, v)}>
                   <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>{["draft", "published", "cancelled", "completed"].map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(["draft", "published", "cancelled", "completed"] as const).map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                 </Select>
                 <Link to="/admin/events/$id" params={{ id: e.id }}><Button size="sm" variant="outline"><Users className="w-4 h-4 mr-1" />Details</Button></Link>
                 <Button size="sm" variant="ghost" onClick={() => setEditing({ id: e.id, form: { ...blankEvent, ...e, tags: (e.tags as string[] | null) ?? [] } as EventInput })}><Pencil className="w-4 h-4" /></Button>
@@ -278,17 +279,17 @@ function TripsSection({ userId }: { userId: string }) {
                 <F label="Return time"><Input value={editing.form.return_time} onChange={e => setEditing({ ...editing, form: { ...editing.form, return_time: e.target.value } })} /></F>
                 <F label="Max participants"><Input type="number" value={editing.form.max_participants} onChange={e => setEditing({ ...editing, form: { ...editing.form, max_participants: +e.target.value } })} /></F>
                 <F label="Price estimate (€)"><Input type="number" value={editing.form.price_estimate} onChange={e => setEditing({ ...editing, form: { ...editing.form, price_estimate: +e.target.value } })} /></F>
-                <F label="Type"><Select value={editing.form.type} onValueChange={v => setEditing({ ...editing, form: { ...editing.form, type: v } })}>
+                <F label="Type"><Select value={editing.form.type} onValueChange={(v: EventInput["type"]) => setEditing({ ...editing, form: { ...editing.form, type: v } })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{["snowboard", "mountain_walk", "skate", "surf"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(["snowboard", "mountain_walk", "skate", "surf"] as const).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select></F>
-                <F label="Difficulty"><Select value={editing.form.difficulty} onValueChange={v => setEditing({ ...editing, form: { ...editing.form, difficulty: v } })}>
+                <F label="Difficulty"><Select value={editing.form.difficulty} onValueChange={(v: EventInput["difficulty"]) => setEditing({ ...editing, form: { ...editing.form, difficulty: v } })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{["easy", "moderate", "hard", "expert"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(["easy", "moderate", "hard", "expert"] as const).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select></F>
-                <F label="Status"><Select value={editing.form.status} onValueChange={v => setEditing({ ...editing, form: { ...editing.form, status: v } })}>
+                <F label="Status"><Select value={editing.form.status} onValueChange={(v: EventInput["status"]) => setEditing({ ...editing, form: { ...editing.form, status: v } })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{["draft", "published", "cancelled", "completed"].map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(["draft", "published", "cancelled", "completed"] as const).map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
                 </Select></F>
               </div>
               <F label="Lunch plan"><Input value={editing.form.lunch_plan} onChange={e => setEditing({ ...editing, form: { ...editing.form, lunch_plan: e.target.value } })} /></F>
@@ -357,7 +358,7 @@ function RegistrationsSection() {
     enabled: !!tripId,
     queryFn: async () => {
       let q = supabase.from("event_registrations").select("*").eq("event_id", tripId!).order("created_at");
-      if (filter !== "all") q = q.eq("status", filter as never);
+      if (filter !== "all") q = q.eq("status", filter as Database["public"]["Enums"]["registration_status"]);
       const { data: regs } = await q;
       if (!regs?.length) return [];
       const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", regs.map(r => r.user_id));
@@ -365,10 +366,10 @@ function RegistrationsSection() {
     },
   });
 
-  const update = async (id: string, status: string) => {
+  const update = async (id: string, status: Database["public"]["Enums"]["registration_status"]) => {
     const prev = regs?.find(r => r.id === id);
     const isConfirmTransition = status === "confirmed" && prev && (prev.status === "pending" || prev.status === "waitlisted");
-    const { error } = await supabase.from("event_registrations").update({ status: status as never }).eq("id", id);
+    const { error } = await supabase.from("event_registrations").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     if (isConfirmTransition) {
       toast.success("Participant confirmed. Email system is not configured yet — set up Lovable Emails to send confirmation emails.");
@@ -380,7 +381,7 @@ function RegistrationsSection() {
   const resendConfirmation = async (id: string) => {
     // Reset flag so once email is configured, the next dispatch will send.
     const { error } = await supabase.from("event_registrations")
-      .update({ confirmation_email_sent: false, confirmation_email_sent_at: null, confirmation_email_error: null } as never)
+      .update({ confirmation_email_sent: false, confirmation_email_sent_at: null, confirmation_email_error: null })
       .eq("id", id);
     if (error) toast.error(error.message);
     else toast.success("Marked for resend. Email will be sent once Lovable Emails is configured.");
@@ -394,7 +395,7 @@ function RegistrationsSection() {
       offers_seats: r.offers_car_seats, seats: r.available_car_seats, needs_rental: r.needs_rental,
       has_equipment: r.has_equipment, notes: r.notes, created_at: r.created_at,
     }));
-    download("registrations.csv", toCSV(rows as never, Object.keys(rows[0])));
+    download("registrations.csv", toCSV(rows, Object.keys(rows[0])));
   };
 
   return (
@@ -439,7 +440,7 @@ function RegistrationsSection() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 items-end">
-                <Select value={r.status} onValueChange={(v) => update(r.id, v)}>
+                <Select value={r.status} onValueChange={(v: Database["public"]["Enums"]["registration_status"]) => update(r.id, v)}>
                   <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                   <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                 </Select>
@@ -471,7 +472,7 @@ function CarpoolSection() {
         supabase.from("trip_cars").select("*").eq("event_id", tripId!),
         supabase.from("seat_seekers").select("*").eq("event_id", tripId!),
         supabase.from("seat_requests").select("*").eq("event_id", tripId!),
-        supabase.from("event_registrations").select("user_id, status").eq("event_id", tripId!).in("status", ["confirmed", "pending"] as never),
+        supabase.from("event_registrations").select("user_id, status").eq("event_id", tripId!).in("status", ["confirmed", "pending"]),
       ]);
       const userIds = Array.from(new Set([
         ...(cars.data ?? []).map(c => c.driver_user_id),
@@ -487,7 +488,7 @@ function CarpoolSection() {
 
   const findP = (uid: string) => data?.profiles.find(p => p.user_id === uid);
   const setReqStatus = async (id: string, status: "accepted" | "rejected" | "pending" | "cancelled") => {
-    const { error } = await supabase.from("seat_requests").update({ status } as never).eq("id", id);
+    const { error } = await supabase.from("seat_requests").update({ status }).eq("id", id);
     if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["admin-carpool"] });
   };
   const removeSeeker = async (id: string) => {
@@ -624,17 +625,17 @@ function RollCallSection() {
     if (!tripId || !user) return;
     const existing = data?.checkins.find(c => c.user_id === uid);
     if (existing) {
-      const { error } = await supabase.from("trip_checkins").update({ ...patch, marked_by_admin: true, admin_marked_by: user.id } as never).eq("id", existing.id);
+      const { error } = await supabase.from("trip_checkins").update({ ...patch, marked_by_admin: true, admin_marked_by: user.id }).eq("id", existing.id);
       if (error) return toast.error(error.message);
     } else {
-      const { error } = await supabase.from("trip_checkins").insert({ event_id: tripId, user_id: uid, marked_by_admin: true, admin_marked_by: user.id, ...patch } as never);
+      const { error } = await supabase.from("trip_checkins").insert({ event_id: tripId, user_id: uid, marked_by_admin: true, admin_marked_by: user.id, ...patch });
       if (error) return toast.error(error.message);
     }
     qc.invalidateQueries({ queryKey: ["admin-rollcall"] });
   };
   const sendReminders = async () => {
     if (!tripId) return;
-    const { data, error } = await supabase.rpc("send_checkin_reminders" as never, { _event_id: tripId } as never);
+    const { data, error } = await supabase.rpc("send_checkin_reminders", { _event_id: tripId });
     if (error) return toast.error(error.message);
     toast.success(`Reminder sent to ${data ?? 0} members`);
   };
@@ -763,7 +764,7 @@ function UsersSection() {
   });
 
   const promote = async (uid: string) => {
-    const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: "admin" } as never);
+    const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
     if (error) toast.error(error.message); else { toast.success("Promoted to admin"); qc.invalidateQueries({ queryKey: ["admin-users"] }); }
   };
   const demote = async (uid: string) => {
@@ -816,8 +817,8 @@ function NotificationsSection() {
     queryFn: async () => ((await supabase.from("admin_notifications").select("*").order("created_at", { ascending: false }).limit(200)).data ?? []) as unknown as AdminNotif[],
   });
   const unread = (notifs ?? []).filter(n => !n.read).length;
-  const markRead = async (id: string) => { await supabase.from("admin_notifications").update({ read: true } as never).eq("id", id); qc.invalidateQueries({ queryKey: ["admin-notifs-full"] }); };
-  const markAll = async () => { await supabase.from("admin_notifications").update({ read: true } as never).eq("read", false); qc.invalidateQueries({ queryKey: ["admin-notifs-full"] }); };
+  const markRead = async (id: string) => { await supabase.from("admin_notifications").update({ read: true }).eq("id", id); qc.invalidateQueries({ queryKey: ["admin-notifs-full"] }); };
+  const markAll = async () => { await supabase.from("admin_notifications").update({ read: true }).eq("read", false); qc.invalidateQueries({ queryKey: ["admin-notifs-full"] }); };
 
   const summary = (n: AdminNotif) => {
     const p = n.payload;
@@ -856,7 +857,7 @@ function ExportsSection() {
   const exportUsers = async () => {
     const { data } = await supabase.from("profiles").select("full_name, username, email, phone, city, snowboard_level, created_at").limit(2000);
     if (!data?.length) return toast.error("No users to export");
-    download("users.csv", toCSV(data as never, Object.keys(data[0])));
+    download("users.csv", toCSV(data, Object.keys(data[0])));
   };
   const exportParticipants = async () => {
     if (!tripId) return toast.error("Pick a trip first");
@@ -867,7 +868,7 @@ function ExportsSection() {
       const p = profiles?.find(x => x.user_id === r.user_id);
       return { name: p?.full_name ?? p?.username, email: p?.email, phone: p?.phone, city: p?.city, level: p?.snowboard_level, status: r.status, needs_ride: r.needs_ride, offers_seats: r.offers_car_seats, available_seats: r.available_car_seats, needs_rental: r.needs_rental, has_equipment: r.has_equipment };
     });
-    download(`participants-${tripId}.csv`, toCSV(rows as never, Object.keys(rows[0])));
+    download(`participants-${tripId}.csv`, toCSV(rows, Object.keys(rows[0])));
   };
   const exportCarpool = async () => {
     if (!tripId) return toast.error("Pick a trip first");
@@ -904,7 +905,7 @@ function ExportsSection() {
       return { name: p?.full_name ?? p?.username, phone: p?.phone, status: c?.status ?? "not_checked_in", meeting_point_at: c?.meeting_point_checked_in_at ?? "", destination_at: c?.destination_checked_in_at ?? "", returned_at: c?.return_checked_in_at ?? "" };
     });
     if (!rows.length) return toast.error("No confirmed participants");
-    download(`checkin-${tripId}.csv`, toCSV(rows as never, Object.keys(rows[0])));
+    download(`checkin-${tripId}.csv`, toCSV(rows, Object.keys(rows[0])));
   };
 
   return (

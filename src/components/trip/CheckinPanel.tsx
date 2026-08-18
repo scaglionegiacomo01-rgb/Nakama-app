@@ -59,7 +59,7 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
     queryKey: ["my-checkin", event.id, user?.id],
     enabled: !!user && isParticipant,
     queryFn: async () => {
-      const { data } = await supabase.from("trip_checkins" as never)
+      const { data } = await supabase.from("trip_checkins")
         .select("*").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle();
       return data as unknown as Checkin | null;
     },
@@ -78,8 +78,8 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
       const ids = list.map(r => r.user_id);
       const [{ data: profs }, { data: checkins }, { data: cars }] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, username, phone, profile_picture_url").in("user_id", ids),
-        supabase.from("trip_checkins" as never).select("*").eq("event_id", event.id),
-        supabase.from("trip_cars" as never).select("id, driver_user_id, departure_area").eq("event_id", event.id),
+        supabase.from("trip_checkins").select("*").eq("event_id", event.id),
+        supabase.from("trip_cars").select("id, driver_user_id, departure_area").eq("event_id", event.id),
       ]);
       const profMap = new Map((profs ?? []).map((p: { user_id: string }) => [p.user_id, p]));
       const carList = (cars ?? []) as unknown as { id: string; driver_user_id: string; departure_area: string }[];
@@ -126,13 +126,13 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
   const upsertCheckin = async (patch: Partial<Checkin>) => {
     if (!user) return;
     const base = myCheckin ?? { meeting_point_checked_in: false, destination_checked_in: false, return_checked_in: false };
-    const { error } = await supabase.from("trip_checkins" as never).upsert({
+    const { error } = await supabase.from("trip_checkins").upsert({
       event_id: event.id, user_id: user.id,
       meeting_point_checked_in: base.meeting_point_checked_in,
       destination_checked_in: base.destination_checked_in,
       return_checked_in: base.return_checked_in,
       ...patch,
-    } as never, { onConflict: "event_id,user_id" });
+    }, { onConflict: "event_id,user_id" });
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["my-checkin", event.id, user.id] });
     qc.invalidateQueries({ queryKey: ["roll-call", event.id] });
@@ -145,14 +145,14 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
   const adminUpdate = async (userId: string, patch: Partial<Checkin>) => {
     if (!user) return;
     const existing = roll?.checkins.get(userId);
-    const { error } = await supabase.from("trip_checkins" as never).upsert({
+    const { error } = await supabase.from("trip_checkins").upsert({
       event_id: event.id, user_id: userId,
       meeting_point_checked_in: existing?.meeting_point_checked_in ?? false,
       destination_checked_in: existing?.destination_checked_in ?? false,
       return_checked_in: existing?.return_checked_in ?? false,
       marked_by_admin: true, admin_marked_by: user.id,
       ...patch,
-    } as never, { onConflict: "event_id,user_id" });
+    }, { onConflict: "event_id,user_id" });
     if (error) toast.error(error.message);
     else { toast.success("Updated"); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
   };
@@ -161,18 +161,18 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
     if (!confirm("Reset this person's check-in?")) return;
     const existing = roll?.checkins.get(userId);
     if (!existing) return;
-    const { error } = await supabase.from("trip_checkins" as never)
+    const { error } = await supabase.from("trip_checkins")
       .update({
         meeting_point_checked_in: false, destination_checked_in: false, return_checked_in: false,
         meeting_point_checked_in_at: null, destination_checked_in_at: null, return_checked_in_at: null,
         status: "not_checked_in",
-      } as never).eq("id", existing.id);
+      }).eq("id", existing.id);
     if (error) toast.error(error.message);
     else { toast.success("Reset"); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
   };
 
   const sendReminders = async () => {
-    const { data, error } = await supabase.rpc("send_checkin_reminders" as never, { _event_id: event.id } as never);
+    const { data, error } = await supabase.rpc("send_checkin_reminders", { _event_id: event.id });
     if (error) toast.error(error.message);
     else toast.success(`Reminder sent to ${(data as number) ?? 0} ${(data as number) === 1 ? "person" : "people"}`);
   };

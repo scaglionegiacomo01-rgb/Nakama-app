@@ -39,14 +39,14 @@ export function WhosGoingPanel({ eventId, isAdmin }: { eventId: string; isAdmin:
       for (const r of (completed ?? []) as { user_id: string }[]) completedByUser.set(r.user_id, (completedByUser.get(r.user_id) ?? 0) + 1);
       const readyByUser = new Map<string, { ready: "ready"|"preparing"; progress: number }>();
       if (isAdmin) {
-        const { data: cls } = await supabase.from("trip_checklists" as never).select("user_id, ready_status, progress_percentage").eq("event_id", eventId).in("user_id", ids);
+        const { data: cls } = await supabase.from("trip_checklists").select("user_id, ready_status, progress_percentage").eq("event_id", eventId).in("user_id", ids);
         for (const c of (cls ?? []) as { user_id: string; ready_status: "ready"|"preparing"; progress_percentage: number }[]) {
           readyByUser.set(c.user_id, { ready: c.ready_status, progress: c.progress_percentage });
         }
       }
       return list.map(r => ({
         ...r,
-        profile: (profs as never[] | null)?.find((p: { user_id: string }) => p.user_id === r.user_id) as Row["profile"],
+        profile: profs?.find((p: { user_id: string }) => p.user_id === r.user_id) as Row["profile"],
         completed: completedByUser.get(r.user_id) ?? 0,
         ready: readyByUser.get(r.user_id)?.ready ?? null,
         progress: readyByUser.get(r.user_id)?.progress ?? null,
