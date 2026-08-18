@@ -21,7 +21,7 @@ function Gallery() {
 
   useEffect(() => {
   if (!loading && !user) {
-    navigate({ to: "/auth", search: { mode: "login" } as never });
+    navigate({ to: "/auth", search: { mode: "login" } });
   }
 }, [user, loading, navigate]);
 
@@ -30,7 +30,7 @@ function Gallery() {
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("trip_media" as never)
+        .from("trip_media")
         .select("*, events(id, title, destination, date, status)")
         .eq("status", "approved")
         .order("created_at", { ascending: false })

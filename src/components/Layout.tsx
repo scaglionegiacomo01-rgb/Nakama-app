@@ -249,12 +249,12 @@ export function Layout({ children }: { children: ReactNode }) {
               </DropdownMenu>
             ) : (
               <>
-                <Link to="/auth" search={{ mode: "login" } as never}>
+                <Link to="/auth" search={{ mode: "login" }}>
                   <Button variant="ghost" size="sm">
                     {t("nav.login")}
                   </Button>
                 </Link>
-                <Link to="/auth" search={{ mode: "signup" } as never}>
+                <Link to="/auth" search={{ mode: "signup" }}>
                   <Button size="sm">{t("nav.signup")}</Button>
                 </Link>
               </>
@@ -282,7 +282,7 @@ export function Layout({ children }: { children: ReactNode }) {
             {user && <NotificationBell />}
 
             {!user && (
-              <Link to="/auth" search={{ mode: "login" } as never}>
+              <Link to="/auth" search={{ mode: "login" }}>
                 <Button size="sm" variant="ghost">
                   {t("nav.login")}
                 </Button>

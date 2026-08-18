@@ -17,7 +17,7 @@ export function NotificationBell() {
     enabled: !!user,
     refetchInterval: 30000,
     queryFn: async () => {
-      const { data } = await supabase.from("notifications" as never).select("*").order("created_at", { ascending: false }).limit(30);
+      const { data } = await supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(30);
       return ((data ?? []) as unknown as Notif[]);
     },
   });
@@ -26,7 +26,7 @@ export function NotificationBell() {
     if (!user) return;
     const ch = supabase.channel(`notif-${user.id}-${Math.random().toString(36).slice(2)}`);
     ch.on(
-      "postgres_changes" as never,
+      "postgres_changes",
       { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
       () => qc.invalidateQueries({ queryKey: ["notifications", user.id] })
     ).subscribe();
@@ -37,11 +37,11 @@ export function NotificationBell() {
   const unread = (notifs ?? []).filter(n => !n.read).length;
 
   const markRead = async (id: string) => {
-    await supabase.from("notifications" as never).update({ read: true } as never).eq("id", id);
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["notifications", user.id] });
   };
   const markAll = async () => {
-    await supabase.from("notifications" as never).update({ read: true } as never).eq("user_id", user.id).eq("read", false);
+    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
     qc.invalidateQueries({ queryKey: ["notifications", user.id] });
   };
   const fmt = (d: string) => new Date(d).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });

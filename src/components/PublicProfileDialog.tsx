@@ -22,7 +22,7 @@ export function PublicProfileDialog({ userId, open, onOpenChange }: { userId: st
     queryKey: ["public-profile", userId],
     enabled: !!userId && open,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_profile" as never, { _user_id: userId } as never);
+      const { data, error } = await supabase.rpc("get_public_profile", { _user_id: userId! });
       if (error) throw error;
       const rows = (data ?? []) as Row[];
       return rows[0] ?? null;

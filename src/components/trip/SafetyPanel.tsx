@@ -18,7 +18,7 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
     queryKey: ["my-checkin", event.id, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("trip_checkins" as never).select("*").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle();
+      const { data } = await supabase.from("trip_checkins").select("*").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle();
       return data as unknown as Checkin | null;
     },
   });
@@ -27,25 +27,26 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
     queryKey: ["checkins", event.id],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data } = await supabase.from("trip_checkins" as never).select("*").eq("event_id", event.id);
+      const { data } = await supabase.from("trip_checkins").select("*").eq("event_id", event.id);
       const list = (data ?? []) as unknown as Checkin[];
       if (list.length === 0) return list;
       const ids = list.map(c => c.user_id);
       const { data: profs } = await supabase.from("profiles").select("user_id, full_name, username, profile_picture_url").in("user_id", ids);
-      return list.map(c => ({ ...c, profile: (profs as never[] | null)?.find((p: { user_id: string }) => p.user_id === c.user_id) }));
+      return list.map(c => ({ ...c, profile: profs?.find((p: { user_id: string }) => p.user_id === c.user_id) }));
     },
   });
 
   const upsertCheckin = async (patch: Partial<Checkin>) => {
     if (!user) return;
-    const { error } = await supabase.from("trip_checkins" as never).upsert({ event_id: event.id, user_id: user.id, ...(myCheckin ?? {}), ...patch } as never, { onConflict: "event_id,user_id" });
+    const { error } = await supabase.from("trip_checkins").upsert({ event_id: event.id, user_id: user.id, ...(myCheckin ?? {}), ...patch }, { onConflict: "event_id,user_id" });
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["my-checkin", event.id, user.id] });
     qc.invalidateQueries({ queryKey: ["checkins", event.id] });
   };
 
   const setAdminFlag = async (col: "safety_meeting_point_ok" | "safety_destination_ok" | "safety_return_ok", val: boolean) => {
-    const { error } = await supabase.from("events").update({ [col]: val } as never).eq("id", event.id);
+    const patch: Partial<Record<typeof col, boolean>> = { [col]: val };
+    const { error } = await supabase.from("events").update(patch).eq("id", event.id);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["event", event.id] });
   };
@@ -57,7 +58,7 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
       const { data: regs } = await supabase.from("event_registrations").select("user_id, status").eq("event_id", event.id).eq("status", "confirmed");
       const ids = (regs ?? []).map(r => r.user_id);
       if (ids.length > 0) {
-        const { data: cs } = await supabase.from("trip_checkins" as never).select("user_id, meeting_point_checked_in, destination_checked_in, return_checked_in, status").eq("event_id", event.id);
+        const { data: cs } = await supabase.from("trip_checkins").select("user_id, meeting_point_checked_in, destination_checked_in, return_checked_in, status").eq("event_id", event.id);
         const cmap = new Map<string, { meeting_point_checked_in: boolean; destination_checked_in: boolean; return_checked_in: boolean; status: string }>();
         for (const c of (cs ?? []) as unknown as Array<{ user_id: string; meeting_point_checked_in: boolean; destination_checked_in: boolean; return_checked_in: boolean; status: string }>) cmap.set(c.user_id, c);
         let neverCheckedIn = 0, atResortNotBack = 0, stillMissing = 0;
@@ -77,7 +78,7 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
     }
     const msg = warning ? `${warning}\nMark this trip as completed?` : "Mark this trip as completed? Confirmed users will see it in their Passport.";
     if (!confirm(msg)) return;
-    const { error } = await supabase.from("events").update({ status: "completed" as never }).eq("id", event.id);
+    const { error } = await supabase.from("events").update({ status: "completed" }).eq("id", event.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Trip completed");
     qc.invalidateQueries({ queryKey: ["event", event.id] });

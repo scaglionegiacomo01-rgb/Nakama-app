@@ -244,12 +244,12 @@ function MyTripsList({ kind, lang }: { kind: "active" | "past" | "cancelled"; la
       return;
     }
     await supabase
-      .from("trip_cars" as never)
+      .from("trip_cars")
       .delete()
       .eq("event_id", eventId)
       .eq("driver_user_id", user.id);
     await supabase
-      .from("seat_seekers" as never)
+      .from("seat_seekers")
       .delete()
       .eq("event_id", eventId)
       .eq("user_id", user.id);

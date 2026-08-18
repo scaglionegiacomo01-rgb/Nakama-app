@@ -89,7 +89,7 @@ function VisitorHome() {
             {t("home.subtitle")}
           </p>
           <div className="mt-9 flex flex-col sm:flex-row gap-3">
-            <Link to="/auth" search={{ mode: "signup" } as never}>
+            <Link to="/auth" search={{ mode: "signup" }}>
               <Button size="lg" className="w-full sm:w-auto">
                 {t("home.cta_join")}
               </Button>
@@ -236,7 +236,7 @@ function VisitorHome() {
           <Shield className="w-7 h-7 mx-auto opacity-90" />
           <h3 className="mt-3 text-2xl md:text-3xl font-bold">{t("home.safety_title")}</h3>
           <p className="mt-3 opacity-90 max-w-xl mx-auto">{t("home.safety_body")}</p>
-          <Link to="/auth" search={{ mode: "signup" } as never}>
+          <Link to="/auth" search={{ mode: "signup" }}>
             <Button variant="secondary" size="lg" className="mt-6">
               {t("home.cta_join")}
             </Button>

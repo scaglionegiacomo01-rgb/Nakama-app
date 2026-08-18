@@ -105,8 +105,8 @@ function TripDetail() {
         .update({ status: "cancelled" }).eq("id", myReg.id);
       if (error) throw error;
       // Deactivate carpool side-effects
-      await supabase.from("trip_cars" as never).delete().eq("event_id", id).eq("driver_user_id", user.id);
-      await supabase.from("seat_seekers" as never).delete().eq("event_id", id).eq("user_id", user.id);
+      await supabase.from("trip_cars").delete().eq("event_id", id).eq("driver_user_id", user.id);
+      await supabase.from("seat_seekers").delete().eq("event_id", id).eq("user_id", user.id);
       toast.success("You cancelled this trip.");
       qc.invalidateQueries({ queryKey: ["my-reg", id] });
       qc.invalidateQueries({ queryKey: ["event-reg-count", id] });
@@ -127,7 +127,7 @@ function TripDetail() {
       const payload = {
         event_id: id, user_id: user.id,
         status: (spotsLeft > 0 ? "pending" : "waitlisted") as "pending" | "waitlisted",
-        transport_status: transport as never,
+        transport_status: transport,
         needs_ride: needsSeat,
         offers_car_seats: transport === "have_car_will_drive",
         available_car_seats: transport === "have_car_will_drive" ? seats : 0,
@@ -142,8 +142,8 @@ function TripDetail() {
         const { error } = await supabase.from("event_registrations").update(payload).eq("id", myReg.id);
         if (error) throw error;
         // Clean any stale carpool rows from previous attempt
-        await supabase.from("trip_cars" as never).delete().eq("event_id", id).eq("driver_user_id", user.id);
-        await supabase.from("seat_seekers" as never).delete().eq("event_id", id).eq("user_id", user.id);
+        await supabase.from("trip_cars").delete().eq("event_id", id).eq("driver_user_id", user.id);
+        await supabase.from("seat_seekers").delete().eq("event_id", id).eq("user_id", user.id);
         toast.success("Your request to join this trip has been sent again.");
       } else {
         const { error } = await supabase.from("event_registrations").insert(payload);
@@ -151,10 +151,10 @@ function TripDetail() {
       }
       // Auto-create carpool entries
       if (transport === "have_car_will_drive" && departureArea.trim()) {
-        await supabase.from("trip_cars" as never).insert({ event_id: id, driver_user_id: user.id, departure_area: departureArea, meeting_point: meetingPoint || null, available_seats: seats, notes: transportNotes || null } as never);
+        await supabase.from("trip_cars").insert({ event_id: id, driver_user_id: user.id, departure_area: departureArea, meeting_point: meetingPoint || null, available_seats: seats, notes: transportNotes || null });
       }
       if (needsSeat && departureArea.trim()) {
-        await supabase.from("seat_seekers" as never).insert({ event_id: id, user_id: user.id, departure_area: departureArea, can_reach_meeting_point: canReachMeeting, notes: transportNotes || null } as never);
+        await supabase.from("seat_seekers").insert({ event_id: id, user_id: user.id, departure_area: departureArea, can_reach_meeting_point: canReachMeeting, notes: transportNotes || null });
       }
       qc.invalidateQueries({ queryKey: ["my-reg", id] });
       qc.invalidateQueries({ queryKey: ["event-reg-count", id] });

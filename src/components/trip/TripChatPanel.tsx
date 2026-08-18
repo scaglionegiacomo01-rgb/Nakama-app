@@ -22,7 +22,7 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
   const { data: messages } = useQuery({
     queryKey: ["trip-chat", eventId],
     queryFn: async () => {
-      const { data } = await supabase.from("trip_chat_messages" as never).select("*").eq("event_id", eventId).order("created_at", { ascending: true }).limit(200);
+      const { data } = await supabase.from("trip_chat_messages").select("*").eq("event_id", eventId).order("created_at", { ascending: true }).limit(200);
       const list = (data ?? []) as unknown as Msg[];
       if (list.length === 0) return list;
       const ids = Array.from(new Set(list.map(m => m.user_id)));
@@ -32,7 +32,7 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
       for (const r of (completed ?? []) as { user_id: string }[]) completedByUser.set(r.user_id, (completedByUser.get(r.user_id) ?? 0) + 1);
       return list.map(m => ({
         ...m,
-        profile: (profs as never[] | null)?.find((p: { user_id: string }) => p.user_id === m.user_id) as Msg["profile"],
+        profile: profs?.find((p: { user_id: string }) => p.user_id === m.user_id) as Msg["profile"],
         completed: completedByUser.get(m.user_id) ?? 0,
       }));
     },
@@ -53,13 +53,13 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
     const m = text.trim();
     if (!m) return;
     if (m.length > 500) { toast.error("500 chars max"); return; }
-    const { error } = await supabase.from("trip_chat_messages" as never).insert({ event_id: eventId, user_id: user.id, message: m } as never);
+    const { error } = await supabase.from("trip_chat_messages").insert({ event_id: eventId, user_id: user.id, message: m });
     if (error) { toast.error(error.message); return; }
     setText("");
   };
 
   const remove = async (id: string) => {
-    await supabase.from("trip_chat_messages" as never).delete().eq("id", id);
+    await supabase.from("trip_chat_messages").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["trip-chat", eventId] });
   };
 

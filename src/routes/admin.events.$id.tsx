@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,19 +48,20 @@ function EventAdmin() {
   const toggleTag = async (tag: string) => {
     const current = (event?.tags as string[] | undefined) ?? [];
     const next = current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag];
-    const { error } = await supabase.from("events").update({ tags: next } as never).eq("id", id);
+    const { error } = await supabase.from("events").update({ tags: next }).eq("id", id);
     if (error) toast.error(error.message);
     else qc.invalidateQueries({ queryKey: ["admin-event", id] });
   };
 
   const toggleSafety = async (field: "safety_meeting_point_ok" | "safety_destination_ok" | "safety_return_ok", value: boolean) => {
-    const { error } = await supabase.from("events").update({ [field]: value } as never).eq("id", id);
+    const patch: Partial<Record<typeof field, boolean>> = { [field]: value };
+    const { error } = await supabase.from("events").update(patch).eq("id", id);
     if (error) toast.error(error.message);
     else { qc.invalidateQueries({ queryKey: ["admin-event", id] }); toast.success("Safety status updated"); }
   };
 
-  const updateStatus = async (regId: string, status: string) => {
-    const { error } = await supabase.from("event_registrations").update({ status: status as never }).eq("id", regId);
+  const updateStatus = async (regId: string, status: Database["public"]["Enums"]["registration_status"]) => {
+    const { error } = await supabase.from("event_registrations").update({ status }).eq("id", regId);
     if (error) toast.error(error.message);
     else { toast.success("Updated"); qc.invalidateQueries({ queryKey: ["admin-regs", id] }); }
   };
@@ -115,13 +117,15 @@ function EventAdmin() {
         <h2 className="text-lg font-bold inline-flex items-center gap-2"><Shield className="w-4 h-4 text-primary" />Safety checklist</h2>
         <p className="text-xs text-muted-foreground mt-1">Confirm each stage of the trip is safe and members are accounted for.</p>
         <div className="mt-3 space-y-2">
-          {[
-            { key: "safety_meeting_point_ok", label: "Meeting point OK — everyone gathered" },
-            { key: "safety_destination_ok", label: "Destination OK — group arrived safely" },
-            { key: "safety_return_ok", label: "Return OK — everyone back safely" },
-          ].map(({ key, label }) => (
+          {(
+            [
+              { key: "safety_meeting_point_ok", label: "Meeting point OK — everyone gathered" },
+              { key: "safety_destination_ok", label: "Destination OK — group arrived safely" },
+              { key: "safety_return_ok", label: "Return OK — everyone back safely" },
+            ] as const
+          ).map(({ key, label }) => (
             <label key={key} className="flex items-start gap-3 cursor-pointer">
-              <Checkbox checked={!!event?.[key as keyof typeof event]} onCheckedChange={v => toggleSafety(key as never, !!v)} className="mt-0.5" />
+              <Checkbox checked={!!event?.[key]} onCheckedChange={v => toggleSafety(key, !!v)} className="mt-0.5" />
               <span className="text-sm">{label}</span>
             </label>
           ))}
@@ -151,7 +155,7 @@ function EventAdmin() {
                   <div className="mt-2 text-xs text-destructive">Emergency: {r.profile?.emergency_contact_name} {r.profile?.emergency_contact_phone}</div>
                 </div>
               </div>
-              <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
+              <Select value={r.status} onValueChange={(v: Database["public"]["Enums"]["registration_status"]) => updateStatus(r.id, v)}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>{statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
               </Select>

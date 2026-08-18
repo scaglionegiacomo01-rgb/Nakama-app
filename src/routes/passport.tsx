@@ -278,7 +278,7 @@ function TripMemoryPreview({ eventId }: { eventId: string }) {
     queryKey: ["passport-memory", eventId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("trip_media" as never)
+        .from("trip_media")
         .select("id, media_url, media_type, is_trip_cover")
         .eq("event_id", eventId)
         .eq("status", "approved")

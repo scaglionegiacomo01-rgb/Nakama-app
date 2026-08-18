@@ -35,7 +35,7 @@ function AdminGallery() {
     enabled: !!isAdmin,
     queryFn: async () => {
       const { data } = await supabase
-        .from("trip_media" as never)
+        .from("trip_media")
         .select("*, events(id, title, destination, date)")
         .eq("status", tab)
         .order("created_at", { ascending: false })
@@ -44,28 +44,28 @@ function AdminGallery() {
       if (list.length === 0) return list;
       const ids = Array.from(new Set(list.map(m => m.user_id)));
       const { data: profs } = await supabase.from("profiles").select("user_id, full_name, username, profile_picture_url").in("user_id", ids);
-      return list.map(m => ({ ...m, profile: (profs as never[] | null)?.find((p: { user_id: string }) => p.user_id === m.user_id) as Media["profile"] }));
+      return list.map(m => ({ ...m, profile: profs?.find((p: { user_id: string }) => p.user_id === m.user_id) as Media["profile"] }));
     },
   });
 
   const moderate = async (m: Media, status: "approved" | "rejected") => {
-    const { error } = await supabase.from("trip_media" as never).update({ status } as never).eq("id", m.id);
+    const { error } = await supabase.from("trip_media").update({ status }).eq("id", m.id);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
   const remove = async (m: Media) => {
     if (!confirm("Delete this upload?")) return;
     if (m.storage_path) await supabase.storage.from("trip-media").remove([m.storage_path]);
-    await supabase.from("trip_media" as never).delete().eq("id", m.id);
+    await supabase.from("trip_media").delete().eq("id", m.id);
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
   const toggleFeatured = async (m: Media) => {
-    await supabase.from("trip_media" as never).update({ is_featured: !m.is_featured } as never).eq("id", m.id);
+    await supabase.from("trip_media").update({ is_featured: !m.is_featured }).eq("id", m.id);
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
   const setCover = async (m: Media) => {
-    await supabase.from("trip_media" as never).update({ is_trip_cover: false } as never).eq("event_id", m.event_id);
-    await supabase.from("trip_media" as never).update({ is_trip_cover: true } as never).eq("id", m.id);
+    await supabase.from("trip_media").update({ is_trip_cover: false }).eq("event_id", m.event_id);
+    await supabase.from("trip_media").update({ is_trip_cover: true }).eq("id", m.id);
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
 

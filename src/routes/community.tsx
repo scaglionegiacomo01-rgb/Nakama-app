@@ -35,7 +35,7 @@ function Community() {
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("community_messages" as never)
+        .from("community_messages")
         .select("id, user_id, message, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
@@ -96,14 +96,14 @@ function Community() {
     const msg = text.trim();
     if (!msg || msg.length > MAX) return;
     setSending(true);
-    const { error } = await supabase.from("community_messages" as never).insert({ user_id: user!.id, message: msg } as never);
+    const { error } = await supabase.from("community_messages").insert({ user_id: user!.id, message: msg });
     setSending(false);
     if (error) { toast.error(error.message); return; }
     setText("");
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("community_messages" as never).delete().eq("id", id);
+    const { error } = await supabase.from("community_messages").delete().eq("id", id);
     if (error) toast.error(error.message);
   };
 
