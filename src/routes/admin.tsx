@@ -192,6 +192,7 @@ type EventInput = {
   max_participants: number; price_estimate: number; lunch_plan: string;
   rental_available: boolean; required_equipment: string; description: string;
   safety_notes: string; status: Database["public"]["Enums"]["event_status"]; organizer_name: string; tags: string[];
+  location_name: string; resort_name: string; latitude: number | null; longitude: number | null;
 };
 const blankEvent: EventInput = {
   title: "", destination: "", date: "", meeting_point: "",
@@ -199,11 +200,39 @@ const blankEvent: EventInput = {
   max_participants: 10, price_estimate: 0, lunch_plan: "Packed lunch",
   rental_available: false, required_equipment: "", description: "",
   safety_notes: "", status: "draft", organizer_name: "", tags: [],
+  location_name: "", resort_name: "", latitude: null, longitude: null,
 };
+
+// Free OpenStreetMap geocoder — no API key. Used by admins to fill in trip
+// coordinates from the destination name so the Passport map can plot pins.
+async function geocodeDestination(query: string): Promise<{ lat: number; lng: number } | null> {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return null;
+  const results = (await res.json()) as { lat: string; lon: string }[];
+  if (results.length === 0) return null;
+  return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+}
 
 function TripsSection({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<{ id?: string; form: EventInput } | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+
+  const lookupCoordinates = async () => {
+    if (!editing?.form.destination) { toast.error("Enter a destination first"); return; }
+    setGeocoding(true);
+    try {
+      const coords = await geocodeDestination(editing.form.destination);
+      if (!coords) { toast.error("No coordinates found for that destination"); return; }
+      setEditing(cur => cur && { ...cur, form: { ...cur.form, latitude: coords.lat, longitude: coords.lng } });
+      toast.success("Coordinates found");
+    } catch {
+      toast.error("Lookup failed, try again");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   const { data: events } = useQuery({
     queryKey: ["admin-events-all"],
@@ -291,6 +320,19 @@ function TripsSection({ userId }: { userId: string }) {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{(["draft", "published", "cancelled", "completed"] as const).map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
                 </Select></F>
+              </div>
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <Label className="text-xs">Map coordinates</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={lookupCoordinates} disabled={geocoding}>
+                    {geocoding ? "Looking up…" : "Find from destination"}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <F label="Latitude"><Input type="number" step="any" value={editing.form.latitude ?? ""} onChange={e => setEditing({ ...editing, form: { ...editing.form, latitude: e.target.value === "" ? null : +e.target.value } })} /></F>
+                  <F label="Longitude"><Input type="number" step="any" value={editing.form.longitude ?? ""} onChange={e => setEditing({ ...editing, form: { ...editing.form, longitude: e.target.value === "" ? null : +e.target.value } })} /></F>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">Powers the pin on members' Passport map. "Find from destination" looks it up automatically — you can still fine-tune it by hand.</p>
               </div>
               <F label="Lunch plan"><Input value={editing.form.lunch_plan} onChange={e => setEditing({ ...editing, form: { ...editing.form, lunch_plan: e.target.value } })} /></F>
               <label className="flex items-center gap-2 text-sm"><Checkbox checked={editing.form.rental_available} onCheckedChange={(v) => setEditing({ ...editing, form: { ...editing.form, rental_available: !!v } })} />Rental available on site</label>
