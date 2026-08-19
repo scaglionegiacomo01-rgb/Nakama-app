@@ -3,19 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { AdminShell } from "@/components/admin/AdminShell";
-import {
-  Users,
-  Bell,
-  Camera,
-  Car,
-  CalendarDays,
-  AlertTriangle,
-  CheckCircle2,
-  Plus,
-  ClipboardCheck,
-  UserCog,
-  Download,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({ component: AdminOverviewPage });
 
@@ -24,10 +12,7 @@ function AdminOverviewPage() {
   if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
 
   return (
-    <AdminShell
-      title="Operations dashboard"
-      description="Run trips, keep the crew safe, and make sure nobody gets left behind."
-    >
+    <AdminShell title="Overview" description="Everything that needs a look, at a glance.">
       <OverviewSection />
     </AdminShell>
   );
@@ -116,91 +101,89 @@ function OverviewSection() {
     },
   });
 
-  const cards = [
-    { label: "Total users", value: stats?.users, icon: Users },
-    { label: "Published trips", value: stats?.published, icon: CalendarDays },
-    { label: "Upcoming trips", value: stats?.upcoming, icon: CalendarDays },
-    {
-      label: "Pending registrations",
-      value: stats?.regPending,
-      icon: Users,
-      warn: !!stats?.regPending,
-    },
-    { label: "Confirmed participants", value: stats?.regConfirmed, icon: CheckCircle2 },
-    {
-      label: "Pending gallery uploads",
-      value: stats?.mediaPending,
-      icon: Camera,
-      warn: !!stats?.mediaPending,
-    },
-    {
-      label: "Pending seat requests",
-      value: stats?.seatPending,
-      icon: Car,
-      warn: !!stats?.seatPending,
-    },
-    {
-      label: "Missing check-ins (next 48h)",
-      value: stats?.missing,
-      icon: AlertTriangle,
-      warn: !!stats?.missing,
-    },
-    {
-      label: "Unread admin notifications",
-      value: stats?.notifs,
-      icon: Bell,
-      warn: !!stats?.notifs,
-    },
-  ];
+  const alerts = [
+    stats?.regPending
+      ? {
+          label: "Pending registrations",
+          value: stats.regPending,
+          to: "/admin/registrations" as const,
+        }
+      : null,
+    stats?.mediaPending
+      ? {
+          label: "Gallery uploads to review",
+          value: stats.mediaPending,
+          to: "/admin/gallery" as const,
+        }
+      : null,
+    stats?.seatPending
+      ? { label: "Seat requests waiting", value: stats.seatPending, to: "/admin/carpool" as const }
+      : null,
+    stats?.missing
+      ? {
+          label: "Missing check-ins (next 48h)",
+          value: stats.missing,
+          to: "/admin/rollcall" as const,
+        }
+      : null,
+    stats?.notifs
+      ? { label: "Unread notifications", value: stats.notifs, to: "/admin/notifications" as const }
+      : null,
+  ].filter(
+    (
+      a,
+    ): a is {
+      label: string;
+      value: number;
+      to:
+        | "/admin/registrations"
+        | "/admin/gallery"
+        | "/admin/carpool"
+        | "/admin/rollcall"
+        | "/admin/notifications";
+    } => a !== null,
+  );
 
   return (
     <div>
-      <h2 className="text-base font-bold">Quick actions</h2>
-      <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
-        <QuickAction to="/admin/trips" icon={Plus} label="Create / manage trips" />
-        <QuickAction to="/admin/registrations" icon={Users} label="Registrations" />
-        <QuickAction to="/admin/carpool" icon={Car} label="Carpool" />
-        <QuickAction to="/admin/rollcall" icon={ClipboardCheck} label="Roll call" />
-        <QuickAction to="/admin/gallery" icon={Camera} label="Gallery moderation" />
-        <QuickAction to="/admin/users" icon={UserCog} label="Users" />
-        <QuickAction to="/admin/exports" icon={Download} label="Exports" />
-        <QuickAction to="/admin/notifications" icon={Bell} label="Notifications" />
-      </div>
+      {!stats ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : alerts.length > 0 ? (
+        <div className="space-y-2">
+          {alerts.map((a) => (
+            <Link
+              key={a.label}
+              to={a.to}
+              className="flex items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm hover:bg-destructive/10 transition-colors"
+            >
+              <span>{a.label}</span>
+              <span className="flex items-center gap-1 font-bold">
+                {a.value}
+                <ChevronRight className="w-4 h-4 opacity-60" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+          Nothing needs your attention right now.
+        </div>
+      )}
 
-      <h2 className="mt-6 text-base font-bold">At a glance</h2>
-      <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className={`rounded-xl border p-2.5 ${c.warn ? "border-destructive/40 bg-destructive/5" : "border-border bg-card"}`}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-              <c.icon className="w-3 h-3 shrink-0" />
-              {c.label}
-            </div>
-            <div className="text-xl font-bold mt-0.5">{c.value ?? "—"}</div>
-          </div>
-        ))}
+      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+        <span>
+          <b className="text-foreground">{stats?.users ?? "—"}</b> users
+        </span>
+        <span>
+          <b className="text-foreground">{stats?.published ?? "—"}</b> published trips
+        </span>
+        <span>
+          <b className="text-foreground">{stats?.upcoming ?? "—"}</b> upcoming
+        </span>
+        <span>
+          <b className="text-foreground">{stats?.regConfirmed ?? "—"}</b> confirmed participants
+        </span>
       </div>
     </div>
-  );
-}
-function QuickAction({
-  to,
-  icon: Icon,
-  label,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="rounded-xl border border-border bg-card hover:bg-secondary p-3 text-sm font-medium inline-flex items-center gap-2"
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-    </Link>
   );
 }
