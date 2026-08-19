@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { useAuth } from "@/hooks/use-auth";
+import { useAdminGuard } from "@/hooks/use-admin-guard";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download } from "lucide-react";
@@ -21,21 +22,18 @@ const statuses = ["pending","confirmed","waitlisted","cancelled","rejected"];
 
 function EventAdmin() {
   const { id } = Route.useParams();
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { ready, loading } = useAdminGuard();
   const qc = useQueryClient();
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  useEffect(() => { if (!loading && (!user || !isAdmin)) navigate({ to: "/" }); }, [user, isAdmin, loading, navigate]);
-
   const { data: event } = useQuery({
-    queryKey: ["admin-event", id], enabled: !!isAdmin,
+    queryKey: ["admin-event", id], enabled: ready,
     queryFn: async () => (await supabase.from("events").select("*").eq("id", id).maybeSingle()).data,
   });
 
   const { data: regs } = useQuery({
-    queryKey: ["admin-regs", id], enabled: !!isAdmin,
+    queryKey: ["admin-regs", id], enabled: ready,
     queryFn: async () => {
       const { data: registrations } = await supabase.from("event_registrations").select("*").eq("event_id", id).order("created_at");
       if (!registrations || registrations.length === 0) return [];
@@ -82,19 +80,14 @@ function EventAdmin() {
     URL.revokeObjectURL(url);
   };
 
-  if (!isAdmin) return null;
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
-      <div className="mt-3 flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold">{event?.title}</h1>
-          <p className="text-muted-foreground">{event?.destination} · {event && new Date(event.date).toLocaleDateString()}</p>
-        </div>
-        <Button onClick={exportCsv} variant="outline"><Download className="w-4 h-4 mr-1" />Export CSV</Button>
-      </div>
-
+    <AdminShell
+      title={event?.title ?? "Trip"}
+      description={event ? `${event.destination} · ${new Date(event.date).toLocaleDateString()}` : undefined}
+      actions={<Button onClick={exportCsv} variant="outline"><Download className="w-4 h-4 mr-1" />Export CSV</Button>}
+    >
       {/* Event tags */}
       <div className="mt-8 rounded-2xl bg-card border border-border p-5">
         <h2 className="text-lg font-bold inline-flex items-center gap-2"><TagIcon className="w-4 h-4 text-primary" />Event tags</h2>
@@ -165,6 +158,6 @@ function EventAdmin() {
         {regs && regs.length === 0 && <p className="text-muted-foreground">No participants yet.</p>}
       </div>
       <PublicProfileDialog userId={profileUserId} open={profileOpen} onOpenChange={setProfileOpen} />
-    </div>
+    </AdminShell>
   );
 }

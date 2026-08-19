@@ -1,10 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAdminGuard } from "@/hooks/use-admin-guard";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Trash2, Star, ImageIcon, Play, Shield } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Star, ImageIcon, Play } from "lucide-react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 
@@ -20,19 +21,13 @@ type Media = {
 };
 
 function AdminGallery() {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { ready, loading } = useAdminGuard();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
-    if (!loading && user && !isAdmin) toast.error("Admin access required");
-  }, [user, isAdmin, loading, navigate]);
-
   const { data: media } = useQuery({
     queryKey: ["admin-gallery", tab],
-    enabled: !!isAdmin,
+    enabled: ready,
     queryFn: async () => {
       const { data } = await supabase
         .from("trip_media")
@@ -69,20 +64,11 @@ function AdminGallery() {
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-12">Loading...</div>;
-  if (!isAdmin) return <div className="max-w-5xl mx-auto px-4 py-12"><h1 className="text-2xl font-bold">Admin only</h1></div>;
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"><Shield className="w-3.5 h-3.5" />Moderation</div>
-          <h1 className="text-3xl font-bold mt-1">Gallery moderation</h1>
-        </div>
-        <Link to="/admin"><Button variant="outline" size="sm">← Admin</Button></Link>
-      </div>
-
-      <div className="mt-6 flex gap-2">
+    <AdminShell title="Gallery moderation" description="Approve, reject, feature or set cover for every member upload.">
+      <div className="flex gap-2">
         {(["pending", "approved", "rejected"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-3 py-1.5 rounded-full text-sm capitalize ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{t}</button>
         ))}
@@ -129,6 +115,6 @@ function AdminGallery() {
         ))}
         {(media ?? []).length === 0 && <p className="text-muted-foreground col-span-full">Nothing to show in "{tab}".</p>}
       </div>
-    </div>
+    </AdminShell>
   );
 }
