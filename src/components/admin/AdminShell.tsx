@@ -1,15 +1,22 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
-  LayoutDashboard, CalendarDays, Users, Car, ClipboardCheck, Camera,
-  UserCog, Bell, Download, Palette, ShieldCheck, Menu,
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  Car,
+  ClipboardCheck,
+  Camera,
+  UserCog,
+  Bell,
+  Download,
+  Palette,
+  ShieldCheck,
+  Menu,
 } from "lucide-react";
-import {
-  SidebarProvider, Sidebar, SidebarHeader, SidebarContent,
-  SidebarMenu, SidebarMenuItem, SidebarMenuButton,
-} from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -28,20 +35,32 @@ function isNavActive(pathname: string, to: string) {
   return to === "/admin" ? pathname === "/admin" : pathname === to || pathname.startsWith(to + "/");
 }
 
+// Plain links, no shadcn Sidebar primitives — keeps this interactive on the
+// very first render (no extra context providers/hooks between the tap and
+// the <Link>) and matches the bottom-sheet nav already proven in Layout.tsx.
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
-    <SidebarMenu>
-      {NAV.map((item) => (
-        <SidebarMenuItem key={item.to}>
-          <SidebarMenuButton asChild isActive={isNavActive(pathname, item.to)} onClick={onNavigate}>
-            <Link to={item.to}>
-              <item.icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+    <div className="flex flex-col gap-1">
+      {NAV.map((item) => {
+        const active = isNavActive(pathname, item.to);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              active
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            )}
+          >
+            <item.icon className="w-4 h-4 shrink-0" />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
@@ -60,54 +79,55 @@ export function AdminShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <SidebarProvider defaultOpen className="min-h-0 w-full block">
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-        {/* Mobile top bar */}
-        <div className="md:hidden flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            <ShieldCheck className="w-3.5 h-3.5" />Admin
+    <div className="max-w-6xl mx-auto px-4 py-5 md:py-8">
+      {/* Mobile top bar */}
+      <div className="md:hidden flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Admin
+        </div>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Menu className="w-4 h-4 mr-1" />
+              Menu
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto p-0">
+            <SheetHeader className="px-5 pt-5 pb-2 text-left">
+              <SheetTitle className="text-xl font-display">Admin</SheetTitle>
+            </SheetHeader>
+            <div className="px-3 pb-6">
+              <NavList pathname={location.pathname} onNavigate={() => setMobileOpen(false)} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="mt-3 md:mt-0 flex gap-6 items-start">
+        {/* Desktop rail */}
+        <div className="hidden md:flex md:flex-col w-56 shrink-0 rounded-2xl border border-sidebar-border bg-sidebar text-sidebar-foreground overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-[0.2em] text-sidebar-foreground/70 border-b border-sidebar-border">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Admin
           </div>
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm"><Menu className="w-4 h-4 mr-1" />Menu</Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 bg-sidebar text-sidebar-foreground">
-              <SheetHeader className="p-4 border-b border-sidebar-border">
-                <SheetTitle className="text-left text-sidebar-foreground">Admin</SheetTitle>
-              </SheetHeader>
-              <div className="p-2">
-                <NavList pathname={location.pathname} onNavigate={() => setMobileOpen(false)} />
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="p-2">
+            <NavList pathname={location.pathname} />
+          </div>
         </div>
 
-        <div className="mt-4 md:mt-0 flex gap-6 items-start">
-          {/* Desktop rail */}
-          <Sidebar collapsible="none" className="hidden md:flex w-56 shrink-0 rounded-2xl border border-sidebar-border overflow-hidden">
-            <SidebarHeader className="border-b border-sidebar-border">
-              <div className="flex items-center gap-2 px-2 py-1 text-xs uppercase tracking-[0.2em] text-sidebar-foreground/70">
-                <ShieldCheck className="w-3.5 h-3.5" />Admin
-              </div>
-            </SidebarHeader>
-            <SidebarContent className="p-2">
-              <NavList pathname={location.pathname} />
-            </SidebarContent>
-          </Sidebar>
-
-          {/* Page content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>
-                {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
-              </div>
-              {actions}
+        {/* Page content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
+              {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
             </div>
-            <div className="mt-6">{children}</div>
+            {actions}
           </div>
+          <div className="mt-4">{children}</div>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
