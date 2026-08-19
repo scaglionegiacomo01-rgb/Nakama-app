@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Palette, FileImage, Smartphone, Globe } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useAdminGuard } from "@/hooks/use-admin-guard";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { FileImage, Smartphone, Globe } from "lucide-react";
 
 export const Route = createFileRoute("/admin/brand")({ component: AdminBrand });
 
@@ -17,29 +17,15 @@ const ASSETS: Asset[] = [
 ];
 
 function AdminBrand() {
-  const { isAdmin, loading, user } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) navigate({ to: "/auth" });
-    else if (!isAdmin) navigate({ to: "/" });
-  }, [user, isAdmin, loading, navigate]);
-
-  if (loading || !isAdmin) return null;
+  const { ready, loading } = useAdminGuard();
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Back to admin</Link>
-      <h1 className="mt-3 text-3xl md:text-4xl font-display font-bold inline-flex items-center gap-2">
-        <Palette className="w-7 h-7 text-primary" /> Brand Settings
-      </h1>
-      <p className="mt-2 text-muted-foreground max-w-2xl">
-        Read-only overview of the branding assets currently used by the app. To rebrand,
-        replace the files inside <code className="px-1 py-0.5 rounded bg-secondary text-xs">/public/brand/</code> with the same filenames — no code changes required.
-      </p>
-
-      <section className="mt-8">
+    <AdminShell
+      title="Brand settings"
+      description="Read-only overview of the branding assets currently used by the app. To rebrand, replace the files inside /public/brand/ with the same filenames — no code changes required."
+    >
+      <section>
         <h2 className="font-display font-bold text-xl inline-flex items-center gap-2"><FileImage className="w-5 h-5 text-primary" />Current assets</h2>
         <div className="mt-4 grid sm:grid-cols-2 gap-3">
           {ASSETS.map(a => (
@@ -82,7 +68,7 @@ function AdminBrand() {
           <li>Hard-refresh the browser (icons are cached aggressively).</li>
         </ol>
       </section>
-    </div>
+    </AdminShell>
   );
 }
 

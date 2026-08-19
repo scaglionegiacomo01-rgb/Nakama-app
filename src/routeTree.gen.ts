@@ -25,7 +25,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIdRouteImport } from './routes/trips_.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminTripsRouteImport } from './routes/admin.trips'
+import { Route as AdminRollcallRouteImport } from './routes/admin.rollcall'
+import { Route as AdminRegistrationsRouteImport } from './routes/admin.registrations'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminGalleryRouteImport } from './routes/admin.gallery'
+import { Route as AdminExportsRouteImport } from './routes/admin.exports'
+import { Route as AdminCarpoolRouteImport } from './routes/admin.carpool'
 import { Route as AdminBrandRouteImport } from './routes/admin.brand'
 import { Route as AdminEventsIdRouteImport } from './routes/admin.events.$id'
 
@@ -109,9 +116,44 @@ const TripsIdRoute = TripsIdRouteImport.update({
   path: '/trips/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTripsRoute = AdminTripsRouteImport.update({
+  id: '/trips',
+  path: '/trips',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRollcallRoute = AdminRollcallRouteImport.update({
+  id: '/rollcall',
+  path: '/rollcall',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRegistrationsRoute = AdminRegistrationsRouteImport.update({
+  id: '/registrations',
+  path: '/registrations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGalleryRoute = AdminGalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminExportsRoute = AdminExportsRouteImport.update({
+  id: '/exports',
+  path: '/exports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCarpoolRoute = AdminCarpoolRouteImport.update({
+  id: '/carpool',
+  path: '/carpool',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBrandRoute = AdminBrandRouteImport.update({
@@ -142,7 +184,14 @@ export interface FileRoutesByFullPath {
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
   '/admin/brand': typeof AdminBrandRoute
+  '/admin/carpool': typeof AdminCarpoolRoute
+  '/admin/exports': typeof AdminExportsRoute
   '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
+  '/admin/rollcall': typeof AdminRollcallRoute
+  '/admin/trips': typeof AdminTripsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/trips/$id': typeof TripsIdRoute
   '/admin/events/$id': typeof AdminEventsIdRoute
 }
@@ -163,7 +212,14 @@ export interface FileRoutesByTo {
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
   '/admin/brand': typeof AdminBrandRoute
+  '/admin/carpool': typeof AdminCarpoolRoute
+  '/admin/exports': typeof AdminExportsRoute
   '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
+  '/admin/rollcall': typeof AdminRollcallRoute
+  '/admin/trips': typeof AdminTripsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/trips/$id': typeof TripsIdRoute
   '/admin/events/$id': typeof AdminEventsIdRoute
 }
@@ -185,7 +241,14 @@ export interface FileRoutesById {
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
   '/admin/brand': typeof AdminBrandRoute
+  '/admin/carpool': typeof AdminCarpoolRoute
+  '/admin/exports': typeof AdminExportsRoute
   '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
+  '/admin/rollcall': typeof AdminRollcallRoute
+  '/admin/trips': typeof AdminTripsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/trips_/$id': typeof TripsIdRoute
   '/admin/events/$id': typeof AdminEventsIdRoute
 }
@@ -208,7 +271,14 @@ export interface FileRouteTypes {
     | '/trips'
     | '/values'
     | '/admin/brand'
+    | '/admin/carpool'
+    | '/admin/exports'
     | '/admin/gallery'
+    | '/admin/notifications'
+    | '/admin/registrations'
+    | '/admin/rollcall'
+    | '/admin/trips'
+    | '/admin/users'
     | '/trips/$id'
     | '/admin/events/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -229,7 +299,14 @@ export interface FileRouteTypes {
     | '/trips'
     | '/values'
     | '/admin/brand'
+    | '/admin/carpool'
+    | '/admin/exports'
     | '/admin/gallery'
+    | '/admin/notifications'
+    | '/admin/registrations'
+    | '/admin/rollcall'
+    | '/admin/trips'
+    | '/admin/users'
     | '/trips/$id'
     | '/admin/events/$id'
   id:
@@ -250,7 +327,14 @@ export interface FileRouteTypes {
     | '/trips'
     | '/values'
     | '/admin/brand'
+    | '/admin/carpool'
+    | '/admin/exports'
     | '/admin/gallery'
+    | '/admin/notifications'
+    | '/admin/registrations'
+    | '/admin/rollcall'
+    | '/admin/trips'
+    | '/admin/users'
     | '/trips_/$id'
     | '/admin/events/$id'
   fileRoutesById: FileRoutesById
@@ -388,11 +472,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/trips': {
+      id: '/admin/trips'
+      path: '/trips'
+      fullPath: '/admin/trips'
+      preLoaderRoute: typeof AdminTripsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rollcall': {
+      id: '/admin/rollcall'
+      path: '/rollcall'
+      fullPath: '/admin/rollcall'
+      preLoaderRoute: typeof AdminRollcallRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/registrations': {
+      id: '/admin/registrations'
+      path: '/registrations'
+      fullPath: '/admin/registrations'
+      preLoaderRoute: typeof AdminRegistrationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/gallery': {
       id: '/admin/gallery'
       path: '/gallery'
       fullPath: '/admin/gallery'
       preLoaderRoute: typeof AdminGalleryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/exports': {
+      id: '/admin/exports'
+      path: '/exports'
+      fullPath: '/admin/exports'
+      preLoaderRoute: typeof AdminExportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/carpool': {
+      id: '/admin/carpool'
+      path: '/carpool'
+      fullPath: '/admin/carpool'
+      preLoaderRoute: typeof AdminCarpoolRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/brand': {
@@ -414,13 +547,27 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminBrandRoute: typeof AdminBrandRoute
+  AdminCarpoolRoute: typeof AdminCarpoolRoute
+  AdminExportsRoute: typeof AdminExportsRoute
   AdminGalleryRoute: typeof AdminGalleryRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminRegistrationsRoute: typeof AdminRegistrationsRoute
+  AdminRollcallRoute: typeof AdminRollcallRoute
+  AdminTripsRoute: typeof AdminTripsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminEventsIdRoute: typeof AdminEventsIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBrandRoute: AdminBrandRoute,
+  AdminCarpoolRoute: AdminCarpoolRoute,
+  AdminExportsRoute: AdminExportsRoute,
   AdminGalleryRoute: AdminGalleryRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminRegistrationsRoute: AdminRegistrationsRoute,
+  AdminRollcallRoute: AdminRollcallRoute,
+  AdminTripsRoute: AdminTripsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminEventsIdRoute: AdminEventsIdRoute,
 }
 
