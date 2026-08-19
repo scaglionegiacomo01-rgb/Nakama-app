@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({ component: AdminOverviewPage });
 
@@ -170,20 +171,52 @@ function OverviewSection() {
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-        <span>
-          <b className="text-foreground">{stats?.users ?? "—"}</b> users
-        </span>
-        <span>
-          <b className="text-foreground">{stats?.published ?? "—"}</b> published trips
-        </span>
-        <span>
-          <b className="text-foreground">{stats?.upcoming ?? "—"}</b> upcoming
-        </span>
-        <span>
-          <b className="text-foreground">{stats?.regConfirmed ?? "—"}</b> confirmed participants
-        </span>
+      <h2 className="mt-5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Dashboard
+      </h2>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        <Stat label="Users" value={stats?.users} />
+        <Stat label="Published trips" value={stats?.published} />
+        <Stat label="Upcoming trips" value={stats?.upcoming} />
+        <Stat label="Confirmed participants" value={stats?.regConfirmed} />
+        <Stat label="Pending registrations" value={stats?.regPending} warn={!!stats?.regPending} />
+        <Stat
+          label="Pending gallery uploads"
+          value={stats?.mediaPending}
+          warn={!!stats?.mediaPending}
+        />
+        <Stat
+          label="Pending seat requests"
+          value={stats?.seatPending}
+          warn={!!stats?.seatPending}
+        />
+        <Stat label="Missing check-ins (48h)" value={stats?.missing} warn={!!stats?.missing} />
+        <Stat label="Unread notifications" value={stats?.notifs} warn={!!stats?.notifs} />
       </div>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  warn,
+}: {
+  label: string;
+  value: number | undefined;
+  warn?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border p-2.5",
+        warn ? "border-destructive/40 bg-destructive/5" : "border-border bg-card",
+      )}
+    >
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wide leading-tight">
+        {label}
+      </div>
+      <div className="text-xl font-bold mt-0.5">{value ?? "—"}</div>
     </div>
   );
 }
