@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -61,13 +61,17 @@ function DesktopNav({ pathname }: { pathname: string }) {
   );
 }
 
-// Mobile menu: a plain, hand-rolled overlay+panel — deliberately NOT built on
-// the Radix Sheet/Dialog primitive. On real touch devices, tapping an item
-// closed the sheet but the navigation itself never fired (only reproducible
-// on-device, not in headless testing) — rebuilding it as plain DOM with an
-// explicit imperative navigate() call removes any dependency on how a
-// third-party primitive composes touch/click events, so a tap can't be
-// silently swallowed by a library-specific gesture/dismiss heuristic.
+// Mobile menu: a plain, hand-rolled overlay+panel. Nav items are real <a
+// href> tags — NOT TanStack Router's <Link> and NOT an onClick+navigate()
+// call. Two rebuilds using the client-side router (first inside a Radix
+// Sheet, then a hand-rolled panel with an imperative navigate()) both
+// reportedly still did nothing on tap on a real device, even though both
+// tested fine locally. A plain anchor's navigation is handled by the
+// browser itself, not by any of our JS running correctly — even if some
+// as-yet-unidentified issue is swallowing the tap before our React handlers
+// ever see it, the browser's own default action for tapping a link still
+// fires. This trades the client-side transition for a full page load, but
+// a full page load that actually arrives beats an instant one that doesn't.
 function MobileNav({
   pathname,
   open,
@@ -77,8 +81,6 @@ function MobileNav({
   open: boolean;
   onClose: () => void;
 }) {
-  const navigate = useNavigate();
-
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
@@ -89,11 +91,6 @@ function MobileNav({
   }, [open]);
 
   if (!open) return null;
-
-  const go = (to: (typeof NAV)[number]["to"]) => {
-    onClose();
-    navigate({ to });
-  };
 
   return (
     <div className="md:hidden fixed inset-0 z-50">
@@ -114,10 +111,10 @@ function MobileNav({
           {NAV.map((item) => {
             const active = isNavActive(pathname, item.to);
             return (
-              <button
+              <a
                 key={item.to}
-                type="button"
-                onClick={() => go(item.to)}
+                href={item.to}
+                onClick={onClose}
                 className={cn(
                   "w-full flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-left transition-colors",
                   active
@@ -129,7 +126,7 @@ function MobileNav({
                   <item.icon className="w-[18px] h-[18px]" />
                 </span>
                 {item.label}
-              </button>
+              </a>
             );
           })}
         </div>
