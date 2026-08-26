@@ -76,4 +76,6 @@ Quando lavori su Nakama:
 
 ## Workflow Git
 
-Lavora sempre direttamente sul branch main, senza creare branch separati. Dopo ogni modifica fai git add, commit e push su main automaticamente, senza chiedermi conferma. Dopo ogni push, verifica che il link di produzione Vercel sia attivo e funzionante (controlla che il deploy sia andato a buon fine). Se il link è sempre lo stesso e funziona, confermamelo. Se per qualche motivo cambia o smette di funzionare, dammi subito il nuovo link aggiornato.
+Lavora sempre direttamente sul branch main, senza creare branch separati. Dopo ogni modifica fai git add, commit e push su main automaticamente, senza chiedermi conferma. Dopo ogni push, verifica che il link di produzione Cloudflare Workers/Pages sia attivo e funzionante (controlla che il deploy del progetto `nakama-app`, configurato in `wrangler.jsonc`, sia andato a buon fine). L'URL di produzione è `https://nakama-app.scaglionegiacomo01.workers.dev`. Se il link è sempre lo stesso e funziona, confermamelo. Se per qualche motivo cambia o smette di funzionare, dammi subito il nuovo link aggiornato.
+
+Se il push diretto su main viene bloccato da un sistema di sicurezza, crea comunque commit e push su un branch, poi apri una pull request verso main e avvisami esplicitamente che serve la mia approvazione.
