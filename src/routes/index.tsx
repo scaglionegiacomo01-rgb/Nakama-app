@@ -237,7 +237,7 @@ function VisitorHome() {
           <h3 className="mt-3 text-2xl md:text-3xl font-bold">{t("home.safety_title")}</h3>
           <p className="mt-3 opacity-90 max-w-xl mx-auto">{t("home.safety_body")}</p>
           <Link to="/auth" search={{ mode: "signup" }}>
-            <Button variant="secondary" size="lg" className="mt-6">
+            <Button variant="secondary" size="lg" className="mt-6 !bg-blue-500 !text-white">
               {t("home.cta_join")}
             </Button>
           </Link>
