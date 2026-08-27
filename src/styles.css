@@ -192,7 +192,11 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { font-family: var(--font-sans); }
+  html {
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -201,8 +205,12 @@
       radial-gradient(at 100% 0%, oklch(0.34 0.07 320 / 0.30) 0px, transparent 55%),
       radial-gradient(at 50% 110%, oklch(0.62 0.24 350 / 0.12) 0px, transparent 60%);
     background-attachment: fixed;
+    overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  button, a {
+    -webkit-tap-highlight-color: transparent;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
