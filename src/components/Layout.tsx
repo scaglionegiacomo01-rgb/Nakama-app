@@ -115,7 +115,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/75 border-b border-border/60">
+      <header className="sticky top-0 z-40 backdrop-blur-2xl backdrop-saturate-[1.8] bg-background/60 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 h-20 md:h-16 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link
@@ -314,8 +314,27 @@ export function Layout({ children }: { children: ReactNode }) {
           className="md:hidden fixed inset-x-0 z-40 px-4"
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/10 bg-background/65 backdrop-blur-xl backdrop-saturate-150 shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5)] overflow-hidden">
-            <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/15 bg-background/55 backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.12),inset_0_-1px_0_rgb(0_0_0/0.3)] overflow-hidden">
+            {/* Glass tint — a faint brand-color wash so the panel reads as a
+                lit surface instead of just a dimmer rectangle of the page. */}
+            <span
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, oklch(0.62 0.24 350 / 0.22) 0%, transparent 45%, oklch(0.68 0.18 20 / 0.16) 100%)",
+              }}
+            />
+            {/* Glass grain — subtle noise so the blur reads as frosted acrylic
+                even over the app's near-flat dark background. */}
+            <span
+              className="pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-overlay"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+                backgroundSize: "120px 120px",
+              }}
+            />
+            <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
             {mobileBottom.map((l) => {
               const Icon = l.icon;
               const active = isActive(l.to);
@@ -324,7 +343,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   key={l.to}
                   to={l.to}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-all duration-150 active:scale-90",
+                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-all duration-150 active:scale-90",
                     active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -347,7 +366,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <SheetTrigger asChild>
                 <button
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all duration-150 active:scale-90",
+                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all duration-150 active:scale-90",
                     moreOpen ? "text-primary" : "text-muted-foreground",
                   )}
                   aria-label={t("nav.more")}
