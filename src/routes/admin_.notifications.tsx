@@ -5,7 +5,7 @@ import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/admin/notifications")({ component: AdminNotificationsPage });
+export const Route = createFileRoute("/admin_/notifications")({ component: AdminNotificationsPage });
 
 function AdminNotificationsPage() {
   const { ready, loading } = useAdminGuard();

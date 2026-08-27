@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { TripPicker, Stat } from "@/lib/admin-shared";
 
-export const Route = createFileRoute("/admin/carpool")({ component: AdminCarpoolPage });
+export const Route = createFileRoute("/admin_/carpool")({ component: AdminCarpoolPage });
 
 function AdminCarpoolPage() {
   const { ready, loading } = useAdminGuard();

@@ -25,16 +25,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIdRouteImport } from './routes/trips_.$id'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminTripsRouteImport } from './routes/admin.trips'
-import { Route as AdminRollcallRouteImport } from './routes/admin.rollcall'
-import { Route as AdminRegistrationsRouteImport } from './routes/admin.registrations'
-import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
-import { Route as AdminGalleryRouteImport } from './routes/admin.gallery'
-import { Route as AdminExportsRouteImport } from './routes/admin.exports'
-import { Route as AdminCarpoolRouteImport } from './routes/admin.carpool'
-import { Route as AdminBrandRouteImport } from './routes/admin.brand'
-import { Route as AdminEventsIdRouteImport } from './routes/admin.events.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin_.users'
+import { Route as AdminTripsRouteImport } from './routes/admin_.trips'
+import { Route as AdminRollcallRouteImport } from './routes/admin_.rollcall'
+import { Route as AdminRegistrationsRouteImport } from './routes/admin_.registrations'
+import { Route as AdminNotificationsRouteImport } from './routes/admin_.notifications'
+import { Route as AdminGalleryRouteImport } from './routes/admin_.gallery'
+import { Route as AdminExportsRouteImport } from './routes/admin_.exports'
+import { Route as AdminCarpoolRouteImport } from './routes/admin_.carpool'
+import { Route as AdminBrandRouteImport } from './routes/admin_.brand'
+import { Route as AdminEventsIdRouteImport } from './routes/admin_.events.$id'
 
 const ValuesRoute = ValuesRouteImport.update({
   id: '/values',
@@ -117,59 +117,59 @@ const TripsIdRoute = TripsIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTripsRoute = AdminTripsRouteImport.update({
-  id: '/trips',
-  path: '/trips',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/trips',
+  path: '/admin/trips',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRollcallRoute = AdminRollcallRouteImport.update({
-  id: '/rollcall',
-  path: '/rollcall',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/rollcall',
+  path: '/admin/rollcall',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRegistrationsRoute = AdminRegistrationsRouteImport.update({
-  id: '/registrations',
-  path: '/registrations',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/registrations',
+  path: '/admin/registrations',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/notifications',
+  path: '/admin/notifications',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminGalleryRoute = AdminGalleryRouteImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/gallery',
+  path: '/admin/gallery',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminExportsRoute = AdminExportsRouteImport.update({
-  id: '/exports',
-  path: '/exports',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/exports',
+  path: '/admin/exports',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCarpoolRoute = AdminCarpoolRouteImport.update({
-  id: '/carpool',
-  path: '/carpool',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/carpool',
+  path: '/admin/carpool',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminBrandRoute = AdminBrandRouteImport.update({
-  id: '/brand',
-  path: '/brand',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/brand',
+  path: '/admin/brand',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminEventsIdRoute = AdminEventsIdRouteImport.update({
-  id: '/events/$id',
-  path: '/events/$id',
-  getParentRoute: () => AdminRoute,
+  id: '/admin_/events/$id',
+  path: '/admin/events/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cloud-nine': typeof CloudNineRoute
   '/community': typeof CommunityRoute
@@ -197,7 +197,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cloud-nine': typeof CloudNineRoute
   '/community': typeof CommunityRoute
@@ -226,7 +226,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cloud-nine': typeof CloudNineRoute
   '/community': typeof CommunityRoute
@@ -240,17 +240,17 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
-  '/admin/brand': typeof AdminBrandRoute
-  '/admin/carpool': typeof AdminCarpoolRoute
-  '/admin/exports': typeof AdminExportsRoute
-  '/admin/gallery': typeof AdminGalleryRoute
-  '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/registrations': typeof AdminRegistrationsRoute
-  '/admin/rollcall': typeof AdminRollcallRoute
-  '/admin/trips': typeof AdminTripsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin_/brand': typeof AdminBrandRoute
+  '/admin_/carpool': typeof AdminCarpoolRoute
+  '/admin_/exports': typeof AdminExportsRoute
+  '/admin_/gallery': typeof AdminGalleryRoute
+  '/admin_/notifications': typeof AdminNotificationsRoute
+  '/admin_/registrations': typeof AdminRegistrationsRoute
+  '/admin_/rollcall': typeof AdminRollcallRoute
+  '/admin_/trips': typeof AdminTripsRoute
+  '/admin_/users': typeof AdminUsersRoute
   '/trips_/$id': typeof TripsIdRoute
-  '/admin/events/$id': typeof AdminEventsIdRoute
+  '/admin_/events/$id': typeof AdminEventsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -326,22 +326,22 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trips'
     | '/values'
-    | '/admin/brand'
-    | '/admin/carpool'
-    | '/admin/exports'
-    | '/admin/gallery'
-    | '/admin/notifications'
-    | '/admin/registrations'
-    | '/admin/rollcall'
-    | '/admin/trips'
-    | '/admin/users'
+    | '/admin_/brand'
+    | '/admin_/carpool'
+    | '/admin_/exports'
+    | '/admin_/gallery'
+    | '/admin_/notifications'
+    | '/admin_/registrations'
+    | '/admin_/rollcall'
+    | '/admin_/trips'
+    | '/admin_/users'
     | '/trips_/$id'
-    | '/admin/events/$id'
+    | '/admin_/events/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
+  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   CloudNineRoute: typeof CloudNineRoute
   CommunityRoute: typeof CommunityRoute
@@ -355,7 +355,17 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   TripsRoute: typeof TripsRoute
   ValuesRoute: typeof ValuesRoute
+  AdminBrandRoute: typeof AdminBrandRoute
+  AdminCarpoolRoute: typeof AdminCarpoolRoute
+  AdminExportsRoute: typeof AdminExportsRoute
+  AdminGalleryRoute: typeof AdminGalleryRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminRegistrationsRoute: typeof AdminRegistrationsRoute
+  AdminRollcallRoute: typeof AdminRollcallRoute
+  AdminTripsRoute: typeof AdminTripsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   TripsIdRoute: typeof TripsIdRoute
+  AdminEventsIdRoute: typeof AdminEventsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -472,110 +482,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
+    '/admin_/users': {
+      id: '/admin_/users'
+      path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/trips': {
-      id: '/admin/trips'
-      path: '/trips'
+    '/admin_/trips': {
+      id: '/admin_/trips'
+      path: '/admin/trips'
       fullPath: '/admin/trips'
       preLoaderRoute: typeof AdminTripsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/rollcall': {
-      id: '/admin/rollcall'
-      path: '/rollcall'
+    '/admin_/rollcall': {
+      id: '/admin_/rollcall'
+      path: '/admin/rollcall'
       fullPath: '/admin/rollcall'
       preLoaderRoute: typeof AdminRollcallRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/registrations': {
-      id: '/admin/registrations'
-      path: '/registrations'
+    '/admin_/registrations': {
+      id: '/admin_/registrations'
+      path: '/admin/registrations'
       fullPath: '/admin/registrations'
       preLoaderRoute: typeof AdminRegistrationsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/notifications': {
-      id: '/admin/notifications'
-      path: '/notifications'
+    '/admin_/notifications': {
+      id: '/admin_/notifications'
+      path: '/admin/notifications'
       fullPath: '/admin/notifications'
       preLoaderRoute: typeof AdminNotificationsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/gallery': {
-      id: '/admin/gallery'
-      path: '/gallery'
+    '/admin_/gallery': {
+      id: '/admin_/gallery'
+      path: '/admin/gallery'
       fullPath: '/admin/gallery'
       preLoaderRoute: typeof AdminGalleryRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/exports': {
-      id: '/admin/exports'
-      path: '/exports'
+    '/admin_/exports': {
+      id: '/admin_/exports'
+      path: '/admin/exports'
       fullPath: '/admin/exports'
       preLoaderRoute: typeof AdminExportsRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/carpool': {
-      id: '/admin/carpool'
-      path: '/carpool'
+    '/admin_/carpool': {
+      id: '/admin_/carpool'
+      path: '/admin/carpool'
       fullPath: '/admin/carpool'
       preLoaderRoute: typeof AdminCarpoolRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/brand': {
-      id: '/admin/brand'
-      path: '/brand'
+    '/admin_/brand': {
+      id: '/admin_/brand'
+      path: '/admin/brand'
       fullPath: '/admin/brand'
       preLoaderRoute: typeof AdminBrandRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/events/$id': {
-      id: '/admin/events/$id'
-      path: '/events/$id'
+    '/admin_/events/$id': {
+      id: '/admin_/events/$id'
+      path: '/admin/events/$id'
       fullPath: '/admin/events/$id'
       preLoaderRoute: typeof AdminEventsIdRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AdminRouteChildren {
-  AdminBrandRoute: typeof AdminBrandRoute
-  AdminCarpoolRoute: typeof AdminCarpoolRoute
-  AdminExportsRoute: typeof AdminExportsRoute
-  AdminGalleryRoute: typeof AdminGalleryRoute
-  AdminNotificationsRoute: typeof AdminNotificationsRoute
-  AdminRegistrationsRoute: typeof AdminRegistrationsRoute
-  AdminRollcallRoute: typeof AdminRollcallRoute
-  AdminTripsRoute: typeof AdminTripsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdminEventsIdRoute: typeof AdminEventsIdRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminBrandRoute: AdminBrandRoute,
-  AdminCarpoolRoute: AdminCarpoolRoute,
-  AdminExportsRoute: AdminExportsRoute,
-  AdminGalleryRoute: AdminGalleryRoute,
-  AdminNotificationsRoute: AdminNotificationsRoute,
-  AdminRegistrationsRoute: AdminRegistrationsRoute,
-  AdminRollcallRoute: AdminRollcallRoute,
-  AdminTripsRoute: AdminTripsRoute,
-  AdminUsersRoute: AdminUsersRoute,
-  AdminEventsIdRoute: AdminEventsIdRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
+  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   CloudNineRoute: CloudNineRoute,
   CommunityRoute: CommunityRoute,
@@ -589,7 +571,17 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   TripsRoute: TripsRoute,
   ValuesRoute: ValuesRoute,
+  AdminBrandRoute: AdminBrandRoute,
+  AdminCarpoolRoute: AdminCarpoolRoute,
+  AdminExportsRoute: AdminExportsRoute,
+  AdminGalleryRoute: AdminGalleryRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminRegistrationsRoute: AdminRegistrationsRoute,
+  AdminRollcallRoute: AdminRollcallRoute,
+  AdminTripsRoute: AdminTripsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   TripsIdRoute: TripsIdRoute,
+  AdminEventsIdRoute: AdminEventsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

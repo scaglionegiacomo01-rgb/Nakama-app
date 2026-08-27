@@ -3,7 +3,7 @@ import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { FileImage, Smartphone, Globe } from "lucide-react";
 
-export const Route = createFileRoute("/admin/brand")({ component: AdminBrand });
+export const Route = createFileRoute("/admin_/brand")({ component: AdminBrand });
 
 type Asset = { file: string; purpose: string; size: string };
 

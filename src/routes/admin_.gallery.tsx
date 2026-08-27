@@ -9,7 +9,7 @@ import { CheckCircle2, XCircle, Trash2, Star, ImageIcon, Play } from "lucide-rea
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 
-export const Route = createFileRoute("/admin/gallery")({ component: AdminGallery });
+export const Route = createFileRoute("/admin_/gallery")({ component: AdminGallery });
 
 type Media = {
   id: string; event_id: string; user_id: string; media_url: string; storage_path: string | null;

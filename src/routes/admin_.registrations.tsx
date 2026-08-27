@@ -14,7 +14,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
 import { STATUSES, TripPicker, toCSV, download } from "@/lib/admin-shared";
 
-export const Route = createFileRoute("/admin/registrations")({ component: AdminRegistrationsPage });
+export const Route = createFileRoute("/admin_/registrations")({ component: AdminRegistrationsPage });
 
 function AdminRegistrationsPage() {
   const { ready, loading } = useAdminGuard();

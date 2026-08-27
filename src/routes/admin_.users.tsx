@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
 
-export const Route = createFileRoute("/admin/users")({ component: AdminUsersPage });
+export const Route = createFileRoute("/admin_/users")({ component: AdminUsersPage });
 
 function AdminUsersPage() {
   const { ready, loading } = useAdminGuard();
