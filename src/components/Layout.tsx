@@ -115,7 +115,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 backdrop-blur-2xl backdrop-saturate-[1.8] bg-background/60 border-b border-white/10">
+      <header className="nakama-glass sticky top-0 z-40 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 h-20 md:h-16 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link
@@ -314,26 +314,7 @@ export function Layout({ children }: { children: ReactNode }) {
           className="md:hidden fixed inset-x-0 z-40 px-4"
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/15 bg-background/55 backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.12),inset_0_-1px_0_rgb(0_0_0/0.3)] overflow-hidden">
-            {/* Glass tint — a faint brand-color wash so the panel reads as a
-                lit surface instead of just a dimmer rectangle of the page. */}
-            <span
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, oklch(0.62 0.24 350 / 0.22) 0%, transparent 45%, oklch(0.68 0.18 20 / 0.16) 100%)",
-              }}
-            />
-            {/* Glass grain — subtle noise so the blur reads as frosted acrylic
-                even over the app's near-flat dark background. */}
-            <span
-              className="pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-overlay"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-                backgroundSize: "120px 120px",
-              }}
-            />
+          <div className="nakama-glass relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/15 shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.12),inset_0_-1px_0_rgb(0_0_0/0.3)]">
             <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
             {mobileBottom.map((l) => {
               const Icon = l.icon;
@@ -381,81 +362,80 @@ export function Layout({ children }: { children: ReactNode }) {
                   <span className="leading-none">{t("nav.more")}</span>
                 </button>
               </SheetTrigger>
-              <SheetContent
-                side="bottom"
-                className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0"
-              >
+              <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] p-0 flex flex-col">
                 <SheetHeader className="px-5 pt-5 pb-2 text-left">
                   <SheetTitle className="text-xl font-display">{t("nav.more")}</SheetTitle>
                 </SheetHeader>
 
-                <div className="px-3 pb-2">
-                  {moreItems.map((m) => {
-                    const Icon = m.icon;
-                    return (
+                <div className="overflow-y-auto">
+                  <div className="px-3 pb-2">
+                    {moreItems.map((m) => {
+                      const Icon = m.icon;
+                      return (
+                        <Link
+                          key={m.to}
+                          to={m.to}
+                          onClick={() => setMoreOpen(false)}
+                          className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
+                        >
+                          <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center">
+                            <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                          </span>
+                          {m.label}
+                        </Link>
+                      );
+                    })}
+
+                    {isAdmin && (
                       <Link
-                        key={m.to}
-                        to={m.to}
+                        to="/admin"
                         onClick={() => setMoreOpen(false)}
                         className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
                       >
-                        <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center">
-                          <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                        <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
+                          <Shield className="w-[18px] h-[18px]" strokeWidth={1.75} />
                         </span>
-                        {m.label}
+                        {t("nav.admin")}
                       </Link>
-                    );
-                  })}
+                    )}
+                  </div>
 
-                  {isAdmin && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
+                  <div className="border-t border-border px-5 py-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                      <Globe className="w-3.5 h-3.5" />
+                      {t("nav.language")}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={lang === "en" ? "default" : "outline"}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setLang("en")}
+                      >
+                        🇬🇧 English
+                      </Button>
+                      <Button
+                        variant={lang === "it" ? "default" : "outline"}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setLang("it")}
+                      >
+                        🇮🇹 Italiano
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border px-3 py-3">
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-[0.98]"
                     >
-                      <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
-                        <Shield className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                      <span className="w-9 h-9 rounded-xl bg-destructive/10 grid place-items-center">
+                        <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
                       </span>
-                      {t("nav.admin")}
-                    </Link>
-                  )}
-                </div>
-
-                <div className="border-t border-border px-5 py-3">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" />
-                    {t("nav.language")}
+                      {t("nav.logout")}
+                    </button>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={lang === "en" ? "default" : "outline"}
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setLang("en")}
-                    >
-                      🇬🇧 English
-                    </Button>
-                    <Button
-                      variant={lang === "it" ? "default" : "outline"}
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setLang("it")}
-                    >
-                      🇮🇹 Italiano
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t border-border px-3 py-3">
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-[0.98]"
-                  >
-                    <span className="w-9 h-9 rounded-xl bg-destructive/10 grid place-items-center">
-                      <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                    </span>
-                    {t("nav.logout")}
-                  </button>
                 </div>
               </SheetContent>
             </Sheet>

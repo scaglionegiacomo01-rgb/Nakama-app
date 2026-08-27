@@ -224,6 +224,40 @@
   }
 }
 
+/* Reusable liquid-glass treatment for floating chrome (nav bars, menus,
+   sheets). backdrop-blur alone is invisible over this app's near-flat dark
+   background, so we layer a brand-tinted wash + grain via a pseudo-element
+   (kept out of `overflow: hidden` — combining backdrop-filter with
+   overflow:hidden + border-radius silently drops the blur on some Android
+   Chrome versions) so the panel reads as frosted glass regardless of what's
+   behind it. `isolation: isolate` scopes the ::before's negative z-index to
+   this element, so content inside paints above it with no extra z-index needed.
+   Deliberately does NOT set `position` here: this class and Tailwind's
+   position utilities (fixed/sticky/absolute) have equal specificity, so
+   whichever is declared later in the stylesheet wins regardless of class
+   order in the markup — declaring `position` here silently clobbered every
+   consumer's own `fixed`/`sticky`. Every element using `.nakama-glass` must
+   already carry its own position class (or get one positioned via JS, as
+   Radix Popper content does). */
+.nakama-glass {
+  isolation: isolate;
+  background-color: color-mix(in oklch, var(--popover) 62%, transparent);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+}
+.nakama-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    linear-gradient(135deg, oklch(0.62 0.24 350 / 0.16) 0%, transparent 45%, oklch(0.68 0.18 20 / 0.12) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  background-size: cover, 120px 120px;
+}
+
 @utility glow-magenta {
   box-shadow: 0 0 0 1px oklch(0.40 0.17 5 / 0.6),
               0 10px 40px -10px oklch(0.40 0.17 5 / 0.5);

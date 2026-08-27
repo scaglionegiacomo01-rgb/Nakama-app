@@ -25,6 +25,12 @@ const en: Dict = {
   "nav.cloud_nine": "Cloud Nine",
   "nav.settings": "Settings",
   "nav.notifications": "Notifications",
+
+  // notification bell
+  "notif.title": "Notifications",
+  "notif.mark_all_read": "Mark all read",
+  "notif.empty": "You're all caught up.",
+
   "home.value_1_title": "Together",
   "home.value_1_body": "We're not strangers sharing a day. We're a crew.",
 
@@ -41,18 +47,21 @@ const en: Dict = {
   "home.badge": "Season 2026 · Open to all levels",
   "home.title": "Find your group in the mountains.",
   "home.payoff": "Nobody gets left behind.",
-  "home.subtitle": "An inclusive snowboard and mountain community open to all levels. Share rides, join official trips and spend the day with people who actually wait for you.",
+  "home.subtitle":
+    "An inclusive snowboard and mountain community open to all levels. Share rides, join official trips and spend the day with people who actually wait for you.",
   "home.cta_join": "Join the crew",
   "home.cta_trips": "View next trips",
   "home.why_title": "Why Nakama exists",
-  "home.why_body": "Most people don't ride alone because they want to, they ride alone because they don't have a group. Nakama exists for the riders, the beginners, the newcomers in town, and anyone who just needs a lift to the slopes.",
+  "home.why_body":
+    "Most people don't ride alone because they want to, they ride alone because they don't have a group. Nakama exists for the riders, the beginners, the newcomers in town, and anyone who just needs a lift to the slopes.",
   "home.how_title": "How it works",
   "home.upcoming_title": "Next trips",
   "home.see_all": "See all",
   "home.no_trips": "No trips scheduled yet. Check back soon.",
   "home.values_title": "What we stand for",
   "home.safety_title": "Nobody gets left behind",
-  "home.safety_body": "We ride at the pace of the slowest rider. We wait at the lift. We check in on each other. The mountain is bigger than any of us.",
+  "home.safety_body":
+    "We ride at the pace of the slowest rider. We wait at the lift. We check in on each other. The mountain is bigger than any of us.",
   "home.how_1_title": "Create your profile",
   "home.how_1_body": "Add your level, gear and transport options.",
   "home.how_2_title": "Browse trips",
@@ -118,7 +127,8 @@ const en: Dict = {
 
   // ranks
   "ranks.title": "Crew Ranks",
-  "ranks.subtitle": "Every rank tells a story. Ranks grow with every trip you complete with the crew — no competition, just the road you've ridden together.",
+  "ranks.subtitle":
+    "Every rank tells a story. Ranks grow with every trip you complete with the crew — no competition, just the road you've ridden together.",
   "ranks.your_rank": "Your rank",
   "ranks.next": "next",
   "ranks.trips_completed": "completed trips",
@@ -132,7 +142,8 @@ const en: Dict = {
   "trips.tab_available": "Available",
   "trips.tab_mine": "My trips",
   "trips.tab_archive": "Archive",
-  "trips.empty_available": "No trips scheduled yet. Check back soon — new trips are added every week.",
+  "trips.empty_available":
+    "No trips scheduled yet. Check back soon — new trips are added every week.",
   "trips.empty_mine": "You haven't joined any trips yet.",
   "trips.empty_archive": "Nothing in your archive yet.",
   "trips.browse": "Browse trips",
@@ -240,6 +251,12 @@ const it: Dict = {
   "nav.cloud_nine": "Cloud Nine",
   "nav.settings": "Impostazioni",
   "nav.notifications": "Notifiche",
+
+  // notification bell
+  "notif.title": "Notifiche",
+  "notif.mark_all_read": "Segna tutte come lette",
+  "notif.empty": "Sei in pari con tutto.",
+
   "home.value_1_title": "Stare Insieme",
   "home.value_1_body": "Non siamo estranei che condividono una giornata. Siamo una crew.",
 
@@ -247,28 +264,31 @@ const it: Dict = {
   "home.value_2_body": "Il livello non rende nessuno migliore degli altri.",
 
   "home.value_3_title": "Responsabilità",
-  "home.value_3_body": "Presentati preparato, fai la tua parte e prenditi cura della tua attrezzatura.",
+  "home.value_3_body":
+    "Presentati preparato, fai la tua parte e prenditi cura della tua attrezzatura.",
 
   "home.value_4_title": "Rispetta la montagna",
   "home.value_4_body": "La montagna è più grande di noi. Sicurezza e buon senso prima di tutto.",
-
 
   // home — visitor
   "home.badge": "Stagione 2026 · Aperti a tutti i livelli",
   "home.title": "Trova il tuo gruppo in montagna.",
   "home.payoff": "Nobody gets left behind.",
-  "home.subtitle": "Una community per snowboard e montagna, aperta a tutti i livelli. Condividi passaggi, partecipa a viaggi ufficiali e vivi la giornata con persone che ti aspettano davvero.",
+  "home.subtitle":
+    "Una community per snowboard e montagna, aperta a tutti i livelli. Condividi passaggi, partecipa a viaggi ufficiali e vivi la giornata con persone che ti aspettano davvero.",
   "home.cta_join": "Join the crew",
   "home.cta_trips": "Vedi i prossimi viaggi",
   "home.why_title": "Perché esiste Nakama",
-  "home.why_body": "La maggior parte delle persone non ride da sola perché lo vuole, lo fa perché non ha un gruppo. Nakama esiste per i rider, i principianti, chi è appena arrivato in città e chiunque abbia solo bisogno di un passaggio per la montagna.",
+  "home.why_body":
+    "La maggior parte delle persone non ride da sola perché lo vuole, lo fa perché non ha un gruppo. Nakama esiste per i rider, i principianti, chi è appena arrivato in città e chiunque abbia solo bisogno di un passaggio per la montagna.",
   "home.how_title": "Come funziona",
   "home.upcoming_title": "Prossimi viaggi",
   "home.see_all": "Vedi tutti",
   "home.no_trips": "Nessun viaggio in programma. Torna presto.",
   "home.values_title": "Cosa rappresentiamo",
   "home.safety_title": "Nobody gets left behind",
-  "home.safety_body": "Andiamo al ritmo di chi è più lento. Aspettiamo all'impianto. Ci controlliamo a vicenda. La montagna è più grande di chiunque di noi.",
+  "home.safety_body":
+    "Andiamo al ritmo di chi è più lento. Aspettiamo all'impianto. Ci controlliamo a vicenda. La montagna è più grande di chiunque di noi.",
   "home.how_1_title": "Crea il tuo profilo",
   "home.how_1_body": "Aggiungi livello, attrezzatura e opzioni di trasporto.",
   "home.how_2_title": "Scopri le uscite",
@@ -281,7 +301,7 @@ const it: Dict = {
   "home.how_5_body": "I principianti sono benvenuti. Il gruppo si adatta.",
   "home.how_6_title": "Si torna insieme",
   "home.how_6_body": "Nessuno viene lasciato indietro. Mai.",
-  
+
   // home — logged in
   "home.welcome": "Bentornato",
   "home.my_next_trip": "Il tuo prossimo viaggio",
@@ -330,21 +350,23 @@ const it: Dict = {
   "status.rejected": "Non accettato",
 
   "ranks.title": "Crew Ranks",
-  "ranks.subtitle": "Ogni rango racconta una storia. I ranghi crescono con ogni viaggio completato con la crew — nessuna competizione, solo la strada percorsa insieme.",
+  "ranks.subtitle":
+    "Ogni rango racconta una storia. I ranghi crescono con ogni viaggio completato con la crew — nessuna competizione, solo la strada percorsa insieme.",
   "ranks.your_rank": "Il tuo rango",
   "ranks.next": "prossimo",
   "ranks.trips_completed": "viaggi completati",
   "ranks.until_next": "Ancora {n} {tripWord} per diventare {title}",
   "ranks.trip": "viaggio",
   "ranks.trips": "viaggi",
-  
+
   // trips tabs
   "trips.title": "Viaggi",
   "trips.subtitle": "Viaggi disponibili, le tue iscrizioni e quelli passati.",
   "trips.tab_available": "Disponibili",
   "trips.tab_mine": "I miei viaggi",
   "trips.tab_archive": "Archivio",
-  "trips.empty_available": "Nessun viaggio in programma. Torna presto — nuovi viaggi ogni settimana.",
+  "trips.empty_available":
+    "Nessun viaggio in programma. Torna presto — nuovi viaggi ogni settimana.",
   "trips.empty_mine": "Non sei iscritto a nessun viaggio.",
   "trips.empty_archive": "Il tuo archivio è ancora vuoto.",
   "trips.browse": "Sfoglia i viaggi",
@@ -434,7 +456,11 @@ const it: Dict = {
 
 const DICTS: Record<Lang, Dict> = { en, it };
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: string, vars?: Record<string, string | number>) => string };
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+};
 
 const I18nCtx = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => k });
 
@@ -449,17 +475,24 @@ function detect(): Lang {
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
-  useEffect(() => { setLangState(detect()); }, []);
+  useEffect(() => {
+    setLangState(detect());
+  }, []);
 
   const setLang = (l: Lang) => {
     setLangState(l);
-    try { window.localStorage.setItem("lang", l); } catch { /* ignore */ }
+    try {
+      window.localStorage.setItem("lang", l);
+    } catch {
+      /* ignore */
+    }
     if (typeof document !== "undefined") document.documentElement.lang = l;
   };
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
     let v = DICTS[lang][key] ?? DICTS.en[key] ?? key;
-    if (vars) for (const k of Object.keys(vars)) v = v.replace(new RegExp(`{${k}}`, "g"), String(vars[k]));
+    if (vars)
+      for (const k of Object.keys(vars)) v = v.replace(new RegExp(`{${k}}`, "g"), String(vars[k]));
     return v;
   };
 
