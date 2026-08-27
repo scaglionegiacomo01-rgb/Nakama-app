@@ -16,7 +16,7 @@ import { EventTag } from "@/components/EventTag";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Tag as TagIcon } from "lucide-react";
 
-export const Route = createFileRoute("/admin/events/$id")({ component: EventAdmin });
+export const Route = createFileRoute("/admin_/events/$id")({ component: EventAdmin });
 
 const statuses = ["pending","confirmed","waitlisted","cancelled","rejected"];
 

@@ -8,7 +8,7 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { TripPicker, toCSV, download } from "@/lib/admin-shared";
 
-export const Route = createFileRoute("/admin/exports")({ component: AdminExportsPage });
+export const Route = createFileRoute("/admin_/exports")({ component: AdminExportsPage });
 
 function AdminExportsPage() {
   const { ready, loading } = useAdminGuard();

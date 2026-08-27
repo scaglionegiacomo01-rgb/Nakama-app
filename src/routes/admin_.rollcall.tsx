@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { CHECKIN_LABELS, TripPicker, Stat } from "@/lib/admin-shared";
 
-export const Route = createFileRoute("/admin/rollcall")({ component: AdminRollCallPage });
+export const Route = createFileRoute("/admin_/rollcall")({ component: AdminRollCallPage });
 
 function AdminRollCallPage() {
   const { ready, loading } = useAdminGuard();

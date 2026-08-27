@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { EVENT_TAGS } from "@/lib/event-tags";
 import { EventTag } from "@/components/EventTag";
 
-export const Route = createFileRoute("/admin/trips")({ component: AdminTripsPage });
+export const Route = createFileRoute("/admin_/trips")({ component: AdminTripsPage });
 
 function AdminTripsPage() {
   const { ready, loading, userId } = useAdminGuard();
