@@ -74,6 +74,28 @@ Quando lavori su Nakama:
 - il "come" implementare (architettura, stack, dettagli tecnici) è una tua responsabilità — qui conta il "perché" e il "per chi";
 - se una richiesta sembra in conflitto con questi valori (es. introdurre classifiche di livello, gamification competitiva, meccaniche che premiano solo i più bravi), segnalalo prima di procedere.
 
+## Note tecniche da non dimenticare
+
+### Routing: il trattino basso nei nomi dei file
+
+Il progetto usa TanStack Router con routing basato sui nomi dei file. **Se esiste
+`x.tsx`, un file `x.qualcosa.tsx` viene trattato automaticamente come figlio annidato
+di `x.tsx`** — e per essere visibile richiede che il genitore renderizzi un `<Outlet />`.
+
+Se il genitore non ha un `<Outlet />`, la sotto-pagina **non viene mai mostrata**:
+l'URL cambia correttamente ma a schermo resta il contenuto del genitore. È un bug
+silenzioso e molto difficile da diagnosticare (è già successo con tutta la sezione
+admin: i tasti sembravano "non funzionare", in realtà la pagina non poteva apparire).
+
+**Regola**: se la sotto-pagina deve essere una pagina indipendente e non annidata,
+aggiungi un trattino basso al segmento genitore nel nome del file:
+
+- ❌ `admin.trips.tsx` → diventa figlia di `admin.tsx`, invisibile
+- ✅ `admin_.trips.tsx` → pagina indipendente su `/admin/trips`
+
+L'URL finale non cambia: il trattino basso vive solo nel nome del file. Vedi
+`admin_.*.tsx` e `trips_.$id.tsx` come esempi già corretti in questo repo.
+
 ## Workflow Git
 
 Lavora sempre direttamente sul branch main, senza creare branch separati. Dopo ogni modifica fai git add, commit e push su main automaticamente, senza chiedermi conferma. Dopo ogni push, verifica che il link di produzione Cloudflare Workers/Pages sia attivo e funzionante (controlla che il deploy del progetto `nakama-app`, configurato in `wrangler.jsonc`, sia andato a buon fine). L'URL di produzione è `https://nakama-app.scaglionegiacomo01.workers.dev`. Se il link è sempre lo stesso e funziona, confermamelo. Se per qualche motivo cambia o smette di funzionare, dammi subito il nuovo link aggiornato.
