@@ -81,16 +81,17 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: "/gallery", label: t("nav.gallery"), icon: Images },
   ];
 
-  // Mobile bottom — exactly 5
+  // Mobile bottom — only the three core destinations, everything else lives
+  // in the "More" sheet so the main job of the app stays obvious.
   const mobileBottom: NavItem[] = [
     { to: "/", label: t("nav.home"), icon: Home },
     { to: "/trips", label: t("nav.trips"), icon: MountainSnow },
     { to: "/profile", label: t("nav.profile"), icon: User },
-    { to: "/passport", label: t("nav.passport"), icon: BookOpen },
   ];
 
   // More sheet content
   const moreItems: NavItem[] = [
+    { to: "/passport", label: t("nav.passport"), icon: BookOpen },
     { to: "/values", label: t("nav.values"), icon: HeartHandshake },
     { to: "/how-it-works", label: t("nav.how_it_works"), icon: Compass },
     { to: "/cloud-nine", label: "Cloud Nine", icon: Shield },
@@ -300,7 +301,7 @@ export function Layout({ children }: { children: ReactNode }) {
           className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-border/60"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div className="grid grid-cols-5 h-16">
+          <div className="grid grid-cols-4 h-16">
             {mobileBottom.map((l) => {
               const Icon = l.icon;
               const active = isActive(l.to);
