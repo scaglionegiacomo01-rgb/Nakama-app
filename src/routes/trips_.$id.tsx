@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Calendar, MapPin, Users, CheckCircle2, Mountain, Car, Backpack, Clock, ShieldCheck, Bell } from "lucide-react";
+import { Calendar, MapPin, Users, CheckCircle2, Mountain, Car, Backpack, Clock, ShieldCheck, Bell, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { OverviewPanel } from "@/components/trip/OverviewPanel";
 import { WhosGoingPanel } from "@/components/trip/WhosGoingPanel";
@@ -69,6 +69,7 @@ function TripDetail() {
 
 
   const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [transport, setTransport] = useState<"have_car_will_drive"|"have_car_no_drive"|"no_car_can_drive"|"no_car_need_seat">("no_car_need_seat");
   const [seats, setSeats] = useState(2);
   const [departureArea, setDepartureArea] = useState("");
@@ -95,6 +96,16 @@ function TripDetail() {
   const isBeginnerEvent = eventTags.some(t => BEGINNER_TAGS.includes(t));
   const userIsBeginner = myProfile?.snowboard_level === "beginner";
   const showAssistTab = isParticipant && (userIsBeginner || isBeginnerEvent);
+  // Crew-only tabs stay hidden until you're actually in the trip (admins keep
+  // full visibility) — a visitor shouldn't have to scroll past six tabs they
+  // can't use to find out what the trip is.
+  const showCrewTabs = isParticipant || isAdmin;
+  // If the selected tab stops existing (e.g. you cancel while sitting on Chat)
+  // fall back to Overview instead of rendering an empty panel.
+  const CREW_TABS = ["checkin", "carpool", "chat", "gallery"];
+  const tabIsGone =
+    (!showCrewTabs && CREW_TABS.includes(activeTab)) || (!showAssistTab && activeTab === "assist");
+  const effectiveTab = tabIsGone ? "overview" : activeTab;
 
   const cancelMyReg = async () => {
     if (!myReg || !user) return;
@@ -119,9 +130,12 @@ function TripDetail() {
   };
 
   const join = async () => {
-    if (!user) { navigate({ to: "/auth" }); return; }
-    if (!form.accepted_liability_for_event || !form.accepted_rules_for_event) { toast.error("Please accept the disclaimer and rules"); return; }
-    if ((hasCar || needsSeat) && !departureArea.trim()) { toast.error("Please add your departure area"); return; }
+    if (!user) { navigate({ to: "/auth", search: { mode: "login", redirect: `/trips/${id}` } }); return; }
+    if (!form.accepted_liability_for_event || !form.accepted_rules_for_event) { toast.error(t("join.err_accept")); return; }
+    // Departure area only matters once they've actually opened the optional
+    // transport section — otherwise transport stays at its default and the
+    // carpool rows below simply aren't created.
+    if ((transport === "have_car_will_drive" || needsSeat) && !departureArea.trim()) { toast.error(t("join.err_departure")); return; }
     setBusy(true);
     try {
       const payload = {
@@ -200,30 +214,30 @@ function TripDetail() {
         </button>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+      <Tabs value={effectiveTab} onValueChange={setActiveTab} className="mt-6">
         <TabsList className="w-full overflow-x-auto justify-start flex-nowrap">
           <TabsTrigger value="overview">{t("tab.overview")}</TabsTrigger>
-          <TabsTrigger value="checkin">{t("tab.checkin")}</TabsTrigger>
+          {showCrewTabs && <TabsTrigger value="checkin">{t("tab.checkin")}</TabsTrigger>}
           <TabsTrigger value="who">{t("tab.who")}</TabsTrigger>
-          <TabsTrigger value="carpool">{t("tab.carpool")}</TabsTrigger>
-          <TabsTrigger value="chat">{t("tab.chat")}</TabsTrigger>
-          <TabsTrigger value="gallery">{t("tab.gallery")}</TabsTrigger>
+          {showCrewTabs && <TabsTrigger value="carpool">{t("tab.carpool")}</TabsTrigger>}
+          {showCrewTabs && <TabsTrigger value="chat">{t("tab.chat")}</TabsTrigger>}
+          {showCrewTabs && <TabsTrigger value="gallery">{t("tab.gallery")}</TabsTrigger>}
           <TabsTrigger value="safety">{t("tab.safety")}</TabsTrigger>
           {showAssistTab && <TabsTrigger value="assist">{t("tab.assist")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview" className="mt-6"><OverviewPanel event={event} spotsLeft={spotsLeft} /></TabsContent>
-        <TabsContent value="checkin" className="mt-6"><CheckinPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} /></TabsContent>
+        {showCrewTabs && <TabsContent value="checkin" className="mt-6"><CheckinPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} /></TabsContent>}
         <TabsContent value="who" className="mt-6"><WhosGoingPanel eventId={id} isAdmin={isAdmin} /></TabsContent>
-        <TabsContent value="carpool" className="mt-6"><CarpoolPanel eventId={id} isAdmin={isAdmin} /></TabsContent>
-        <TabsContent value="chat" className="mt-6"><TripChatPanel eventId={id} canPost={canChat} isAdmin={isAdmin} /></TabsContent>
-        <TabsContent value="gallery" className="mt-6"><GalleryPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant && myReg?.status === "confirmed"} /></TabsContent>
+        {showCrewTabs && <TabsContent value="carpool" className="mt-6"><CarpoolPanel eventId={id} isAdmin={isAdmin} /></TabsContent>}
+        {showCrewTabs && <TabsContent value="chat" className="mt-6"><TripChatPanel eventId={id} canPost={canChat} isAdmin={isAdmin} /></TabsContent>}
+        {showCrewTabs && <TabsContent value="gallery" className="mt-6"><GalleryPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant && myReg?.status === "confirmed"} /></TabsContent>}
         <TabsContent value="safety" className="mt-6"><SafetyPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} /></TabsContent>
         {showAssistTab && <TabsContent value="assist" className="mt-6"><BeginnerChecklistPanel eventId={id} /></TabsContent>}
       </Tabs>
 
       {/* Sticky join bar */}
       <div
-        className="fixed inset-x-0 z-50 bg-background/95 backdrop-blur border-t border-border p-3 bottom-16 md:bottom-0"
+        className="fixed inset-x-0 z-50 bg-background/95 backdrop-blur border-t border-border p-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-0"
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
 
@@ -249,7 +263,7 @@ function TripDetail() {
               <div className="text-sm text-muted-foreground">Your request was not accepted.</div>
             </div>
           ) : (
-            <Button size="lg" className="w-full" onClick={() => user ? setShowForm(true) : navigate({ to: "/auth" })}>
+            <Button size="lg" className="w-full" onClick={() => user ? setShowForm(true) : navigate({ to: "/auth", search: { mode: "login", redirect: `/trips/${id}` } })}>
               {user ? (spotsLeft > 0 ? t("trip.join") : t("trip.join_waitlist")) : t("trip.signin_to_join")}
             </Button>
           )}
@@ -259,51 +273,68 @@ function TripDetail() {
       {/* Join dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Join this trip</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("join.title")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("join.intro")}</p>
+
             <div>
-              <Label className="mb-2 block">Transport</Label>
+              <Label className="mb-2 block">{t("join.transport")}</Label>
               <RadioGroup value={transport} onValueChange={(v) => setTransport(v as typeof transport)} className="space-y-1.5">
-                <RadioRow value="have_car_will_drive" label="I have a car and I can drive" />
-                <RadioRow value="have_car_no_drive" label="I have a car but I can't drive" />
-                <RadioRow value="no_car_can_drive" label="I don't have a car but I can drive if needed" />
-                <RadioRow value="no_car_need_seat" label="I don't have a car and I need a seat" />
+                <RadioRow value="have_car_will_drive" label={t("join.transport_have_car_will_drive")} />
+                <RadioRow value="have_car_no_drive" label={t("join.transport_have_car_no_drive")} />
+                <RadioRow value="no_car_can_drive" label={t("join.transport_no_car_can_drive")} />
+                <RadioRow value="no_car_need_seat" label={t("join.transport_no_car_need_seat")} />
               </RadioGroup>
               <p className="text-[11px] text-muted-foreground mt-2">{SEATS_DISCLAIMER}</p>
             </div>
 
-            {hasCar && (
-              <div className="space-y-2 rounded-xl bg-secondary/30 p-3">
-                <div><Label>Departure area</Label><Input value={departureArea} onChange={e => setDepartureArea(e.target.value)} placeholder="e.g. Milan" /></div>
-                {transport === "have_car_will_drive" && (
-                  <>
-                    <div><Label>Available passenger seats (after gear)</Label><Input type="number" min={0} max={8} value={seats} onChange={e => setSeats(+e.target.value)} /></div>
-                    <div><Label>Meeting point (optional)</Label><Input value={meetingPoint} onChange={e => setMeetingPoint(e.target.value)} placeholder="e.g. Lambrate station 6:00" /></div>
-                    <div><Label>Notes for passengers</Label><Textarea value={transportNotes} onChange={e => setTransportNotes(e.target.value)} /></div>
-                  </>
-                )}
-              </div>
+            {/* Departure area is the one detail carpooling can't work without,
+                so it stays in the main form whenever transport implies it. */}
+            {(transport === "have_car_will_drive" || needsSeat) && (
+              <div><Label>{t("join.departure_area")}</Label><Input value={departureArea} onChange={e => setDepartureArea(e.target.value)} placeholder="es. Milano" /></div>
             )}
-            {needsSeat && (
-              <div className="space-y-2 rounded-xl bg-secondary/30 p-3">
-                <div><Label>Departure area</Label><Input value={departureArea} onChange={e => setDepartureArea(e.target.value)} placeholder="e.g. Milan" /></div>
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={canReachMeeting} onCheckedChange={v => setCanReachMeeting(!!v)} />I can reach the main meeting point</label>
-                <div><Label>Notes for drivers</Label><Textarea value={transportNotes} onChange={e => setTransportNotes(e.target.value)} /></div>
-              </div>
-            )}
-
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_equipment} onCheckedChange={v => setForm({...form, has_equipment: !!v})} />I have my own snowboard equipment</label>
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.needs_rental} onCheckedChange={v => setForm({...form, needs_rental: !!v})} />I need rental</label>
-            <div><Label>Notes for the organizer</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
 
             <div className="border-t border-border pt-3 space-y-2">
-              <label className="flex items-start gap-2 text-sm"><Checkbox checked={form.accepted_liability_for_event} onCheckedChange={v => setForm({...form, accepted_liability_for_event: !!v})} className="mt-0.5" />I accept the liability disclaimer and acknowledge mountain sports involve risk</label>
-              <label className="flex items-start gap-2 text-sm"><Checkbox checked={form.accepted_rules_for_event} onCheckedChange={v => setForm({...form, accepted_rules_for_event: !!v})} className="mt-0.5" />I accept the community rules</label>
+              <label className="flex items-start gap-2 text-sm"><Checkbox checked={form.accepted_liability_for_event} onCheckedChange={v => setForm({...form, accepted_liability_for_event: !!v})} className="mt-0.5" />{t("join.accept_liability")}</label>
+              <label className="flex items-start gap-2 text-sm"><Checkbox checked={form.accepted_rules_for_event} onCheckedChange={v => setForm({...form, accepted_rules_for_event: !!v})} className="mt-0.5" />{t("join.accept_rules")}</label>
+            </div>
+
+            <div className="border-t border-border pt-3">
+              <button
+                type="button"
+                onClick={() => setShowDetails(v => !v)}
+                className="w-full flex items-center justify-between gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("join.details_toggle")}
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${showDetails ? "rotate-180" : ""}`} />
+              </button>
+
+              {showDetails && (
+                <div className="mt-3 space-y-3">
+                  {transport === "have_car_will_drive" && (
+                    <div className="space-y-2 rounded-xl bg-secondary/30 p-3">
+                      <div><Label>{t("join.seats")}</Label><Input type="number" min={0} max={8} value={seats} onChange={e => setSeats(+e.target.value)} /></div>
+                      <div><Label>{t("join.meeting_point")}</Label><Input value={meetingPoint} onChange={e => setMeetingPoint(e.target.value)} placeholder="es. Stazione Lambrate 6:00" /></div>
+                      <div><Label>{t("join.notes_passengers")}</Label><Textarea value={transportNotes} onChange={e => setTransportNotes(e.target.value)} /></div>
+                    </div>
+                  )}
+                  {needsSeat && (
+                    <div className="space-y-2 rounded-xl bg-secondary/30 p-3">
+                      <label className="flex items-center gap-2 text-sm"><Checkbox checked={canReachMeeting} onCheckedChange={v => setCanReachMeeting(!!v)} />{t("join.can_reach_meeting")}</label>
+                      <div><Label>{t("join.notes_drivers")}</Label><Textarea value={transportNotes} onChange={e => setTransportNotes(e.target.value)} /></div>
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.has_equipment} onCheckedChange={v => setForm({...form, has_equipment: !!v})} />{t("join.has_equipment")}</label>
+                  <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.needs_rental} onCheckedChange={v => setForm({...form, needs_rental: !!v})} />{t("join.needs_rental")}</label>
+                  <div><Label>{t("join.notes_organizer")}</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
+                  <p className="text-[11px] text-muted-foreground">{t("join.details_later")}</p>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
-              <Button onClick={join} disabled={busy} className="flex-1">{busy ? "..." : "Confirm"}</Button>
+              <Button variant="ghost" onClick={() => setShowForm(false)} className="flex-1">{t("join.cancel")}</Button>
+              <Button onClick={join} disabled={busy} className="flex-1">{busy ? "..." : t("join.confirm")}</Button>
             </div>
           </div>
         </DialogContent>

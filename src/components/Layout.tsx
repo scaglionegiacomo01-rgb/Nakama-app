@@ -293,15 +293,15 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className={cn("flex-1", user ? "pb-24 md:pb-0" : "pb-0")}>{children}</main>
+      <main className={cn("flex-1", user ? "pb-32 md:pb-0" : "pb-0")}>{children}</main>
 
       {/* Mobile bottom nav — only for logged-in users (Profile/Passport need auth) */}
       {user && (
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-border/60"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          className="md:hidden fixed inset-x-0 z-40 px-4"
+          style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="grid grid-cols-4 h-16">
+          <div className="mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-border/60 bg-background/90 backdrop-blur-2xl shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5)]">
             {mobileBottom.map((l) => {
               const Icon = l.icon;
               const active = isActive(l.to);
@@ -315,7 +315,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   )}
                 >
                   {active && (
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] via-[oklch(0.62_0.24_350)] to-[oklch(0.68_0.18_20)]" />
+                    <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] via-[oklch(0.62_0.24_350)] to-[oklch(0.68_0.18_20)]" />
                   )}
                   <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
                   <span className="leading-none">{l.label}</span>
@@ -418,7 +418,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
       )}
 
-      <footer className={cn("border-t border-border mt-12", user ? "pb-24 md:pb-0" : "")}>
+      <footer className={cn("border-t border-border mt-12", user ? "pb-32 md:pb-0" : "")}>
         <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-muted-foreground flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2">
             <img

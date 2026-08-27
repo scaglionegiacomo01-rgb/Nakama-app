@@ -11,14 +11,17 @@ import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TabValue = "available" | "my-trips" | "past" | "cancelled";
-const TABS: TabValue[] = ["available", "my-trips", "past", "cancelled"];
+type TabValue = "available" | "my-trips" | "archive";
+const TABS: TabValue[] = ["available", "my-trips", "archive"];
 const ACTIVE_STATUSES = ["pending", "confirmed", "waitlisted"] as const;
 
 export const Route = createFileRoute("/trips")({
   head: () => ({ meta: [{ title: "Trips — Nakama" }] }),
   validateSearch: (s: Record<string, unknown>): { tab?: TabValue } => {
     const tab = s.tab as string | undefined;
+    // "past" and "cancelled" were separate tabs before they were merged into
+    // "archive" — keep old links (and bookmarks) working.
+    if (tab === "past" || tab === "cancelled") return { tab: "archive" };
     return { tab: TABS.includes(tab as TabValue) ? (tab as TabValue) : undefined };
   },
   component: Trips,
@@ -49,18 +52,15 @@ function Trips() {
       </header>
 
       <Tabs value={tab} onValueChange={setTab} className="mt-5 md:mt-8">
-        <TabsList className="w-full grid grid-cols-4 h-auto p-1 bg-secondary/60">
+        <TabsList className="w-full grid grid-cols-3 h-auto p-1 bg-secondary/60">
           <TabsTrigger value="available" className="text-xs sm:text-sm px-2 py-2">
             {t("trips.tab_available")}
           </TabsTrigger>
           <TabsTrigger value="my-trips" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
             {t("trips.tab_mine")}
           </TabsTrigger>
-          <TabsTrigger value="past" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
-            {t("trips.tab_past")}
-          </TabsTrigger>
-          <TabsTrigger value="cancelled" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
-            {t("trips.tab_cancelled")}
+          <TabsTrigger value="archive" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
+            {t("trips.tab_archive")}
           </TabsTrigger>
         </TabsList>
 
@@ -70,11 +70,8 @@ function Trips() {
         <TabsContent value="my-trips" className="mt-5">
           {user ? <MyTripsList kind="active" lang={lang} /> : null}
         </TabsContent>
-        <TabsContent value="past" className="mt-5">
-          {user ? <MyTripsList kind="past" lang={lang} /> : null}
-        </TabsContent>
-        <TabsContent value="cancelled" className="mt-5">
-          {user ? <MyTripsList kind="cancelled" lang={lang} /> : null}
+        <TabsContent value="archive" className="mt-5">
+          {user ? <MyTripsList kind="archive" lang={lang} /> : null}
         </TabsContent>
       </Tabs>
     </div>
@@ -169,7 +166,7 @@ type RegRow = {
   } | null;
 };
 
-function MyTripsList({ kind, lang }: { kind: "active" | "past" | "cancelled"; lang: string }) {
+function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string }) {
   const { user } = useAuth();
   const { t } = useI18n();
   const qc = useQueryClient();
@@ -213,7 +210,6 @@ function MyTripsList({ kind, lang }: { kind: "active" | "past" | "cancelled"; la
 
   const filtered = useMemo(() => {
     const rows = (data ?? []).filter((r) => r.events);
-    if (kind === "cancelled") return rows.filter((r) => r.status === "cancelled");
     if (kind === "active")
       return rows
         .filter(
@@ -224,12 +220,16 @@ function MyTripsList({ kind, lang }: { kind: "active" | "past" | "cancelled"; la
             r.events!.status !== "cancelled"
         )
         .sort((a, b) => a.events!.date.localeCompare(b.events!.date));
-    // past
-    return rows.filter(
-      (r) =>
-        r.status !== "cancelled" &&
-        (r.events!.date < todayStr || r.events!.status === "completed")
-    );
+    // archive — everything that's done with: past/completed trips plus the
+    // ones you cancelled, most recent first.
+    return rows
+      .filter(
+        (r) =>
+          r.status === "cancelled" ||
+          r.events!.date < todayStr ||
+          r.events!.status === "completed"
+      )
+      .sort((a, b) => b.events!.date.localeCompare(a.events!.date));
   }, [data, kind, todayStr]);
 
   const cancel = async (regId: string, eventId: string) => {
@@ -273,13 +273,7 @@ function MyTripsList({ kind, lang }: { kind: "active" | "past" | "cancelled"; la
     return (
       <EmptyState
         icon={Calendar}
-        text={
-          kind === "active"
-            ? t("trips.empty_mine")
-            : kind === "past"
-            ? t("trips.empty_past")
-            : t("trips.empty_cancelled")
-        }
+        text={kind === "active" ? t("trips.empty_mine") : t("trips.empty_archive")}
         cta={
           kind === "active" ? (
             <Link to="/trips" search={{ tab: undefined }}>
@@ -316,7 +310,7 @@ function RegCard({
 }: {
   reg: RegRow;
   lang: string;
-  kind: "active" | "past" | "cancelled";
+  kind: "active" | "archive";
   checkin: { status: string; meeting: boolean } | null;
   onCancel: () => void;
 }) {
