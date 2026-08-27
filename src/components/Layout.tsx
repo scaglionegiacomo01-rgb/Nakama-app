@@ -29,13 +29,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
@@ -100,7 +94,6 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: "/community", label: t("nav.community"), icon: MessageCircle },
   ];
 
-
   const NavPill = ({ item }: { item: NavItem }) => {
     const Icon = item.icon;
     const active = isActive(item.to);
@@ -108,10 +101,10 @@ export function Layout({ children }: { children: ReactNode }) {
       <Link
         to={item.to}
         className={cn(
-          "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap",
+          "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap active:scale-95",
           active
             ? "bg-primary/15 text-foreground border border-primary/40 shadow-[0_0_20px_-6px_oklch(0.40_0.17_5/0.6)]"
-            : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground border border-transparent"
+            : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground border border-transparent",
         )}
       >
         <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -138,9 +131,7 @@ export function Layout({ children }: { children: ReactNode }) {
               className="w-16 h-16 md:w-12 md:h-12 object-contain transition-transform group-hover:scale-105"
             />
             <span className="tracking-tight text-[18px] md:text-[17px]">Nakama</span>
-
           </Link>
-
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-0.5 flex-1 justify-center min-w-0">
@@ -182,7 +173,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors",
                   isActive("/admin")
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                 )}
                 aria-label={t("nav.admin")}
               >
@@ -193,16 +184,27 @@ export function Layout({ children }: { children: ReactNode }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("nav.language")}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  aria-label={t("nav.language")}
+                >
                   <Globe className="w-[18px] h-[18px]" strokeWidth={1.75} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{t("nav.language")}</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setLang("en")} className={lang === "en" ? "font-semibold" : ""}>
+                <DropdownMenuItem
+                  onClick={() => setLang("en")}
+                  className={lang === "en" ? "font-semibold" : ""}
+                >
                   🇬🇧 English
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLang("it")} className={lang === "it" ? "font-semibold" : ""}>
+                <DropdownMenuItem
+                  onClick={() => setLang("it")}
+                  className={lang === "it" ? "font-semibold" : ""}
+                >
                   🇮🇹 Italiano
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -265,16 +267,27 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="md:hidden flex items-center gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("nav.language")}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  aria-label={t("nav.language")}
+                >
                   <Globe className="w-[18px] h-[18px]" strokeWidth={1.75} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{t("nav.language")}</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setLang("en")} className={lang === "en" ? "font-semibold" : ""}>
+                <DropdownMenuItem
+                  onClick={() => setLang("en")}
+                  className={lang === "en" ? "font-semibold" : ""}
+                >
                   🇬🇧 English
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLang("it")} className={lang === "it" ? "font-semibold" : ""}>
+                <DropdownMenuItem
+                  onClick={() => setLang("it")}
+                  className={lang === "it" ? "font-semibold" : ""}
+                >
                   🇮🇹 Italiano
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -301,7 +314,8 @@ export function Layout({ children }: { children: ReactNode }) {
           className="md:hidden fixed inset-x-0 z-40 px-4"
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-border/60 bg-background/90 backdrop-blur-2xl shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5)]">
+          <div className="relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/10 bg-background/65 backdrop-blur-xl backdrop-saturate-150 shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5)] overflow-hidden">
+            <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
             {mobileBottom.map((l) => {
               const Icon = l.icon;
               const active = isActive(l.to);
@@ -310,14 +324,20 @@ export function Layout({ children }: { children: ReactNode }) {
                   key={l.to}
                   to={l.to}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors",
-                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                    "relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-all duration-150 active:scale-90",
+                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {active && (
-                    <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] via-[oklch(0.62_0.24_350)] to-[oklch(0.68_0.18_20)]" />
+                    <span className="animate-in zoom-in-50 fade-in duration-300 absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] via-[oklch(0.62_0.24_350)] to-[oklch(0.68_0.18_20)]" />
                   )}
-                  <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
+                  <Icon
+                    className={cn(
+                      "w-[22px] h-[22px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                      active ? "scale-110" : "scale-100",
+                    )}
+                    strokeWidth={active ? 2.25 : 1.75}
+                  />
                   <span className="leading-none">{l.label}</span>
                 </Link>
               );
@@ -327,12 +347,18 @@ export function Layout({ children }: { children: ReactNode }) {
               <SheetTrigger asChild>
                 <button
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
-                    moreOpen ? "text-primary" : "text-muted-foreground"
+                    "flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all duration-150 active:scale-90",
+                    moreOpen ? "text-primary" : "text-muted-foreground",
                   )}
                   aria-label={t("nav.more")}
                 >
-                  <MoreHorizontal className="w-[22px] h-[22px]" strokeWidth={1.75} />
+                  <MoreHorizontal
+                    className={cn(
+                      "w-[22px] h-[22px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                      moreOpen ? "scale-110" : "scale-100",
+                    )}
+                    strokeWidth={1.75}
+                  />
                   <span className="leading-none">{t("nav.more")}</span>
                 </button>
               </SheetTrigger>
@@ -352,7 +378,7 @@ export function Layout({ children }: { children: ReactNode }) {
                         key={m.to}
                         to={m.to}
                         onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-colors"
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
                       >
                         <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center">
                           <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -366,7 +392,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     <Link
                       to="/admin"
                       onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-colors"
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
                     >
                       <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
                         <Shield className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -404,7 +430,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <div className="border-t border-border px-3 py-3">
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-[0.98]"
                   >
                     <span className="w-9 h-9 rounded-xl bg-destructive/10 grid place-items-center">
                       <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -442,7 +468,6 @@ export function Layout({ children }: { children: ReactNode }) {
               Cloud Nine
             </Link>
           </div>
-
         </div>
       </footer>
     </div>
