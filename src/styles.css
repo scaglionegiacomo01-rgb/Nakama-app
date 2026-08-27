@@ -113,21 +113,24 @@
   --background: oklch(0.16 0.014 250);              /* #0b0f12 */
   --foreground: oklch(0.94 0.008 40);               /* #e3deda */
 
-  /* Elevated dark surfaces, subtle warm purple cast */
-  --card: oklch(0.21 0.022 290);
+  /* Elevated dark surfaces, subtle warm purple cast.
+     Ladder spaced further apart than a straight tonal ramp so
+     sections read as distinct layers instead of blending together. */
+  --card: oklch(0.24 0.028 290);
   --card-foreground: oklch(0.94 0.008 40);
-  --popover: oklch(0.20 0.020 290);
+  --popover: oklch(0.22 0.026 290);
   --popover-foreground: oklch(0.94 0.008 40);
 
   /* Brand primary = deep magenta */
   --primary: oklch(0.40 0.17 5);                    /* #9b0646 */
   --primary-foreground: oklch(0.97 0.01 40);
 
-  /* Soft dark surface for chips, secondary buttons */
-  --secondary: oklch(0.26 0.030 295);
+  /* Soft dark surface for chips, secondary buttons — the most raised layer */
+  --secondary: oklch(0.29 0.036 298);
   --secondary-foreground: oklch(0.94 0.008 40);
 
-  --muted: oklch(0.23 0.022 290);
+  /* Subtle fill, between background and card (inputs, skeletons) */
+  --muted: oklch(0.19 0.018 280);
   --muted-foreground: oklch(0.72 0.025 305);        /* #a69dbb lilac */
 
   /* Accent = coral, hover / interactive highlight */
@@ -149,7 +152,7 @@
   --destructive: oklch(0.58 0.20 25);
   --destructive-foreground: oklch(0.98 0.01 40);
 
-  --border: oklch(0.30 0.030 290 / 0.6);
+  --border: oklch(0.34 0.032 290 / 0.65);
   --input: oklch(0.30 0.030 290);
   --ring: oklch(0.62 0.24 350);
 
@@ -167,19 +170,19 @@
 .dark {
   --background: oklch(0.16 0.014 250);
   --foreground: oklch(0.94 0.008 40);
-  --card: oklch(0.21 0.022 290);
+  --card: oklch(0.24 0.028 290);
   --card-foreground: oklch(0.94 0.008 40);
-  --popover: oklch(0.20 0.020 290);
+  --popover: oklch(0.22 0.026 290);
   --popover-foreground: oklch(0.94 0.008 40);
   --primary: oklch(0.40 0.17 5);
   --primary-foreground: oklch(0.97 0.01 40);
-  --secondary: oklch(0.26 0.030 295);
+  --secondary: oklch(0.29 0.036 298);
   --secondary-foreground: oklch(0.94 0.008 40);
-  --muted: oklch(0.23 0.022 290);
+  --muted: oklch(0.19 0.018 280);
   --muted-foreground: oklch(0.72 0.025 305);
   --accent: oklch(0.68 0.18 20);
   --accent-foreground: oklch(0.99 0.005 30);
-  --border: oklch(0.30 0.030 290 / 0.6);
+  --border: oklch(0.34 0.032 290 / 0.65);
   --input: oklch(0.30 0.030 290);
   --ring: oklch(0.62 0.24 350);
   --ice: oklch(0.26 0.030 295);
@@ -223,8 +226,8 @@
 }
 @utility surface-elevated {
   background-image: linear-gradient(180deg,
-    oklch(0.24 0.028 295) 0%,
-    oklch(0.19 0.020 290) 100%);
+    oklch(0.28 0.034 298) 0%,
+    oklch(0.22 0.024 290) 100%);
 }
 
 /* Passport map (Leaflet) — themed to match the app's dark surfaces */
