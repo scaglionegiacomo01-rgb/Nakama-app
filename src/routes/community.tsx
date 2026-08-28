@@ -3,18 +3,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send, Trash2, MessagesSquare } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/community")({ component: Community });
 
 type Msg = { id: string; user_id: string; message: string; created_at: string };
-type ProfileLite = { user_id: string; full_name: string | null; username: string | null; profile_picture_url: string | null };
+type ProfileLite = {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  profile_picture_url: string | null;
+};
 
 const MAX = 500;
 
@@ -28,7 +32,9 @@ function Community() {
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [user, loading, navigate]);
 
   const { data: messages } = useQuery({
     queryKey: ["community-messages"],
@@ -43,7 +49,10 @@ function Community() {
     },
   });
 
-  const userIds = useMemo(() => Array.from(new Set((messages ?? []).map(m => m.user_id))), [messages]);
+  const userIds = useMemo(
+    () => Array.from(new Set((messages ?? []).map((m) => m.user_id))),
+    [messages],
+  );
 
   const { data: profiles } = useQuery({
     queryKey: ["community-profiles", userIds.sort().join(",")],
@@ -75,6 +84,17 @@ function Community() {
     },
   });
 
+  const { data: riderCount } = useQuery({
+    queryKey: ["community-rider-count"],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
+
+  const [onlineCount, setOnlineCount] = useState(1);
+
   // Realtime
   useEffect(() => {
     if (!user) return;
@@ -84,8 +104,28 @@ function Community() {
         qc.invalidateQueries({ queryKey: ["community-messages"] });
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, qc]);
+
+  // Presence — live "online" count for the LIVE chip
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase.channel("community-presence", {
+      config: { presence: { key: user.id } },
+    });
+    channel
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(channel.presenceState()).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") await channel.track({ online_at: new Date().toISOString() });
+      });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Auto-scroll
   useEffect(() => {
@@ -96,9 +136,14 @@ function Community() {
     const msg = text.trim();
     if (!msg || msg.length > MAX) return;
     setSending(true);
-    const { error } = await supabase.from("community_messages").insert({ user_id: user!.id, message: msg });
+    const { error } = await supabase
+      .from("community_messages")
+      .insert({ user_id: user!.id, message: msg });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setText("");
   };
 
@@ -107,12 +152,15 @@ function Community() {
     if (error) toast.error(error.message);
   };
 
-  const openProfile = (uid: string) => { setProfileUserId(uid); setProfileOpen(true); };
+  const openProfile = (uid: string) => {
+    setProfileUserId(uid);
+    setProfileOpen(true);
+  };
 
   if (loading) return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
   if (!user) return null;
 
-  const profileMap = new Map((profiles ?? []).map(p => [p.user_id, p]));
+  const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   const fmt = (d: string) => {
     const date = new Date(d);
     const now = new Date();
@@ -124,18 +172,26 @@ function Community() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 flex flex-col h-[calc(100vh-9rem)]">
-      <div className="flex items-center gap-3 pb-4 border-b border-border">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-summit grid place-items-center text-primary-foreground">
-          <MessagesSquare className="w-5 h-5" />
+    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-9rem)]">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 md:px-0 py-4 border-b border-border">
+        <span className="w-10 h-10 rounded-[14px] bg-gradient-to-br from-primary to-nakama-pink grid place-items-center shrink-0">
+          <MessagesSquare className="w-[19px] h-[19px]" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-[22px] leading-[1.1] tracking-[-0.04em]">Community</div>
+          <div className="mt-[3px] text-[11px] text-muted-foreground">
+            {riderCount ?? "—"} rider · {onlineCount} online
+          </div>
         </div>
-        <div>
-          <h1 className="font-display font-bold text-2xl">Community</h1>
-          <p className="text-xs text-muted-foreground">Crew chat — share stoke, plans, mountain talk.</p>
-        </div>
+        <span className="shrink-0 inline-flex items-center gap-[6px] px-2.5 py-[5px] rounded-full bg-secondary text-[10px] font-bold tracking-[0.1em] whitespace-nowrap">
+          <span className="w-[6px] h-[6px] rounded-full bg-nakama-coral nk-pulse" />
+          LIVE
+        </span>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 space-y-3">
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-0 py-4 flex flex-col gap-4">
         {!messages ? (
           <div className="text-muted-foreground text-sm text-center py-12">Loading messages…</div>
         ) : messages.length === 0 ? (
@@ -146,51 +202,109 @@ function Community() {
             <p className="mt-4 font-display font-bold text-lg">No messages yet</p>
             <p className="text-sm text-muted-foreground">Be the first to say hi to the crew.</p>
           </div>
-        ) : messages.map(m => {
-          const p = profileMap.get(m.user_id);
-          const name = p?.username ? `@${p.username}` : (p?.full_name ?? "Member");
-          const canDelete = isAdmin || m.user_id === user.id;
-          const completed = completedCounts?.[m.user_id] ?? 0;
-          return (
-            <div key={m.id} className="flex gap-3 group">
-              <UserAvatar url={p?.profile_picture_url} name={p?.full_name ?? p?.username} size="md" onClick={() => openProfile(m.user_id)} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button onClick={() => openProfile(m.user_id)} className="font-semibold text-sm hover:underline truncate">{name}</button>
-                  <RankBadge completed={completed} size="xs" />
-                  <span className="text-xs text-muted-foreground">{fmt(m.created_at)}</span>
-                  {canDelete && (
-                    <button onClick={() => remove(m.id)} className="ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition" aria-label="Delete">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+        ) : (
+          messages.map((m) => {
+            const p = profileMap.get(m.user_id);
+            const name = p?.username ? `@${p.username}` : (p?.full_name ?? "Member");
+            const canDelete = isAdmin || m.user_id === user.id;
+            const completed = completedCounts?.[m.user_id] ?? 0;
+            const isMine = m.user_id === user.id;
+
+            return (
+              <div key={m.id} className={cn("flex gap-[11px] group", isMine && "flex-row-reverse")}>
+                <UserAvatar
+                  url={p?.profile_picture_url}
+                  name={p?.full_name ?? p?.username}
+                  onClick={() => openProfile(m.user_id)}
+                  className="h-[38px] w-[38px] text-xs shrink-0"
+                />
+                <div className={cn("min-w-0 flex-1", isMine && "flex flex-col items-end")}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-[7px] flex-wrap",
+                      isMine && "flex-row-reverse",
+                    )}
+                  >
+                    {isMine ? (
+                      <span className="text-[13px] font-semibold">Tu</span>
+                    ) : (
+                      <button
+                        onClick={() => openProfile(m.user_id)}
+                        className="truncate text-[13px] font-semibold hover:underline"
+                      >
+                        {name}
+                      </button>
+                    )}
+                    {!isMine && <RankBadge completed={completed} size="xs" interactive={false} />}
+                    <span className="text-[11px] text-muted-foreground">{fmt(m.created_at)}</span>
+                    {canDelete && (
+                      <button
+                        onClick={() => remove(m.id)}
+                        className={cn(
+                          "text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive",
+                          !isMine && "ml-auto",
+                        )}
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      "mt-[6px] max-w-[82%] whitespace-pre-wrap break-words px-[13px] py-[11px] text-[13.5px] leading-[1.45]",
+                      isMine
+                        ? "rounded-[16px_16px_5px_16px] bg-gradient-to-br from-primary to-[oklch(0.34_0.13_350)] text-primary-foreground"
+                        : "rounded-[16px_16px_16px_5px] bg-[oklch(0.22_0.026_290)]",
+                    )}
+                  >
+                    {m.message}
+                  </div>
                 </div>
-                <div className="mt-0.5 text-sm whitespace-pre-wrap break-words">{m.message}</div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
-      <div className="border-t border-border pt-3">
-        <div className="flex gap-2 items-end">
-          <Textarea
+      {/* Composer */}
+      <div className="border-t border-border px-4 md:px-0 pt-3 pb-4">
+        <div className="flex items-center gap-[9px]">
+          <input
+            type="text"
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, MAX))}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Say something to the crew…"
-            rows={1}
-            className="resize-none min-h-[44px]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder="Scrivi qualcosa alla crew…"
+            className="h-[46px] flex-1 min-w-0 rounded-[16px] border border-border bg-[oklch(0.24_0.028_290)] px-[15px] text-base md:text-[13.5px] placeholder:text-muted-foreground focus:outline-none focus:border-nakama-pink"
           />
-          <Button onClick={send} disabled={sending || !text.trim()} size="icon"><Send className="w-4 h-4" /></Button>
+          <button
+            onClick={send}
+            disabled={sending || !text.trim()}
+            aria-label="Send"
+            className="h-[46px] w-[46px] shrink-0 rounded-[16px] bg-gradient-to-br from-[oklch(0.45_0.19_5)] to-[oklch(0.36_0.15_355)] text-white grid place-items-center shadow-[0_8px_22px_-10px_oklch(0.40_0.17_5)] disabled:opacity-50 transition"
+          >
+            <Send className="w-[18px] h-[18px]" />
+          </button>
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>Be kind. Nobody gets left behind.</span>
-          <span>{text.length}/{MAX}</span>
+        <div className="mt-[9px] flex justify-between text-[11px] text-muted-foreground">
+          <span>Sii gentile. Nobody gets left behind.</span>
+          <span>
+            {text.length}/{MAX}
+          </span>
         </div>
       </div>
 
-      <PublicProfileDialog userId={profileUserId} open={profileOpen} onOpenChange={setProfileOpen} />
+      <PublicProfileDialog
+        userId={profileUserId}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+      />
     </div>
   );
 }
