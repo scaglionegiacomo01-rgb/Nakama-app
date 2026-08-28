@@ -319,12 +319,19 @@ export function Layout({ children }: { children: ReactNode }) {
             {mobileBottom.map((l) => {
               const Icon = l.icon;
               const active = isActive(l.to);
+              const tapClass =
+                l.to === "/"
+                  ? "nav-tap-home"
+                  : l.to === "/trips"
+                    ? "nav-tap-trips"
+                    : "nav-tap-profile";
               return (
                 <Link
                   key={l.to}
                   to={l.to}
                   className={cn(
-                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-all duration-150 active:scale-90",
+                    tapClass,
+                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-150",
                     active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
