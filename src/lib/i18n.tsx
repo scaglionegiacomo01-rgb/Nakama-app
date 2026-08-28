@@ -229,6 +229,7 @@ const en: Dict = {
     "We sent a confirmation link to {email}. Open it to activate your account — then you can join the trip.",
   "auth.check_email_hint": "No email? Check your spam folder.",
   "auth.check_email_back": "Back to sign in",
+  "auth.tab_signup": "Sign up",
 
   // join a trip
   "join.title": "Join this trip",
@@ -479,6 +480,7 @@ const it: Dict = {
     "Abbiamo inviato un link di conferma a {email}. Aprilo per attivare il tuo account — poi potrai iscriverti al viaggio.",
   "auth.check_email_hint": "Non arriva? Controlla anche lo spam.",
   "auth.check_email_back": "Torna all'accesso",
+  "auth.tab_signup": "Iscriviti",
 
   // iscrizione a un viaggio
   "join.title": "Partecipa a questo viaggio",
