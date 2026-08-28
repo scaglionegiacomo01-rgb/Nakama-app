@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { EventCard } from "@/components/EventCard";
-import { Calendar, MapPin, Car, CheckCircle2 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PhotoCard } from "@/components/PhotoCard";
+import { typeLabel } from "@/components/EventCard";
+import { Calendar, MapPin, Car, CheckCircle2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -27,12 +27,20 @@ export const Route = createFileRoute("/trips")({
   component: Trips,
 });
 
+const TAB_LABEL_KEY: Record<TabValue, string> = {
+  available: "trips.tab_available",
+  "my-trips": "trips.tab_mine",
+  archive: "trips.tab_archive",
+};
+
 function Trips() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const navigate = useNavigate({ from: "/trips" });
   const search = Route.useSearch();
   const tab: TabValue = search.tab ?? "available";
+  const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState("");
 
   // when user logs out from "my-trips" tab, fall back to available
   useEffect(() => {
@@ -41,48 +49,99 @@ function Trips() {
     }
   }, [user, tab, navigate]);
 
-  const setTab = (v: string) =>
-    navigate({ search: { tab: v === "available" ? undefined : (v as TabValue) }, replace: true });
+  const setTab = (v: TabValue) =>
+    navigate({ search: { tab: v === "available" ? undefined : v }, replace: true });
+
+  const openCount = useOpenTripsCount();
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-6 pb-10 md:pt-10 md:max-w-6xl">
-      <header>
-        <h1 className="text-3xl md:text-5xl font-bold">{t("trips.title")}</h1>
-        <p className="mt-1.5 text-sm md:text-base text-muted-foreground">{t("trips.subtitle")}</p>
+    <div className="max-w-3xl mx-auto px-5 pt-6 pb-10 md:pt-10 md:max-w-6xl">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-nakama-coral text-[10px] font-bold uppercase tracking-[0.22em] whitespace-nowrap">
+            {openCount != null ? t("trips.open_count", { n: openCount }) : t("trips.subtitle")}
+          </div>
+          <h1 className="mt-1 font-display text-[38px] leading-[1.04] tracking-[-0.045em]">
+            {t("trips.title")}
+          </h1>
+        </div>
+        <button
+          onClick={() => setShowSearch((s) => !s)}
+          className="w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"
+          aria-label={t("trips.search")}
+        >
+          {showSearch ? (
+            <X className="w-[18px] h-[18px]" />
+          ) : (
+            <Search className="w-[18px] h-[18px]" />
+          )}
+        </button>
       </header>
 
-      <Tabs value={tab} onValueChange={setTab} className="mt-5 md:mt-8">
-        <TabsList className="w-full grid grid-cols-3 h-auto p-1 bg-secondary/60">
-          <TabsTrigger value="available" className="text-xs sm:text-sm px-2 py-2">
-            {t("trips.tab_available")}
-          </TabsTrigger>
-          <TabsTrigger value="my-trips" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
-            {t("trips.tab_mine")}
-          </TabsTrigger>
-          <TabsTrigger value="archive" className="text-xs sm:text-sm px-2 py-2" disabled={!user}>
-            {t("trips.tab_archive")}
-          </TabsTrigger>
-        </TabsList>
+      {showSearch && (
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("trips.search_placeholder")}
+          className="mt-3 w-full h-11 rounded-2xl bg-secondary px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      )}
 
-        <TabsContent value="available" className="mt-5">
-          <AvailableList />
-        </TabsContent>
-        <TabsContent value="my-trips" className="mt-5">
-          {user ? <MyTripsList kind="active" lang={lang} /> : null}
-        </TabsContent>
-        <TabsContent value="archive" className="mt-5">
-          {user ? <MyTripsList kind="archive" lang={lang} /> : null}
-        </TabsContent>
-      </Tabs>
+      <div className="mt-5 flex gap-5 border-b border-border">
+        {TABS.map((v) => {
+          const disabled = v !== "available" && !user;
+          return (
+            <button
+              key={v}
+              onClick={() => !disabled && setTab(v)}
+              disabled={disabled}
+              className={cn(
+                "pb-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px",
+                disabled && "opacity-40",
+                tab === v
+                  ? "border-nakama-pink text-foreground"
+                  : "border-transparent text-muted-foreground",
+              )}
+            >
+              {t(TAB_LABEL_KEY[v])}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5">
+        {tab === "available" && <AvailableList query={query} />}
+        {tab === "my-trips" && user && <MyTripsList kind="active" lang={lang} />}
+        {tab === "archive" && user && <MyTripsList kind="archive" lang={lang} />}
+      </div>
     </div>
   );
 }
 
+function useOpenTripsCount() {
+  const { data } = useQuery({
+    queryKey: ["trips-open-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "published")
+        .gte("date", new Date().toISOString().slice(0, 10));
+      return count ?? 0;
+    },
+  });
+  return data;
+}
+
 /* ----------------- Available ----------------- */
 
-function AvailableList() {
+const TYPE_FILTERS = ["snowboard", "mountain_walk", "skate", "surf"] as const;
+
+function AvailableList({ query }: { query: string }) {
   const { t } = useI18n();
   const { user } = useAuth();
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["events", "list", user?.id],
     queryFn: async () => {
@@ -97,14 +156,20 @@ function AvailableList() {
       const counts = await supabase
         .from("event_registrations")
         .select("event_id, status")
-        .in("event_id", events.map((e) => e.id));
+        .in(
+          "event_id",
+          events.map((e) => e.id),
+        );
       let myRegs: { event_id: string; status: string }[] = [];
       if (user) {
         const { data: regs } = await supabase
           .from("event_registrations")
           .select("event_id, status")
           .eq("user_id", user.id)
-          .in("event_id", events.map((e) => e.id));
+          .in(
+            "event_id",
+            events.map((e) => e.id),
+          );
         myRegs = regs ?? [];
       }
       const taken = new Map<string, number>();
@@ -121,28 +186,82 @@ function AvailableList() {
     },
   });
 
+  const filtered = (data ?? []).filter((e) => {
+    if (typeFilter && e.type !== typeFilter) return false;
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      if (!e.title.toLowerCase().includes(q) && !e.destination.toLowerCase().includes(q))
+        return false;
+    }
+    return true;
+  });
+
   if (isLoading) {
     return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-2xl bg-card border border-border h-56 animate-pulse" />
+          <div
+            key={i}
+            className="rounded-[26px] bg-card border border-border h-[238px] animate-pulse"
+          />
         ))}
       </div>
     );
   }
 
   if (!data || data.length === 0) {
-    return (
-      <EmptyState icon={Calendar} text={t("trips.empty_available")} />
-    );
+    return <EmptyState icon={Calendar} text={t("trips.empty_available")} />;
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {data.map((e) => (
-        <EventCard key={e.id} event={e} spotsLeft={e.spotsLeft} myRegStatus={e.myRegStatus} />
-      ))}
+    <div>
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+        <FilterChip active={typeFilter === null} onClick={() => setTypeFilter(null)}>
+          {t("trips.filter_all")}
+        </FilterChip>
+        {TYPE_FILTERS.map((type) => (
+          <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
+            {typeLabel[type] ?? type}
+          </FilterChip>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="mt-5">
+          <EmptyState icon={Search} text={t("trips.empty_filtered")} />
+        </div>
+      ) : (
+        <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {filtered.map((e) => (
+            <PhotoCard key={e.id} event={e} spotsLeft={e.spotsLeft} />
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 border",
+        active
+          ? "bg-foreground text-background border-foreground"
+          : "border-border text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -178,7 +297,7 @@ function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string 
       const { data } = await supabase
         .from("event_registrations")
         .select(
-          "id, status, created_at, needs_ride, offers_car_seats, events(id, title, destination, date, type, difficulty, status, max_participants)"
+          "id, status, created_at, needs_ride, offers_car_seats, events(id, title, destination, date, type, difficulty, status, max_participants)",
         )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
@@ -201,7 +320,7 @@ function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string 
   const checkinByEvent = useMemo(() => {
     const m = new Map<string, { status: string; meeting: boolean }>();
     (checkins ?? []).forEach((c) =>
-      m.set(c.event_id, { status: c.status, meeting: !!c.meeting_point_checked_in })
+      m.set(c.event_id, { status: c.status, meeting: !!c.meeting_point_checked_in }),
     );
     return m;
   }, [checkins]);
@@ -217,7 +336,7 @@ function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string 
             (ACTIVE_STATUSES as readonly string[]).includes(r.status) &&
             r.events!.date >= todayStr &&
             r.events!.status !== "completed" &&
-            r.events!.status !== "cancelled"
+            r.events!.status !== "cancelled",
         )
         .sort((a, b) => a.events!.date.localeCompare(b.events!.date));
     // archive — everything that's done with: past/completed trips plus the
@@ -225,9 +344,7 @@ function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string 
     return rows
       .filter(
         (r) =>
-          r.status === "cancelled" ||
-          r.events!.date < todayStr ||
-          r.events!.status === "completed"
+          r.status === "cancelled" || r.events!.date < todayStr || r.events!.status === "completed",
       )
       .sort((a, b) => b.events!.date.localeCompare(a.events!.date));
   }, [data, kind, todayStr]);
@@ -243,16 +360,8 @@ function MyTripsList({ kind, lang }: { kind: "active" | "archive"; lang: string 
       toast.error(error.message);
       return;
     }
-    await supabase
-      .from("trip_cars")
-      .delete()
-      .eq("event_id", eventId)
-      .eq("driver_user_id", user.id);
-    await supabase
-      .from("seat_seekers")
-      .delete()
-      .eq("event_id", eventId)
-      .eq("user_id", user.id);
+    await supabase.from("trip_cars").delete().eq("event_id", eventId).eq("driver_user_id", user.id);
+    await supabase.from("seat_seekers").delete().eq("event_id", eventId).eq("user_id", user.id);
     toast.success(t("trip.cancelled_msg"));
     qc.invalidateQueries({ queryKey: ["my-trips"] });
     qc.invalidateQueries({ queryKey: ["my-reg", eventId] });
@@ -323,16 +432,11 @@ function RegCard({
   });
   const statusLabel = t(`status.${reg.status}`);
 
-  const carpoolLabel = reg.offers_car_seats
-    ? "Driver"
-    : reg.needs_ride
-    ? "Needs ride"
-    : null;
+  const carpoolLabel = reg.offers_car_seats ? "Driver" : reg.needs_ride ? "Needs ride" : null;
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const isTripDay = ev.date === todayStr;
-  const canRejoin =
-    reg.status === "cancelled" && ev.status === "published" && ev.date >= todayStr;
+  const canRejoin = reg.status === "cancelled" && ev.status === "published" && ev.date >= todayStr;
 
   const statusTone: Record<string, string> = {
     pending: "bg-secondary text-foreground",
@@ -367,7 +471,7 @@ function RegCard({
         <span
           className={cn(
             "px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0",
-            statusTone[reg.status] ?? "bg-secondary"
+            statusTone[reg.status] ?? "bg-secondary",
           )}
         >
           {statusLabel}

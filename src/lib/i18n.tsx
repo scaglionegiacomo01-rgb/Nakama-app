@@ -159,6 +159,11 @@ const en: Dict = {
   "trips.view_details": "View details",
   "trips.confirm_cancel": "Cancel your participation in this trip?",
   "trips.spots_left": "{n} spots left",
+  "trips.open_count": "{n} open trips",
+  "trips.search": "Search",
+  "trips.search_placeholder": "Search by name or place",
+  "trips.filter_all": "All",
+  "trips.empty_filtered": "No trips match this search.",
 
   // profile
   "profile.title": "Your profile",
@@ -389,6 +394,11 @@ const it: Dict = {
   "trips.view_details": "Dettagli",
   "trips.confirm_cancel": "Annullare la partecipazione a questo viaggio?",
   "trips.spots_left": "{n} posti liberi",
+  "trips.open_count": "{n} uscite aperte",
+  "trips.search": "Cerca",
+  "trips.search_placeholder": "Cerca per nome o luogo",
+  "trips.filter_all": "Tutti",
+  "trips.empty_filtered": "Nessun viaggio corrisponde alla ricerca.",
 
   // profile
   "profile.title": "Il tuo profilo",
