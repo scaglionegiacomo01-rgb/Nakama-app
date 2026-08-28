@@ -9,8 +9,11 @@ import { cn } from "@/lib/utils";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
-const typeLabel: Record<string, string> = {
-  snowboard: "Snowboard", mountain_walk: "Mountain walk", skate: "Skate", surf: "Surf",
+export const typeLabel: Record<string, string> = {
+  snowboard: "Snowboard",
+  mountain_walk: "Mountain walk",
+  skate: "Skate",
+  surf: "Surf",
 };
 
 const HIDDEN_MOBILE_TAGS = new Set<string>([
@@ -21,7 +24,15 @@ const HIDDEN_MOBILE_TAGS = new Set<string>([
   "First Time Friendly",
 ]);
 
-export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spotsLeft?: number; myRegStatus?: string }) {
+export function EventCard({
+  event,
+  spotsLeft,
+  myRegStatus,
+}: {
+  event: Event;
+  spotsLeft?: number;
+  myRegStatus?: string;
+}) {
   const { lang } = useI18n();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -34,8 +45,12 @@ export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spo
   const isJoined = !!myRegStatus && ACTIVE_STATUSES.includes(myRegStatus);
 
   const ctaLabel = isJoined
-    ? (lang === "it" ? "Iscritto" : "Joined")
-    : (lang === "it" ? "Unisciti" : "Join Trip");
+    ? lang === "it"
+      ? "Iscritto"
+      : "Joined"
+    : lang === "it"
+      ? "Unisciti"
+      : "Join Trip";
 
   const handleCta = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,7 +72,9 @@ export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spo
         <span className="px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium capitalize">
           {event.difficulty}
         </span>
-        {visible.map(t => <EventTag key={t} tag={t} />)}
+        {visible.map((t) => (
+          <EventTag key={t} tag={t} />
+        ))}
         {overflow > 0 && (
           <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
             {moreLabel}
@@ -68,18 +85,26 @@ export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spo
         {event.title}
       </h3>
       <div className="mt-1 text-sm text-muted-foreground inline-flex items-center gap-1">
-        <MapPin className="w-3.5 h-3.5" />{event.destination}
+        <MapPin className="w-3.5 h-3.5" />
+        {event.destination}
       </div>
       <div className="mt-4 space-y-1.5 text-sm">
         <div className="inline-flex items-center gap-2 text-foreground/90">
           <Calendar className="w-3.5 h-3.5 text-accent" />
-          {new Date(event.date).toLocaleDateString(lang === "it" ? "it-IT" : "en-US", { weekday: "short", day: "numeric", month: "short" })}
+          {new Date(event.date).toLocaleDateString(lang === "it" ? "it-IT" : "en-US", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          })}
         </div>
         <div className="flex items-center gap-2.5 text-muted-foreground">
-          <Mountain className="w-3.5 h-3.5" />Meet: {event.meeting_point} · {event.departure_time ?? "—"}
+          <Mountain className="w-3.5 h-3.5" />
+          Meet: {event.meeting_point} · {event.departure_time ?? "—"}
         </div>
         <div className="flex items-center gap-2.5 text-muted-foreground">
-          <Users className="w-3.5 h-3.5" />Max {event.max_participants}{spotsLeft != null && ` · ${spotsLeft} spots left`}
+          <Users className="w-3.5 h-3.5" />
+          Max {event.max_participants}
+          {spotsLeft != null && ` · ${spotsLeft} spots left`}
         </div>
       </div>
       <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-3">
@@ -93,7 +118,7 @@ export function EventCard({ event, spotsLeft, myRegStatus }: { event: Event; spo
           onClick={handleCta}
           className={cn(
             "md:hidden text-xs font-semibold uppercase tracking-wider transition-transform",
-            isJoined ? "text-primary" : "text-accent group-hover:translate-x-0.5"
+            isJoined ? "text-primary" : "text-accent group-hover:translate-x-0.5",
           )}
         >
           {isJoined ? `${ctaLabel} ✓` : `${ctaLabel} →`}

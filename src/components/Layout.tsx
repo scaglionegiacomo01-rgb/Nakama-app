@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
@@ -86,17 +86,17 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: "/gallery", label: t("nav.gallery"), icon: Images },
   ];
 
-  // Mobile bottom — only the three core destinations, everything else lives
-  // in the "More" sheet so the main job of the app stays obvious.
+  // Mobile bottom — the four core destinations. Everything else lives in the
+  // "More" sheet, opened from the header, so the tab bar stays exactly four.
   const mobileBottom: NavItem[] = [
     { to: "/", label: t("nav.home"), icon: Home },
     { to: "/trips", label: t("nav.trips"), icon: MountainSnow },
+    { to: "/passport", label: t("nav.passport"), icon: BookOpen },
     { to: "/profile", label: t("nav.profile"), icon: User },
   ];
 
   // More sheet content
   const moreItems: NavItem[] = [
-    { to: "/passport", label: t("nav.passport"), icon: BookOpen },
     { to: "/values", label: t("nav.values"), icon: HeartHandshake },
     { to: "/how-it-works", label: t("nav.how_it_works"), icon: Compass },
     { to: "/cloud-nine", label: "Cloud Nine", icon: Shield },
@@ -306,6 +306,18 @@ export function Layout({ children }: { children: ReactNode }) {
 
             {user && <NotificationBell />}
 
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                aria-label={t("nav.more")}
+                onClick={() => setMoreOpen(true)}
+              >
+                <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={1.75} />
+              </Button>
+            )}
+
             {!user && (
               <Link to="/auth" search={{ mode: "login" }}>
                 <Button size="sm" variant="ghost">
@@ -325,7 +337,7 @@ export function Layout({ children }: { children: ReactNode }) {
           className="md:hidden fixed inset-x-0 z-40 px-4"
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="nakama-glass relative mx-auto grid max-w-xs grid-cols-4 h-16 rounded-3xl border border-white/15 shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.12),inset_0_-1px_0_rgb(0_0_0/0.3)]">
+          <div className="nakama-glass relative mx-auto grid max-w-xs grid-cols-4 items-center h-16 rounded-3xl border border-white/15 shadow-[0_8px_30px_-6px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.12),inset_0_-1px_0_rgb(0_0_0/0.3)]">
             <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
             {mobileBottom.map((l) => {
               const Icon = l.icon;
@@ -335,130 +347,115 @@ export function Layout({ children }: { children: ReactNode }) {
                   ? "nav-tap-home"
                   : l.to === "/trips"
                     ? "nav-tap-trips"
-                    : "nav-tap-profile";
+                    : l.to === "/passport"
+                      ? "nav-tap-passport"
+                      : "nav-tap-profile";
               return (
                 <Link
                   key={l.to}
                   to={l.to}
                   className={cn(
                     tapClass,
-                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-150",
-                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                    "relative z-10 justify-self-center flex items-center gap-1.5 transition-all duration-200",
+                    active
+                      ? "flex-row px-3.5 py-2 rounded-full bg-primary text-primary-foreground font-bold text-[11px]"
+                      : "flex-col gap-1 text-muted-foreground text-[10.5px] font-semibold hover:text-foreground",
                   )}
                 >
-                  {active && (
-                    <span className="animate-in zoom-in-50 fade-in duration-300 absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] via-[oklch(0.62_0.24_350)] to-[oklch(0.68_0.18_20)]" />
-                  )}
                   <Icon
                     className={cn(
-                      "w-[22px] h-[22px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-                      active ? "scale-110" : "scale-100",
+                      "transition-all",
+                      active ? "w-[18px] h-[18px]" : "w-[22px] h-[22px]",
                     )}
                     strokeWidth={active ? 2.25 : 1.75}
                   />
-                  <span className="leading-none">{l.label}</span>
+                  <span className="leading-none whitespace-nowrap">{l.label}</span>
                 </Link>
               );
             })}
-
-            <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-              <SheetTrigger asChild>
-                <button
-                  className={cn(
-                    "relative z-10 flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all duration-150 active:scale-90",
-                    moreOpen ? "text-primary" : "text-muted-foreground",
-                  )}
-                  aria-label={t("nav.more")}
-                >
-                  <MoreHorizontal
-                    className={cn(
-                      "w-[22px] h-[22px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-                      moreOpen ? "scale-110" : "scale-100",
-                    )}
-                    strokeWidth={1.75}
-                  />
-                  <span className="leading-none">{t("nav.more")}</span>
-                </button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] p-0 flex flex-col">
-                <SheetHeader className="px-5 pt-5 pb-2 text-left">
-                  <SheetTitle className="text-xl font-display">{t("nav.more")}</SheetTitle>
-                </SheetHeader>
-
-                <div className="overflow-y-auto">
-                  <div className="px-3 pb-2">
-                    {moreItems.map((m) => {
-                      const Icon = m.icon;
-                      return (
-                        <Link
-                          key={m.to}
-                          to={m.to}
-                          onClick={() => setMoreOpen(false)}
-                          className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
-                        >
-                          <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center">
-                            <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                          </span>
-                          {m.label}
-                        </Link>
-                      );
-                    })}
-
-                    {isAdmin && (
-                      <Link
-                        to="/admin"
-                        onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
-                      >
-                        <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
-                          <Shield className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                        </span>
-                        {t("nav.admin")}
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="border-t border-border px-5 py-3">
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
-                      <Globe className="w-3.5 h-3.5" />
-                      {t("nav.language")}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={lang === "en" ? "default" : "outline"}
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setLang("en")}
-                      >
-                        🇬🇧 English
-                      </Button>
-                      <Button
-                        variant={lang === "it" ? "default" : "outline"}
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setLang("it")}
-                      >
-                        🇮🇹 Italiano
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border px-3 py-3">
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-[0.98]"
-                    >
-                      <span className="w-9 h-9 rounded-xl bg-destructive/10 grid place-items-center">
-                        <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                      </span>
-                      {t("nav.logout")}
-                    </button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
         </nav>
+      )}
+
+      {user && (
+        <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+          <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] p-0 flex flex-col">
+            <SheetHeader className="px-5 pt-5 pb-2 text-left">
+              <SheetTitle className="text-xl font-display">{t("nav.more")}</SheetTitle>
+            </SheetHeader>
+
+            <div className="overflow-y-auto">
+              <div className="px-3 pb-2">
+                {moreItems.map((m) => {
+                  const Icon = m.icon;
+                  return (
+                    <Link
+                      key={m.to}
+                      to={m.to}
+                      onClick={() => setMoreOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
+                    >
+                      <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center">
+                        <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                      </span>
+                      {m.label}
+                    </Link>
+                  );
+                })}
+
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-foreground hover:bg-secondary/70 transition-all active:scale-[0.98]"
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
+                      <Shield className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    </span>
+                    {t("nav.admin")}
+                  </Link>
+                )}
+              </div>
+
+              <div className="border-t border-border px-5 py-3">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5" />
+                  {t("nav.language")}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={lang === "en" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setLang("en")}
+                  >
+                    🇬🇧 English
+                  </Button>
+                  <Button
+                    variant={lang === "it" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setLang("it")}
+                  >
+                    🇮🇹 Italiano
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-t border-border px-3 py-3">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-[0.98]"
+                >
+                  <span className="w-9 h-9 rounded-xl bg-destructive/10 grid place-items-center">
+                    <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  </span>
+                  {t("nav.logout")}
+                </button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
       <footer className={cn("border-t border-border mt-12", user ? "pb-32 md:pb-0" : "")}>

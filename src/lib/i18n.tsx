@@ -92,6 +92,9 @@ const en: Dict = {
   "home.rank_completed_n": "{n} completed trips",
   "home.rank_next_in": "{n} to {title}",
   "home.rank_maxed": "Top of the mountain.",
+  "home.departure": "Departure",
+  "home.meeting_point": "Meeting",
+  "home.seats": "Seats",
 
   // trip tabs
   "tab.overview": "Overview",
@@ -319,6 +322,9 @@ const it: Dict = {
   "home.rank_completed_n": "{n} viaggi completati",
   "home.rank_next_in": "{n} per {title}",
   "home.rank_maxed": "In cima alla montagna.",
+  "home.departure": "Partenza",
+  "home.meeting_point": "Ritrovo",
+  "home.seats": "Posti",
 
   "tab.overview": "Panoramica",
   "tab.checkin": "Check-in",
