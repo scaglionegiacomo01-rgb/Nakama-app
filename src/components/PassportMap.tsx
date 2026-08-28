@@ -17,7 +17,13 @@ function escapeHtml(value: string) {
 
 // Leaflet touches `document`/`navigator` at module scope, so it can only ever
 // be imported on the client — never as a static import (that would crash SSR).
-export function PassportMap({ places }: { places: PassportMapPlace[] }) {
+export function PassportMap({
+  places,
+  heightClassName = "h-[280px] sm:h-[380px]",
+}: {
+  places: PassportMapPlace[];
+  heightClassName?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -82,7 +88,7 @@ export function PassportMap({ places }: { places: PassportMapPlace[] }) {
     <div className="relative">
       <div
         ref={containerRef}
-        className="nakama-passport-map h-[280px] sm:h-[380px] w-full rounded-2xl overflow-hidden border border-border"
+        className={`nakama-passport-map ${heightClassName} w-full rounded-2xl overflow-hidden border border-border`}
       />
       {!ready && (
         <div className="absolute inset-0 grid place-items-center rounded-2xl bg-secondary text-sm text-muted-foreground">
