@@ -10,7 +10,6 @@ import {
   UserCog,
   Bell,
   Download,
-  Palette,
   ShieldCheck,
   Menu,
   X,
@@ -27,7 +26,6 @@ const NAV = [
   { to: "/admin/users", label: "Users", icon: UserCog },
   { to: "/admin/notifications", label: "Notifications", icon: Bell },
   { to: "/admin/exports", label: "Exports", icon: Download },
-  { to: "/admin/brand", label: "Brand", icon: Palette },
 ] as const;
 
 function isNavActive(pathname: string, to: string) {

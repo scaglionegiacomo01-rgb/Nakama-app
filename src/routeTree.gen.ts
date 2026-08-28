@@ -33,7 +33,6 @@ import { Route as AdminNotificationsRouteImport } from './routes/admin_.notifica
 import { Route as AdminGalleryRouteImport } from './routes/admin_.gallery'
 import { Route as AdminExportsRouteImport } from './routes/admin_.exports'
 import { Route as AdminCarpoolRouteImport } from './routes/admin_.carpool'
-import { Route as AdminBrandRouteImport } from './routes/admin_.brand'
 import { Route as AdminEventsIdRouteImport } from './routes/admin_.events.$id'
 
 const ValuesRoute = ValuesRouteImport.update({
@@ -156,11 +155,6 @@ const AdminCarpoolRoute = AdminCarpoolRouteImport.update({
   path: '/admin/carpool',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminBrandRoute = AdminBrandRouteImport.update({
-  id: '/admin_/brand',
-  path: '/admin/brand',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminEventsIdRoute = AdminEventsIdRouteImport.update({
   id: '/admin_/events/$id',
   path: '/admin/events/$id',
@@ -183,7 +177,6 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
-  '/admin/brand': typeof AdminBrandRoute
   '/admin/carpool': typeof AdminCarpoolRoute
   '/admin/exports': typeof AdminExportsRoute
   '/admin/gallery': typeof AdminGalleryRoute
@@ -211,7 +204,6 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
-  '/admin/brand': typeof AdminBrandRoute
   '/admin/carpool': typeof AdminCarpoolRoute
   '/admin/exports': typeof AdminExportsRoute
   '/admin/gallery': typeof AdminGalleryRoute
@@ -240,7 +232,6 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/trips': typeof TripsRoute
   '/values': typeof ValuesRoute
-  '/admin_/brand': typeof AdminBrandRoute
   '/admin_/carpool': typeof AdminCarpoolRoute
   '/admin_/exports': typeof AdminExportsRoute
   '/admin_/gallery': typeof AdminGalleryRoute
@@ -270,7 +261,6 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trips'
     | '/values'
-    | '/admin/brand'
     | '/admin/carpool'
     | '/admin/exports'
     | '/admin/gallery'
@@ -298,7 +288,6 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trips'
     | '/values'
-    | '/admin/brand'
     | '/admin/carpool'
     | '/admin/exports'
     | '/admin/gallery'
@@ -326,7 +315,6 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trips'
     | '/values'
-    | '/admin_/brand'
     | '/admin_/carpool'
     | '/admin_/exports'
     | '/admin_/gallery'
@@ -355,7 +343,6 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   TripsRoute: typeof TripsRoute
   ValuesRoute: typeof ValuesRoute
-  AdminBrandRoute: typeof AdminBrandRoute
   AdminCarpoolRoute: typeof AdminCarpoolRoute
   AdminExportsRoute: typeof AdminExportsRoute
   AdminGalleryRoute: typeof AdminGalleryRoute
@@ -538,13 +525,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCarpoolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin_/brand': {
-      id: '/admin_/brand'
-      path: '/admin/brand'
-      fullPath: '/admin/brand'
-      preLoaderRoute: typeof AdminBrandRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin_/events/$id': {
       id: '/admin_/events/$id'
       path: '/admin/events/$id'
@@ -571,7 +551,6 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   TripsRoute: TripsRoute,
   ValuesRoute: ValuesRoute,
-  AdminBrandRoute: AdminBrandRoute,
   AdminCarpoolRoute: AdminCarpoolRoute,
   AdminExportsRoute: AdminExportsRoute,
   AdminGalleryRoute: AdminGalleryRoute,
