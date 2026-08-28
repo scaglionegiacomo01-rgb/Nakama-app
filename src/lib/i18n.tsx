@@ -124,6 +124,11 @@ const en: Dict = {
   "trip.today_checkin_cta": "I'm here",
   "trip.today_checkin_done": "Checked in. See you out there.",
   "trip.today_checkin_open": "Open check-in",
+  "trip.difficulty": "Level",
+  "trip.filled": "Joined",
+  "trip.the_crew": "The crew",
+  "trip.carpool_teaser": "Find or offer a ride to the meeting point",
+  "trip.price_estimate": "Est.",
 
   // statuses
   "status.pending": "Pending",
@@ -361,6 +366,11 @@ const it: Dict = {
   "trip.today_checkin_cta": "Sono qui",
   "trip.today_checkin_done": "Check-in fatto. Ci vediamo lì.",
   "trip.today_checkin_open": "Apri check-in",
+  "trip.difficulty": "Livello",
+  "trip.filled": "Iscritti",
+  "trip.the_crew": "La crew",
+  "trip.carpool_teaser": "Trova o offri un passaggio fino al ritrovo",
+  "trip.price_estimate": "Stima",
 
   "status.pending": "In attesa",
   "status.confirmed": "Confermato",

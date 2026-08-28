@@ -23,6 +23,9 @@ import {
   ShieldCheck,
   Bell,
   ChevronDown,
+  ArrowLeft,
+  Share2,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { OverviewPanel } from "@/components/trip/OverviewPanel";
@@ -34,6 +37,9 @@ import { CheckinPanel } from "@/components/trip/CheckinPanel";
 import { GalleryPanel } from "@/components/trip/GalleryPanel";
 import { BeginnerChecklistPanel } from "@/components/trip/BeginnerChecklistPanel";
 import { EventTag } from "@/components/EventTag";
+import { StatTile } from "@/components/SectionLabel";
+import { UserAvatar } from "@/components/UserAvatar";
+import { photoFor } from "@/lib/photo-for";
 import { SEATS_DISCLAIMER } from "@/lib/levels";
 import { BEGINNER_TAGS } from "@/lib/checklist";
 import { Sparkles } from "lucide-react";
@@ -107,6 +113,28 @@ function TripDetail() {
           .eq("user_id", user!.id)
           .maybeSingle()
       ).data,
+  });
+
+  const { data: crew } = useQuery({
+    queryKey: ["trip-crew-preview", id],
+    queryFn: async () => {
+      const { data: regs, count } = await supabase
+        .from("event_registrations")
+        .select("user_id", { count: "exact" })
+        .eq("event_id", id)
+        .in("status", ["pending", "confirmed"]);
+      const ids = (regs ?? []).map((r) => r.user_id).slice(0, 5);
+      if (ids.length === 0) return { members: [], total: count ?? 0 };
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, username, profile_picture_url")
+        .in("user_id", ids);
+      const members = ids.map((uid) => {
+        const p = profs?.find((pr) => pr.user_id === uid);
+        return { url: p?.profile_picture_url ?? null, name: p?.full_name ?? p?.username ?? null };
+      });
+      return { members, total: count ?? 0 };
+    },
   });
 
   const [showForm, setShowForm] = useState(false);
@@ -279,108 +307,219 @@ function TripDetail() {
     }
   };
 
+  const { src: heroSrc, look: heroLook } = photoFor(event.destination);
+  const crewExtra = crew ? Math.max(0, crew.total - crew.members.length) : 0;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 pb-44 md:pb-32">
-      <Link to="/trips" className="text-sm text-muted-foreground hover:text-foreground">
-        {t("trip.all_trips")}
-      </Link>
-      <div className="mt-3 flex items-center gap-2 text-xs flex-wrap">
-        <span className="px-2 py-1 rounded-full bg-ice text-ice-foreground font-medium capitalize">
-          {event.type.replace("_", " ")}
-        </span>
-        <span className="px-2 py-1 rounded-full bg-secondary capitalize">{event.difficulty}</span>
-        {(event.tags ?? []).map((t: string) => (
-          <EventTag key={t} tag={t} />
-        ))}
-      </div>
-      <h1 className="mt-2 text-3xl md:text-4xl font-bold">{event.title}</h1>
-      <div className="mt-1 text-muted-foreground inline-flex items-center gap-1">
-        <MapPin className="w-4 h-4" />
-        {event.destination} ·{" "}
-        {new Date(event.date).toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}
+    <div className="max-w-4xl mx-auto pb-44 md:pb-32">
+      {/* Hero photo */}
+      <div className="relative h-[330px] -mx-0">
+        <img
+          src={heroSrc}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: heroLook.pos, transform: `scale(${heroLook.scale})` }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(180deg, ${heroLook.tint} 0%, transparent 30%, var(--background) 96%)`,
+          }}
+        />
+        <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+          <Link
+            to="/trips"
+            className="nakama-glass w-10 h-10 rounded-full grid place-items-center border border-white/12 text-white"
+            aria-label={t("trip.all_trips")}
+          >
+            <ArrowLeft className="w-[18px] h-[18px]" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              className="nakama-glass w-10 h-10 rounded-full grid place-items-center border border-white/12 text-white"
+              aria-label="Share"
+              onClick={() => {
+                if (navigator.share)
+                  navigator.share({ title: event.title, url: window.location.href });
+                else {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link copied");
+                }
+              }}
+            >
+              <Share2 className="w-[18px] h-[18px]" />
+            </button>
+            <button
+              className="nakama-glass w-10 h-10 rounded-full grid place-items-center border border-white/12 text-white"
+              aria-label="Bookmark"
+            >
+              <Bookmark className="w-[18px] h-[18px]" />
+            </button>
+          </div>
+        </div>
+        <div className="absolute inset-x-5 bottom-6">
+          <div className="text-nakama-coral text-[10px] font-bold uppercase tracking-[0.16em]">
+            {event.destination} ·{" "}
+            {new Date(event.date).toLocaleDateString(undefined, { day: "numeric", month: "long" })}
+          </div>
+          <h1 className="mt-1 font-display text-[40px] leading-[1.0] tracking-[-0.045em] text-white">
+            {event.title}
+          </h1>
+        </div>
       </div>
 
-      {/* Trip-day check-in priority card */}
-      {isParticipant && isToday(event.date) && (
-        <button
-          onClick={() => setActiveTab("checkin")}
-          className="mt-5 w-full text-left rounded-2xl bg-gradient-to-br from-primary via-summit to-ice text-primary-foreground p-5 shadow-lg hover:scale-[1.01] transition group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-background/20 backdrop-blur grid place-items-center">
-              <Bell className="w-6 h-6" />
+      {/* Sheet rising over the photo */}
+      <div className="relative -mt-[30px] rounded-t-[30px] bg-background px-4 pt-5">
+        <div className="flex items-center gap-2 text-xs flex-wrap">
+          <span className="px-2 py-1 rounded-full bg-ice text-ice-foreground font-medium capitalize">
+            {event.type.replace("_", " ")}
+          </span>
+          {(event.tags ?? []).map((tg: string) => (
+            <EventTag key={tg} tag={tg} />
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <StatTile value={event.departure_time ?? "—"} label={t("home.departure")} />
+          <StatTile value={event.difficulty} label={t("trip.difficulty")} />
+          <StatTile
+            value={`${event.max_participants - spotsLeft}/${event.max_participants}`}
+            label={t("trip.filled")}
+          />
+        </div>
+
+        {event.description && (
+          <p className="mt-4 text-[14.5px] leading-relaxed">
+            {event.description.split(/(?<=[.!?])\s+/).map((sentence, i) => (
+              <span key={i} className={i > 0 ? "text-muted-foreground" : ""}>
+                {sentence}{" "}
+              </span>
+            ))}
+          </p>
+        )}
+
+        {/* Crew preview */}
+        {crew && crew.total > 0 && (
+          <div className="mt-6">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              {t("trip.the_crew")}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.2em] opacity-80">
-                {t("trip.today_checkin_title")}
-              </div>
-              <div className="font-display font-bold text-xl mt-0.5">
-                {t("trip.today_checkin_open")} →
-              </div>
-              <div className="text-sm opacity-90 mt-1">{t("trip.today_checkin_cta")}</div>
+            <div className="mt-2.5 flex gap-3 overflow-x-auto pb-1">
+              {crew.members.map((m, i) => (
+                <div key={i} className="flex flex-col items-center gap-1 shrink-0 w-14">
+                  <UserAvatar url={m.url} name={m.name} size="lg" />
+                  <span className="text-[10px] text-muted-foreground truncate max-w-full">
+                    {m.name?.split(" ")[0] ?? "—"}
+                  </span>
+                </div>
+              ))}
+              {crewExtra > 0 && (
+                <div className="flex flex-col items-center gap-1 shrink-0 w-14">
+                  <div className="w-14 h-14 rounded-full border border-dashed border-border grid place-items-center text-xs font-semibold text-muted-foreground">
+                    +{crewExtra}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </button>
-      )}
+        )}
 
-      <Tabs value={effectiveTab} onValueChange={setActiveTab} className="mt-6">
-        <TabsList className="w-full overflow-x-auto justify-start flex-nowrap">
-          <TabsTrigger value="overview">{t("tab.overview")}</TabsTrigger>
-          {showCrewTabs && <TabsTrigger value="checkin">{t("tab.checkin")}</TabsTrigger>}
-          <TabsTrigger value="who">{t("tab.who")}</TabsTrigger>
-          {showCrewTabs && <TabsTrigger value="carpool">{t("tab.carpool")}</TabsTrigger>}
-          {showCrewTabs && <TabsTrigger value="chat">{t("tab.chat")}</TabsTrigger>}
-          {showCrewTabs && <TabsTrigger value="gallery">{t("tab.gallery")}</TabsTrigger>}
-          <TabsTrigger value="safety">{t("tab.safety")}</TabsTrigger>
-          {showAssistTab && <TabsTrigger value="assist">{t("tab.assist")}</TabsTrigger>}
-        </TabsList>
-        <TabsContent value="overview" className="mt-6">
-          <OverviewPanel event={event} spotsLeft={spotsLeft} />
-        </TabsContent>
-        {showCrewTabs && (
-          <TabsContent value="checkin" className="mt-6">
-            <CheckinPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} />
-          </TabsContent>
+        {/* Carpool teaser */}
+        {(isParticipant || isAdmin) && (
+          <button
+            onClick={() => setActiveTab("carpool")}
+            className="mt-5 w-full text-left rounded-2xl bg-gradient-to-br from-[oklch(0.40_0.17_5)] to-[oklch(0.34_0.07_320)] p-4 flex items-center gap-3.5 text-white"
+          >
+            <div className="w-[42px] h-[42px] rounded-2xl bg-white/15 grid place-items-center shrink-0">
+              <Car className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-display text-base leading-tight">{t("tab.carpool")}</div>
+              <div className="text-xs opacity-85 mt-0.5">{t("trip.carpool_teaser")}</div>
+            </div>
+          </button>
         )}
-        <TabsContent value="who" className="mt-6">
-          <WhosGoingPanel eventId={id} isAdmin={isAdmin} />
-        </TabsContent>
-        {showCrewTabs && (
-          <TabsContent value="carpool" className="mt-6">
-            <CarpoolPanel eventId={id} isAdmin={isAdmin} />
-          </TabsContent>
+      </div>
+
+      <div className="px-4">
+        {/* Trip-day check-in priority card */}
+        {isParticipant && isToday(event.date) && (
+          <button
+            onClick={() => setActiveTab("checkin")}
+            className="mt-5 w-full text-left rounded-2xl bg-gradient-to-br from-primary via-summit to-ice text-primary-foreground p-5 shadow-lg hover:scale-[1.01] transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-background/20 backdrop-blur grid place-items-center">
+                <Bell className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] uppercase tracking-[0.2em] opacity-80">
+                  {t("trip.today_checkin_title")}
+                </div>
+                <div className="font-display font-bold text-xl mt-0.5">
+                  {t("trip.today_checkin_open")} →
+                </div>
+                <div className="text-sm opacity-90 mt-1">{t("trip.today_checkin_cta")}</div>
+              </div>
+            </div>
+          </button>
         )}
-        {showCrewTabs && (
-          <TabsContent value="chat" className="mt-6">
-            <TripChatPanel eventId={id} canPost={canChat} isAdmin={isAdmin} />
+
+        <Tabs value={effectiveTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsList className="w-full overflow-x-auto justify-start flex-nowrap">
+            <TabsTrigger value="overview">{t("tab.overview")}</TabsTrigger>
+            {showCrewTabs && <TabsTrigger value="checkin">{t("tab.checkin")}</TabsTrigger>}
+            <TabsTrigger value="who">{t("tab.who")}</TabsTrigger>
+            {showCrewTabs && <TabsTrigger value="carpool">{t("tab.carpool")}</TabsTrigger>}
+            {showCrewTabs && <TabsTrigger value="chat">{t("tab.chat")}</TabsTrigger>}
+            {showCrewTabs && <TabsTrigger value="gallery">{t("tab.gallery")}</TabsTrigger>}
+            <TabsTrigger value="safety">{t("tab.safety")}</TabsTrigger>
+            {showAssistTab && <TabsTrigger value="assist">{t("tab.assist")}</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="overview" className="mt-6">
+            <OverviewPanel event={event} spotsLeft={spotsLeft} />
           </TabsContent>
-        )}
-        {showCrewTabs && (
-          <TabsContent value="gallery" className="mt-6">
-            <GalleryPanel
-              event={event}
-              isAdmin={isAdmin}
-              isParticipant={isParticipant && myReg?.status === "confirmed"}
-            />
+          {showCrewTabs && (
+            <TabsContent value="checkin" className="mt-6">
+              <CheckinPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} />
+            </TabsContent>
+          )}
+          <TabsContent value="who" className="mt-6">
+            <WhosGoingPanel eventId={id} isAdmin={isAdmin} />
           </TabsContent>
-        )}
-        <TabsContent value="safety" className="mt-6">
-          <SafetyPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} />
-        </TabsContent>
-        {showAssistTab && (
-          <TabsContent value="assist" className="mt-6">
-            <BeginnerChecklistPanel eventId={id} />
+          {showCrewTabs && (
+            <TabsContent value="carpool" className="mt-6">
+              <CarpoolPanel eventId={id} isAdmin={isAdmin} />
+            </TabsContent>
+          )}
+          {showCrewTabs && (
+            <TabsContent value="chat" className="mt-6">
+              <TripChatPanel eventId={id} canPost={canChat} isAdmin={isAdmin} />
+            </TabsContent>
+          )}
+          {showCrewTabs && (
+            <TabsContent value="gallery" className="mt-6">
+              <GalleryPanel
+                event={event}
+                isAdmin={isAdmin}
+                isParticipant={isParticipant && myReg?.status === "confirmed"}
+              />
+            </TabsContent>
+          )}
+          <TabsContent value="safety" className="mt-6">
+            <SafetyPanel event={event} isAdmin={isAdmin} isParticipant={isParticipant} />
           </TabsContent>
-        )}
-      </Tabs>
+          {showAssistTab && (
+            <TabsContent value="assist" className="mt-6">
+              <BeginnerChecklistPanel eventId={id} />
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
 
       {/* Sticky join bar */}
       <div
-        className="fixed inset-x-0 z-50 bg-background/95 backdrop-blur border-t border-border p-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-0"
+        className="nakama-glass fixed inset-x-0 z-50 border-t border-white/10 p-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-0"
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
         <div className="max-w-4xl mx-auto">
@@ -416,21 +555,32 @@ function TripDetail() {
               <div className="text-sm text-muted-foreground">Your request was not accepted.</div>
             </div>
           ) : (
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={() =>
-                user
-                  ? setShowForm(true)
-                  : navigate({ to: "/auth", search: { mode: "login", redirect: `/trips/${id}` } })
-              }
-            >
-              {user
-                ? spotsLeft > 0
-                  ? t("trip.join")
-                  : t("trip.join_waitlist")
-                : t("trip.signin_to_join")}
-            </Button>
+            <div className="flex items-center gap-3">
+              {event.price_estimate != null && (
+                <div className="shrink-0">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground whitespace-nowrap">
+                    {t("trip.price_estimate")}
+                  </div>
+                  <div className="font-display text-[23px] leading-none tracking-[-0.03em]">
+                    ~{event.price_estimate}€
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() =>
+                  user
+                    ? setShowForm(true)
+                    : navigate({ to: "/auth", search: { mode: "login", redirect: `/trips/${id}` } })
+                }
+                className="nk-sheen flex-1 h-[52px] rounded-2xl bg-gradient-to-br from-[oklch(0.45_0.19_5)] to-[oklch(0.36_0.15_355)] text-white font-semibold text-[15px] shadow-[0_10px_26px_-12px_oklch(0.40_0.17_5/0.9)]"
+              >
+                {user
+                  ? spotsLeft > 0
+                    ? t("trip.join")
+                    : t("trip.join_waitlist")
+                  : t("trip.signin_to_join")}
+              </button>
+            </div>
           )}
         </div>
       </div>
