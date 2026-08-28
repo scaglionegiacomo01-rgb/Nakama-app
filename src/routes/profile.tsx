@@ -13,11 +13,12 @@ import {
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
+import { StatTile } from "@/components/SectionLabel";
 import { SNOWBOARD_LEVELS, MOUNTAIN_LEVELS } from "@/lib/levels";
-import { getRank } from "@/lib/ranks";
+import { getRank, RANKS } from "@/lib/ranks";
 import { useI18n } from "@/lib/i18n";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
-import { Stat, InfoItem } from "@/components/profile/ProfileFields";
+import { InfoItem } from "@/components/profile/ProfileFields";
 import {
   Camera,
   MapPin,
@@ -75,11 +76,11 @@ function Profile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("event_registrations")
-        .select("status, events(id, date, status)")
+        .select("status, events(id, date, status, destination)")
         .eq("user_id", user!.id);
       return (data ?? []) as Array<{
         status: string;
-        events: { id: string; date: string; status: string } | null;
+        events: { id: string; date: string; status: string; destination: string } | null;
       }>;
     },
   });
@@ -87,18 +88,40 @@ function Profile() {
   const tripStats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const list = (regs ?? []).filter((r) => r.events);
-    const completed = list.filter(
-      (r) => r.status === "confirmed" && r.events!.status === "completed"
-    ).length;
+    const completedTrips = list.filter(
+      (r) => r.status === "confirmed" && r.events!.status === "completed",
+    );
     const upcoming = list.filter(
       (r) =>
         ["pending", "confirmed", "waitlisted"].includes(r.status) &&
         r.events!.date >= today &&
         r.events!.status !== "completed" &&
-        r.events!.status !== "cancelled"
+        r.events!.status !== "cancelled",
     ).length;
-    return { completed, upcoming };
+    const locations = new Set(
+      completedTrips.map((r) => r.events!.destination.split(",")[0].trim()),
+    );
+    return {
+      completed: completedTrips.length,
+      upcoming,
+      locations: locations.size,
+      completedEventIds: completedTrips.map((r) => r.events!.id),
+    };
   }, [regs]);
+
+  const { data: crewCount } = useQuery({
+    queryKey: ["profile-crew-count", user?.id, tripStats.completedEventIds.join(",")],
+    enabled: !!user && tripStats.completedEventIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("event_registrations")
+        .select("user_id")
+        .in("event_id", tripStats.completedEventIds)
+        .eq("status", "confirmed")
+        .neq("user_id", user!.id);
+      return new Set((data ?? []).map((r) => r.user_id)).size;
+    },
+  });
 
   const uploadAvatar = async (file: File) => {
     if (!user) return;
@@ -151,8 +174,7 @@ function Profile() {
         city: (form.city as string) ?? null,
         snowboard_level:
           (form.snowboard_level as "beginner" | "intermediate" | "advanced" | "expert") || null,
-        mountain_level:
-          (form.mountain_level as "beginner" | "intermediate" | "advanced") || null,
+        mountain_level: (form.mountain_level as "beginner" | "intermediate" | "advanced") || null,
         has_equipment: !!form.has_equipment,
         needs_rental: !!form.needs_rental,
         has_car: !!form.has_car,
@@ -179,8 +201,7 @@ function Profile() {
     }
   };
 
-  if (loading || isLoading)
-    return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading || isLoading) return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
 
   const f = form as Record<string, string | boolean | number | string[]>;
 
@@ -193,7 +214,11 @@ function Profile() {
     { key: "snowboard_level", label: "Snowboard level", filled: !!(f.snowboard_level as string) },
     { key: "mountain_level", label: "Mountain level", filled: !!(f.mountain_level as string) },
     { key: "bio", label: "Bio", filled: !!(f.bio as string)?.trim() },
-    { key: "emergency_contact_name", label: "Emergency contact", filled: !!(f.emergency_contact_name as string)?.trim() },
+    {
+      key: "emergency_contact_name",
+      label: "Emergency contact",
+      filled: !!(f.emergency_contact_name as string)?.trim(),
+    },
   ];
   const completedFields = completionFields.filter((c) => c.filled).length;
   const completionPct = Math.round((completedFields / completionFields.length) * 100);
@@ -207,73 +232,88 @@ function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-10 md:pt-10">
-      {/* ====== HERO CARD ====== */}
-      <section className="rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-secondary/40 p-5 md:p-6">
-        <div className="flex items-start gap-4">
-          <div className="relative shrink-0">
-            <UserAvatar
-              url={f.profile_picture_url as string}
-              name={displayName}
-              size="xl"
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-md hover:scale-105 transition"
-              aria-label="Change avatar"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadAvatar(file);
-              }}
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">
-              {t("profile.your_card")}
-            </div>
-            <div className="mt-0.5 font-display font-bold text-xl md:text-2xl truncate">
-              {displayName}
-            </div>
-            {f.username && (
-              <div className="text-sm text-muted-foreground truncate">
-                @{f.username as string}
+      {/* ====== HERO ====== */}
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 md:p-6">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 15% 0%, oklch(0.40 0.17 5 / 0.28) 0%, transparent 55%), radial-gradient(circle at 100% 20%, oklch(0.34 0.07 320 / 0.30) 0%, transparent 55%)",
+          }}
+        />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3.5 min-w-0">
+            <div className="relative shrink-0">
+              <div className="rounded-full ring-2 ring-primary/50 ring-offset-2 ring-offset-card">
+                <UserAvatar
+                  url={f.profile_picture_url as string}
+                  name={displayName}
+                  className="h-[66px] w-[66px] text-lg"
+                />
               </div>
-            )}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <RankBadge completed={tripStats.completed} size="sm" />
-              {f.city && (
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="w-3 h-3" />
-                  {f.city as string}
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-md hover:scale-105 transition"
+                aria-label="Change avatar"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadAvatar(file);
+                }}
+              />
             </div>
-            {uploading && (
-              <div className="mt-2 text-xs text-muted-foreground">Uploading…</div>
-            )}
+            <div className="min-w-0 flex-1 pt-0.5">
+              <div className="font-display text-[25px] leading-[1.05] tracking-[-0.045em] whitespace-nowrap truncate">
+                {displayName}
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <RankBadge completed={tripStats.completed} size="sm" />
+                {f.city && (
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    {f.city as string}
+                  </span>
+                )}
+              </div>
+              {uploading && <div className="mt-1.5 text-xs text-muted-foreground">Uploading…</div>}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditMode(true);
+              setTimeout(
+                () =>
+                  document
+                    .getElementById("edit-profile")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                50,
+              );
+            }}
+            className="w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"
+            aria-label={t("profile.edit")}
+          >
+            <Pencil className="w-[18px] h-[18px]" />
+          </button>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2">
-          <Stat
-            label={t("profile.completed_trips")}
-            value={String(tripStats.completed)}
-          />
-          <Stat
-            label={t("profile.upcoming_trips")}
-            value={String(tripStats.upcoming)}
-          />
-          <Stat label="Level" value={sbLevel ?? "—"} />
+        <div className="relative mt-5 grid grid-cols-3 gap-2.5">
+          <StatTile value={tripStats.completed} label={t("profile.completed_trips")} />
+          <StatTile value={tripStats.locations} label={t("profile.locations")} />
+          <StatTile value={crewCount ?? "—"} label={t("profile.nakama_met")} />
         </div>
       </section>
+
+      {/* ====== NEXT RANK ====== */}
+      <NextRankCard completed={tripStats.completed} />
 
       {/* ====== COMPLETION ====== */}
       {completionPct < 100 && (
@@ -309,7 +349,7 @@ function Profile() {
                   document
                     .getElementById("edit-profile")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-                50
+                50,
               );
             }}
           >
@@ -332,10 +372,7 @@ function Profile() {
             label="Own gear"
             value={f.has_equipment ? "Yes" : f.needs_rental ? "Needs rental" : "—"}
           />
-          <InfoItem
-            label="Brands"
-            value={brands.length > 0 ? `${brands.length}` : "—"}
-          />
+          <InfoItem label="Brands" value={brands.length > 0 ? `${brands.length}` : "—"} />
         </div>
         {brands.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -399,10 +436,7 @@ function Profile() {
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <InfoItem label="Phone" value={(f.phone as string) || "—"} />
-                <InfoItem
-                  label="DOB"
-                  value={(f.date_of_birth as string) || "—"}
-                />
+                <InfoItem label="DOB" value={(f.date_of_birth as string) || "—"} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -414,14 +448,8 @@ function Profile() {
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <InfoItem
-                  label="Name"
-                  value={(f.emergency_contact_name as string) || "—"}
-                />
-                <InfoItem
-                  label="Phone"
-                  value={(f.emergency_contact_phone as string) || "—"}
-                />
+                <InfoItem label="Name" value={(f.emergency_contact_name as string) || "—"} />
+                <InfoItem label="Phone" value={(f.emergency_contact_phone as string) || "—"} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -434,15 +462,9 @@ function Profile() {
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <InfoItem label="Has car" value={f.has_car ? "Yes" : "No"} />
-                <InfoItem
-                  label="Willing to drive"
-                  value={f.willing_to_drive ? "Yes" : "No"}
-                />
+                <InfoItem label="Willing to drive" value={f.willing_to_drive ? "Yes" : "No"} />
                 <InfoItem label="Seats" value={String(Number(f.car_seats) || 0)} />
-                <InfoItem
-                  label="Needs rental"
-                  value={f.needs_rental ? "Yes" : "No"}
-                />
+                <InfoItem label="Needs rental" value={f.needs_rental ? "Yes" : "No"} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -473,5 +495,44 @@ function Profile() {
         />
       )}
     </div>
+  );
+}
+
+function NextRankCard({ completed }: { completed: number }) {
+  const { t } = useI18n();
+  const rank = getRank(completed);
+  const idx = RANKS.findIndex((r) => r.title === rank.title);
+  const next = RANKS[idx + 1];
+
+  return (
+    <section className="mt-4 rounded-2xl border border-border bg-card p-4 md:p-5">
+      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+        {next ? t("profile.next_rank") : t("profile.next_rank_maxed")}
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <div className="text-3xl shrink-0">{next ? next.emoji : rank.emoji}</div>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-lg leading-tight truncate">
+            {next ? next.title : rank.title}
+          </div>
+          {next && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {next.min - completed} {next.min - completed === 1 ? "trip" : "trips"} to go
+            </div>
+          )}
+        </div>
+      </div>
+      {next && (
+        <div className="mt-3 relative h-[5px] rounded-full bg-secondary overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] to-[oklch(0.62_0.24_350)]"
+            style={{
+              width: `${Math.min(100, Math.round(((completed - rank.min) / (next.min - rank.min)) * 100))}%`,
+            }}
+          />
+        </div>
+      )}
+      <p className="mt-3 text-sm italic text-muted-foreground">"{rank.description}"</p>
+    </section>
   );
 }

@@ -191,9 +191,13 @@ const en: Dict = {
   "profile.section_safety": "Safety & emergency",
   "profile.section_preferences": "Bio & agreements",
   "profile.upcoming_trips": "Upcoming trips",
-  "profile.completed_trips": "Completed trips",
+  "profile.completed_trips": "Trips",
   "profile.open_passport": "Open Passport",
   "profile.open_gallery": "Open Gallery",
+  "profile.locations": "Places",
+  "profile.nakama_met": "Crew met",
+  "profile.next_rank": "Next rank",
+  "profile.next_rank_maxed": "Top of the mountain",
 
   // auth
   "auth.signup_title": "Join the crew",
@@ -431,9 +435,13 @@ const it: Dict = {
   "profile.section_safety": "Sicurezza ed emergenza",
   "profile.section_preferences": "Bio e accordi",
   "profile.upcoming_trips": "Viaggi in arrivo",
-  "profile.completed_trips": "Viaggi completati",
+  "profile.completed_trips": "Viaggi",
   "profile.open_passport": "Apri Passaporto",
   "profile.open_gallery": "Apri Galleria",
+  "profile.locations": "Luoghi",
+  "profile.nakama_met": "Nakama",
+  "profile.next_rank": "Prossimo rango",
+  "profile.next_rank_maxed": "In cima alla montagna",
 
   // auth
   "auth.signup_title": "Unisciti alla crew",
