@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { RankLegend } from "@/components/RankLegend";
 import { getRank } from "@/lib/ranks";
-import { Award, Mountain, Snowflake } from "lucide-react";
+import { Award } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { SectionLabel } from "@/components/SectionLabel";
 
 export const Route = createFileRoute("/ranks")({ component: RanksPage });
 
@@ -23,62 +24,84 @@ function RanksPage() {
         .eq("user_id", user!.id)
         .eq("status", "confirmed");
       const rows = (data ?? []) as unknown as { events: { status: string } | null }[];
-      return rows.filter(r => r.events?.status === "completed").length;
+      return rows.filter((r) => r.events?.status === "completed").length;
     },
   });
 
   const r = typeof completed === "number" ? getRank(completed) : null;
-  const progress = r && r.next ? Math.min(100, ((completed! - r.min) / (r.next - r.min)) * 100) : 100;
+  const progress =
+    r && r.next ? Math.min(100, ((completed! - r.min) / (r.next - r.min)) * 100) : 100;
   const remaining = r && r.next ? r.next - completed! : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-summit to-ice p-6 md:p-8 text-primary-foreground shadow-xl">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] opacity-80">
-          <Award className="w-3.5 h-3.5" /> {t("nav.ranks")}
-        </div>
-        <h1 className="mt-2 text-3xl md:text-5xl font-display font-bold">{t("ranks.title")}</h1>
-        <p className="mt-3 opacity-90 max-w-2xl leading-relaxed">{t("ranks.subtitle")}</p>
-      </div>
-
-      {r && (
-        <section className="mt-8 rounded-2xl bg-card border border-border p-5 md:p-6">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-4xl">{r.emoji}</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("ranks.your_rank")}</div>
-              <div className="font-display font-bold text-2xl">{r.title}</div>
-              <div className="text-sm text-muted-foreground">{completed} {completed === 1 ? t("ranks.trip") : t("ranks.trips")}</div>
-            </div>
+    <div className="max-w-3xl mx-auto px-5 pt-6 pb-10 md:pt-10 md:max-w-6xl">
+      <div className="relative overflow-hidden rounded-[26px] border border-[oklch(0.62_0.24_350/0.3)] p-5 md:p-8">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.40 0.17 5), oklch(0.34 0.07 320) 60%, oklch(0.26 0.030 295))",
+          }}
+        />
+        <div className="relative text-primary-foreground">
+          <div className="inline-flex items-center gap-[7px] text-[9.5px] font-bold uppercase tracking-[0.22em] opacity-85 whitespace-nowrap">
+            <Award className="w-[13px] h-[13px]" /> {t("ranks.title")}
           </div>
-          {r.next && r.nextTitle && (
+          {r && (
             <>
-              <div className="mt-4 h-2 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-primary to-summit transition-all" style={{ width: `${progress}%` }} />
+              <div className="mt-2.5 flex items-center gap-3.5">
+                <div className="text-[40px] leading-none shrink-0">{r.emoji}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9.5px] font-bold uppercase tracking-[0.16em] opacity-85 whitespace-nowrap">
+                    {t("ranks.your_rank")}
+                  </div>
+                  <div className="mt-1 font-display text-[28px] leading-[1.02] tracking-[-0.045em] whitespace-nowrap truncate">
+                    {r.title}
+                  </div>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("ranks.until_next", { n: remaining, tripWord: remaining === 1 ? t("ranks.trip") : t("ranks.trips"), title: r.nextTitle })}
-              </p>
+              {r.next && r.nextTitle ? (
+                <>
+                  <div className="mt-4 h-[7px] rounded-full bg-[rgba(11,15,18,.35)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary-foreground transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-[9px] text-xs opacity-90">
+                    {t("ranks.until_next", {
+                      n: remaining,
+                      tripWord: remaining === 1 ? t("ranks.trip") : t("ranks.trips"),
+                      title: r.nextTitle,
+                    })}{" "}
+                    · {completed} {completed === 1 ? t("ranks.trip") : t("ranks.trips")}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4 text-xs opacity-90">
+                  {completed} {t("ranks.trips_completed")}
+                </p>
+              )}
             </>
           )}
-        </section>
-      )}
+        </div>
+      </div>
 
-      <section className="mt-10">
-        <h2 className="font-display font-bold text-2xl inline-flex items-center gap-2">
-          <Snowflake className="w-5 h-5 text-primary" /> All ranks
-        </h2>
-        <div className="mt-4">
+      <section className="mt-5">
+        <SectionLabel>{t("ranks.all_ranks")}</SectionLabel>
+        <div className="mt-2.5">
           <RankLegend completed={completed} />
         </div>
       </section>
 
-      <div className="mt-10 rounded-2xl bg-ice/30 border border-ice p-5 text-center">
-        <p className="font-display text-lg inline-flex items-center gap-2 justify-center">
-          <Mountain className="w-5 h-5" /> Nobody gets left behind.
+      <div className="mt-4 rounded-[18px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-[14px_16px] text-center">
+        <p className="font-display text-base tracking-[-0.03em]">{t("ranks.closing_title")}</p>
+        <p className="mt-[5px] text-[11.5px] text-muted-foreground">
+          {t("ranks.closing_subtitle")}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">Ride at your pace — the crew is waiting at the bottom of the lift.</p>
-        <Link to="/trips" className="inline-block mt-3 text-sm text-accent hover:underline">Explore upcoming trips →</Link>
+        <Link to="/trips" className="inline-block mt-3 text-sm text-accent hover:underline">
+          {t("ranks.explore_trips")} →
+        </Link>
       </div>
     </div>
   );

@@ -147,6 +147,12 @@ const en: Dict = {
   "ranks.until_next": "{n} more {tripWord} until {title}",
   "ranks.trip": "trip",
   "ranks.trips": "trips",
+  "ranks.all_ranks": "All ranks",
+  "ranks.now": "Now",
+  "ranks.here": "you're here",
+  "ranks.closing_title": "Nobody gets left behind.",
+  "ranks.closing_subtitle": "Ride at your pace — the crew is waiting at the bottom of the lift.",
+  "ranks.explore_trips": "Explore upcoming trips",
 
   // trips tabs
   "trips.title": "Trips",
@@ -391,6 +397,12 @@ const it: Dict = {
   "ranks.until_next": "Ancora {n} {tripWord} per diventare {title}",
   "ranks.trip": "viaggio",
   "ranks.trips": "viaggi",
+  "ranks.all_ranks": "Tutti i ranghi",
+  "ranks.now": "Ora",
+  "ranks.here": "sei qui",
+  "ranks.closing_title": "Nobody gets left behind.",
+  "ranks.closing_subtitle": "Vai al tuo ritmo — la crew aspetta in fondo alla seggiovia.",
+  "ranks.explore_trips": "Scopri i prossimi viaggi",
 
   // trips tabs
   "trips.title": "Viaggi",
