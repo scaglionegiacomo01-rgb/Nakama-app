@@ -17,12 +17,16 @@ const ACTIVE_STATUSES = ["pending", "confirmed", "waitlisted"] as const;
 
 export const Route = createFileRoute("/trips")({
   head: () => ({ meta: [{ title: "Trips — Nakama" }] }),
-  validateSearch: (s: Record<string, unknown>): { tab?: TabValue } => {
+  validateSearch: (s: Record<string, unknown>): { tab?: TabValue; q?: string } => {
     const tab = s.tab as string | undefined;
     // "past" and "cancelled" were separate tabs before they were merged into
     // "archive" — keep old links (and bookmarks) working.
-    if (tab === "past" || tab === "cancelled") return { tab: "archive" };
-    return { tab: TABS.includes(tab as TabValue) ? (tab as TabValue) : undefined };
+    if (tab === "past" || tab === "cancelled")
+      return { tab: "archive", q: s.q as string | undefined };
+    return {
+      tab: TABS.includes(tab as TabValue) ? (tab as TabValue) : undefined,
+      q: typeof s.q === "string" ? s.q : undefined,
+    };
   },
   component: Trips,
 });
@@ -39,8 +43,8 @@ function Trips() {
   const navigate = useNavigate({ from: "/trips" });
   const search = Route.useSearch();
   const tab: TabValue = search.tab ?? "available";
-  const [showSearch, setShowSearch] = useState(false);
-  const [query, setQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(!!search.q);
+  const [query, setQuery] = useState(search.q ?? "");
 
   // when user logs out from "my-trips" tab, fall back to available
   useEffect(() => {

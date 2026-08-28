@@ -25,6 +25,9 @@ const en: Dict = {
   "nav.cloud_nine": "Cloud Nine",
   "nav.settings": "Settings",
   "nav.notifications": "Notifications",
+  "nav.propose_trip": "Propose a trip",
+  "nav.cloud_nine_tagline": "Nobody gets left behind.",
+  "cloudnine.sidebar_title": "The crew's 9 rules",
 
   // notification bell
   "notif.title": "Notifications",
@@ -279,6 +282,9 @@ const it: Dict = {
   "nav.cloud_nine": "Cloud Nine",
   "nav.settings": "Impostazioni",
   "nav.notifications": "Notifiche",
+  "nav.propose_trip": "Proponi un'uscita",
+  "nav.cloud_nine_tagline": "Nobody gets left behind.",
+  "cloudnine.sidebar_title": "Le 9 regole della crew",
 
   // notification bell
   "notif.title": "Notifiche",
