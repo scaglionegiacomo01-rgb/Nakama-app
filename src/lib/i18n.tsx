@@ -95,6 +95,10 @@ const en: Dict = {
   "home.departure": "Departure",
   "home.meeting_point": "Meeting",
   "home.seats": "Seats",
+  "home.season": "Season 2026",
+  "home.stat_riders": "Riders",
+  "home.stat_open_trips": "Open trips",
+  "home.stat_left_behind": "Left behind",
 
   // trip tabs
   "tab.overview": "Overview",
@@ -325,6 +329,10 @@ const it: Dict = {
   "home.departure": "Partenza",
   "home.meeting_point": "Ritrovo",
   "home.seats": "Posti",
+  "home.season": "Stagione 2026",
+  "home.stat_riders": "Rider",
+  "home.stat_open_trips": "Uscite aperte",
+  "home.stat_left_behind": "Lasciati indietro",
 
   "tab.overview": "Panoramica",
   "tab.checkin": "Check-in",
