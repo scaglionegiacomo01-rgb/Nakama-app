@@ -15,7 +15,7 @@ import {
   Compass,
   type LucideIcon,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -40,6 +40,17 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { lang, setLang, t } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    // iOS Safari only applies the CSS :active pseudo-class on tap when some
+    // element in the document has a touchstart listener — otherwise it skips
+    // straight to the click, so :active-triggered animations (the bottom nav
+    // tap animations) never play. A single no-op listener unlocks :active
+    // for the whole app.
+    const noop = () => {};
+    document.addEventListener("touchstart", noop, { passive: true });
+    return () => document.removeEventListener("touchstart", noop);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
