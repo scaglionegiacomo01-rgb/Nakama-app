@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PhotoCard } from "@/components/PhotoCard";
 import { typeLabel } from "@/components/EventCard";
-import { Calendar, MapPin, Car, CheckCircle2, Search, X } from "lucide-react";
+import { Calendar, MapPin, Car, CheckCircle2, Search, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Database } from "@/integrations/supabase/types";
 
 type TabValue = "available" | "my-trips" | "archive";
 const TABS: TabValue[] = ["available", "my-trips", "archive"];
@@ -65,13 +66,13 @@ function Trips() {
           <div className="text-nakama-coral text-[10px] font-bold uppercase tracking-[0.22em] whitespace-nowrap">
             {openCount != null ? t("trips.open_count", { n: openCount }) : t("trips.subtitle")}
           </div>
-          <h1 className="mt-1 font-display text-[38px] leading-[1.04] tracking-[-0.045em]">
+          <h1 className="mt-1 font-display text-[38px] lg:text-[46px] leading-[1.04] lg:leading-[1.0] tracking-[-0.045em]">
             {t("trips.title")}
           </h1>
         </div>
         <button
           onClick={() => setShowSearch((s) => !s)}
-          className="w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"
+          className="lg:hidden w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"
           aria-label={t("trips.search")}
         >
           {showSearch ? (
@@ -88,7 +89,7 @@ function Trips() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("trips.search_placeholder")}
-          className="mt-3 w-full h-11 rounded-2xl bg-secondary px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="lg:hidden mt-3 w-full h-11 rounded-2xl bg-secondary px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
       )}
 
@@ -219,7 +220,7 @@ function AvailableList({ query }: { query: string }) {
 
   return (
     <div>
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 lg:flex-wrap lg:overflow-visible lg:mx-0 lg:px-0">
         <FilterChip active={typeFilter === null} onClick={() => setTypeFilter(null)}>
           {t("trips.filter_all")}
         </FilterChip>
@@ -235,8 +236,70 @@ function AvailableList({ query }: { query: string }) {
           <EmptyState icon={Search} text={t("trips.empty_filtered")} />
         </div>
       ) : (
-        <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {filtered.map((e) => (
+        <>
+          <div className="lg:hidden mt-4 grid md:grid-cols-2 gap-3.5">
+            {filtered.map((e) => (
+              <PhotoCard key={e.id} event={e} spotsLeft={e.spotsLeft} />
+            ))}
+          </div>
+          <DesktopAvailableGrid trips={filtered} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function DesktopAvailableGrid({
+  trips,
+}: {
+  trips: Array<
+    Database["public"]["Tables"]["events"]["Row"] & { spotsLeft: number; myRegStatus?: string }
+  >;
+}) {
+  const { t } = useI18n();
+  const [hero, ...others] = trips;
+  const side = others.slice(0, 2);
+  const grid4 = others.slice(2, 5);
+  const rest = trips.slice(6);
+
+  return (
+    <div className="hidden lg:block mt-5">
+      <div className="flex gap-[22px]">
+        <PhotoCard
+          event={hero}
+          spotsLeft={hero.spotsLeft}
+          height={340}
+          className="flex-1 min-w-0"
+        />
+        {side.length > 0 && (
+          <div className="w-[330px] shrink-0 flex flex-col gap-[22px]">
+            {side.map((e) => (
+              <PhotoCard key={e.id} event={e} spotsLeft={e.spotsLeft} height={159} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {(grid4.length > 0 || others.length <= 5) && (
+        <div className="mt-[22px] grid grid-cols-4 gap-[18px]">
+          {grid4.map((e) => (
+            <PhotoCard key={e.id} event={e} spotsLeft={e.spotsLeft} height={170} />
+          ))}
+          <Link
+            to="/community"
+            className="h-[170px] rounded-[22px] border border-dashed border-border bg-card/60 flex flex-col items-center justify-center gap-2.5 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          >
+            <span className="w-[42px] h-[42px] rounded-[14px] bg-secondary grid place-items-center">
+              <Plus className="w-[19px] h-[19px]" />
+            </span>
+            <span className="text-[12.5px] font-semibold">{t("nav.propose_trip")}</span>
+          </Link>
+        </div>
+      )}
+
+      {rest.length > 0 && (
+        <div className="mt-[22px] grid grid-cols-3 gap-3.5">
+          {rest.map((e) => (
             <PhotoCard key={e.id} event={e} spotsLeft={e.spotsLeft} />
           ))}
         </div>
