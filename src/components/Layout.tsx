@@ -524,33 +524,6 @@ export function Layout({ children }: { children: ReactNode }) {
             </SheetContent>
           </Sheet>
         )}
-
-        <footer className={cn("border-t border-border mt-12", user ? "pb-32 md:pb-0" : "")}>
-          <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-muted-foreground flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <img
-                src="/brand/nakama-logo-transparent.png"
-                alt=""
-                width={22}
-                height={22}
-                className="w-[22px] h-[22px] object-contain"
-              />
-              <span className="font-display font-semibold text-foreground">Nakama</span>
-              <span>— Nobody gets left behind.</span>
-            </div>
-            <div className="flex gap-4 flex-wrap">
-              <Link to="/values" className="hover:text-foreground">
-                {t("nav.values")}
-              </Link>
-              <Link to="/how-it-works" className="hover:text-foreground">
-                {t("nav.how_it_works")}
-              </Link>
-              <Link to="/cloud-nine" className="hover:text-foreground">
-                Cloud Nine
-              </Link>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );
