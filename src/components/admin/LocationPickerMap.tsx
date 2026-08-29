@@ -6,9 +6,8 @@ const DEFAULT_CENTER: LatLng = { lat: 46.4, lng: 10.8 }; // roughly the Alps
 
 // Leaflet touches `document`/`navigator` at module scope, so it can only ever
 // be imported on the client — never as a static import (that would crash SSR).
-// Same pattern as PassportMap.tsx, but this map is interactive (click/drag to
-// place a pin) and uses a colorful light basemap instead of the dark one used
-// for the read-only Passport display.
+// Same pattern as PassportMap.tsx, but this map is interactive: click or
+// drag the pin to place it.
 export function LocationPickerMap({
   value,
   onChange,
@@ -38,12 +37,17 @@ export function LocationPickerMap({
       const map = L.map(containerRef.current).setView([start.lat, start.lng], value ? 11 : 6);
       mapRef.current = map;
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 20,
-      }).addTo(map);
+      // Esri's World Street Map tiles: free, no API key required, and a
+      // colorful, legible basemap (unlike CARTO's basemaps, which now
+      // require a key and render as an "API key required" placeholder).
+      L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution:
+            'Tiles &copy; <a href="https://www.esri.com" target="_blank" rel="noreferrer">Esri</a> — Esri, DeLorme, NAVTEQ',
+          maxZoom: 19,
+        },
+      ).addTo(map);
 
       const marker = L.marker([start.lat, start.lng], {
         draggable: true,
