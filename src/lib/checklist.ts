@@ -1,40 +1,40 @@
-export type ChecklistItem = { key: string; label: string; hint?: string };
-export type ChecklistGroup = { title: string; items: ChecklistItem[] };
+export type ChecklistItem = { key: string; labelKey: string; hintKey?: string };
+export type ChecklistGroup = { titleKey: string; items: ChecklistItem[] };
 
 export const BEGINNER_CHECKLIST: ChecklistGroup[] = [
   {
-    title: "Snowboard essentials",
+    titleKey: "checklist.group_snowboard",
     items: [
-      { key: "snowboard", label: "Snowboard" },
-      { key: "boots", label: "Boots" },
-      { key: "bindings", label: "Bindings" },
-      { key: "helmet", label: "Helmet", hint: "Strongly recommended for safety." },
-      { key: "goggles", label: "Goggles / mask", hint: "Protects from sun, wind and snow." },
-      { key: "gloves", label: "Gloves" },
-      { key: "jacket", label: "Snow jacket" },
-      { key: "pants", label: "Snow pants" },
-      { key: "thermals", label: "Thermal layers" },
-      { key: "socks", label: "Snow socks" },
+      { key: "snowboard", labelKey: "checklist.snowboard" },
+      { key: "boots", labelKey: "checklist.boots" },
+      { key: "bindings", labelKey: "checklist.bindings" },
+      { key: "helmet", labelKey: "checklist.helmet", hintKey: "checklist.helmet_hint" },
+      { key: "goggles", labelKey: "checklist.goggles", hintKey: "checklist.goggles_hint" },
+      { key: "gloves", labelKey: "checklist.gloves" },
+      { key: "jacket", labelKey: "checklist.jacket" },
+      { key: "pants", labelKey: "checklist.pants" },
+      { key: "thermals", labelKey: "checklist.thermals" },
+      { key: "socks", labelKey: "checklist.socks" },
     ],
   },
   {
-    title: "Trip essentials",
+    titleKey: "checklist.group_trip",
     items: [
-      { key: "water", label: "Water" },
-      { key: "lunch", label: "Packed lunch / snacks" },
-      { key: "powerbank", label: "Phone charger or powerbank", hint: "Cold weather drains battery faster." },
-      { key: "skipass", label: "Skipass or money" },
-      { key: "id", label: "ID / document" },
-      { key: "backpack", label: "Backpack" },
+      { key: "water", labelKey: "checklist.water" },
+      { key: "lunch", labelKey: "checklist.lunch" },
+      { key: "powerbank", labelKey: "checklist.powerbank", hintKey: "checklist.powerbank_hint" },
+      { key: "skipass", labelKey: "checklist.skipass" },
+      { key: "id", labelKey: "checklist.id" },
+      { key: "backpack", labelKey: "checklist.backpack" },
     ],
   },
   {
-    title: "Optional reminders",
+    titleKey: "checklist.group_optional",
     items: [
-      { key: "sunscreen", label: "Sunscreen", hint: "Sun reflects strongly on snow." },
-      { key: "extra_socks", label: "Extra socks" },
-      { key: "neck_warmer", label: "Neck warmer" },
-      { key: "towel", label: "Small towel" },
+      { key: "sunscreen", labelKey: "checklist.sunscreen", hintKey: "checklist.sunscreen_hint" },
+      { key: "extra_socks", labelKey: "checklist.extra_socks" },
+      { key: "neck_warmer", labelKey: "checklist.neck_warmer" },
+      { key: "towel", labelKey: "checklist.towel" },
     ],
   },
 ];

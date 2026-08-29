@@ -49,7 +49,7 @@ export function RankLegend({ completed, className }: { completed?: number; class
                   isCurrent ? "text-primary-foreground/80" : "text-muted-foreground",
                 )}
               >
-                {rangeLabel(r, i)}
+                {rangeLabel(r, i, t)}
                 {isCurrent && ` · ${t("ranks.here")}`}
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import { typeLabel } from "@/components/EventCard";
+import { eventTypeLabel } from "@/lib/event-tags";
 import { photoFor } from "@/lib/photo-for";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export function PhotoCard({
   height?: number;
   className?: string;
 }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const { src, look } = photoFor(event.destination, event.cover_image_url);
   const tags = (event as unknown as { tags?: string[] }).tags ?? [];
   const hotTag = tags.find((t) => HOT_TAGS.has(t));
@@ -75,7 +75,7 @@ export function PhotoCard({
                 : "bg-black/30 text-white border border-white/25",
             )}
           >
-            {hotTag ?? typeLabel[event.type] ?? event.type}
+            {hotTag ?? eventTypeLabel(event.type, t)}
           </span>
           {spotsLeft != null && (
             <span className="nakama-glass px-2.5 py-1 rounded-full text-[9.5px] font-bold uppercase tracking-[0.14em] whitespace-nowrap text-white border border-white/12">

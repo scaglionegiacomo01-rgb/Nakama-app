@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PhotoCard } from "@/components/PhotoCard";
-import { typeLabel } from "@/components/EventCard";
+import { eventTypeLabel } from "@/lib/event-tags";
 import { Calendar, MapPin, Car, CheckCircle2, Search, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -226,7 +226,7 @@ function AvailableList({ query }: { query: string }) {
         </FilterChip>
         {TYPE_FILTERS.map((type) => (
           <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
-            {typeLabel[type] ?? type}
+            {eventTypeLabel(type, t)}
           </FilterChip>
         ))}
       </div>

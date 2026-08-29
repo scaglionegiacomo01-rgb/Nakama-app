@@ -59,3 +59,37 @@ export function getCardTags(tags: string[] | null | undefined, max = 3): { visib
   for (const t of clean) if (!seen.has(t)) { ordered.push(t); seen.add(t); }
   return { visible: ordered.slice(0, max), overflow: Math.max(0, ordered.length - max) };
 }
+
+// Tags are stored in the DB as fixed English strings (see EVENT_TAGS above) —
+// this only maps them to a translated label for display, the stored value
+// never changes with the language toggle.
+const TAG_LABEL_KEY: Record<string, string> = {
+  "First Time Friendly": "tag.first_time_friendly",
+  "Beginner Friendly": "tag.beginner_friendly",
+  "Chill Day": "tag.chill_day",
+  "Social Ride": "tag.social_ride",
+  "Park Session": "tag.park_session",
+  "Progression Day": "tag.progression_day",
+  "Powder Day": "tag.powder_day",
+  "Mountain Walk": "tag.mountain_walk",
+  "Packed Lunch": "tag.packed_lunch",
+  "Rental Available": "tag.rental_available",
+  Carpool: "tag.carpool",
+};
+
+export function tagLabel(tag: string, t: (key: string) => string): string {
+  const key = TAG_LABEL_KEY[tag];
+  return key ? t(key) : tag;
+}
+
+const TYPE_LABEL_KEY: Record<string, string> = {
+  snowboard: "type.snowboard",
+  mountain_walk: "type.mountain_walk",
+  skate: "type.skate",
+  surf: "type.surf",
+};
+
+export function eventTypeLabel(type: string, t: (key: string) => string): string {
+  const key = TYPE_LABEL_KEY[type];
+  return key ? t(key) : type;
+}

@@ -6,12 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldCheck, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useI18n } from "@/lib/i18n";
 
 type Event = { id: string; status: string; safety_meeting_point_ok: boolean; safety_destination_ok: boolean; safety_return_ok: boolean };
 type Checkin = { id: string; user_id: string; meeting_point_checked_in: boolean; destination_checked_in: boolean; return_checked_in: boolean };
 
 export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; isAdmin: boolean; isParticipant: boolean }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
 
   const { data: myCheckin } = useQuery({
@@ -70,34 +72,34 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
           if (c.destination_checked_in && !c.return_checked_in) atResortNotBack++;
         }
         if (neverCheckedIn || atResortNotBack || stillMissing) {
-          warning = "Some participants are not fully accounted for. Please confirm before completing the trip.\n\n";
-          if (neverCheckedIn) warning += `• ${neverCheckedIn} never checked in\n`;
-          if (atResortNotBack) warning += `• ${atResortNotBack} reached the resort but didn't check back\n`;
+          warning = `${t("safety.confirm_incomplete")}\n\n`;
+          if (neverCheckedIn) warning += `• ${t("safety.never_checked_in", { n: neverCheckedIn })}\n`;
+          if (atResortNotBack) warning += `• ${t("safety.reached_not_back", { n: atResortNotBack })}\n`;
         }
       }
     }
-    const msg = warning ? `${warning}\nMark this trip as completed?` : "Mark this trip as completed? Confirmed users will see it in their Passport.";
+    const msg = warning ? `${warning}\n${t("safety.confirm_complete_prefix")}` : t("safety.confirm_complete_simple");
     if (!confirm(msg)) return;
     const { error } = await supabase.from("events").update({ status: "completed" }).eq("id", event.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Trip completed");
+    toast.success(t("safety.toast_completed"));
     qc.invalidateQueries({ queryKey: ["event", event.id] });
   };
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-summit/10 border border-summit/30 p-5">
-        <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="w-4 h-4" /> Nobody gets left behind</div>
-        <p className="mt-2 text-sm">Stay with your assigned group, respect the meeting times, and tell the organizer if you leave or split from the group.</p>
+        <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="w-4 h-4" /> {t("safety.banner_title")}</div>
+        <p className="mt-2 text-sm">{t("safety.banner_body")}</p>
       </div>
 
       {isParticipant && (
         <div className="rounded-2xl bg-card border border-border p-5">
-          <h3 className="font-display font-bold mb-3">My check-ins</h3>
+          <h3 className="font-display font-bold mb-3">{t("safety.my_checkins")}</h3>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.meeting_point_checked_in} onCheckedChange={v => upsertCheckin({ meeting_point_checked_in: !!v })} />I'm at the meeting point</label>
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.destination_checked_in} onCheckedChange={v => upsertCheckin({ destination_checked_in: !!v })} />I'm at the resort</label>
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.return_checked_in} onCheckedChange={v => upsertCheckin({ return_checked_in: !!v })} />I'm back</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.meeting_point_checked_in} onCheckedChange={v => upsertCheckin({ meeting_point_checked_in: !!v })} />{t("safety.at_meeting_point")}</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.destination_checked_in} onCheckedChange={v => upsertCheckin({ destination_checked_in: !!v })} />{t("safety.at_resort")}</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!myCheckin?.return_checked_in} onCheckedChange={v => upsertCheckin({ return_checked_in: !!v })} />{t("safety.im_back")}</label>
           </div>
         </div>
       )}
@@ -105,30 +107,30 @@ export function SafetyPanel({ event, isAdmin, isParticipant }: { event: Event; i
       {isAdmin && (
         <>
           <div className="rounded-2xl bg-card border border-border p-5">
-            <h3 className="font-display font-bold mb-3">Organizer checklist</h3>
+            <h3 className="font-display font-bold mb-3">{t("safety.organizer_checklist")}</h3>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_meeting_point_ok} onCheckedChange={v => setAdminFlag("safety_meeting_point_ok", !!v)} />Everyone arrived at meeting point</label>
-              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_destination_ok} onCheckedChange={v => setAdminFlag("safety_destination_ok", !!v)} />Everyone arrived at destination</label>
-              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_return_ok} onCheckedChange={v => setAdminFlag("safety_return_ok", !!v)} />Everyone back at final meeting point</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_meeting_point_ok} onCheckedChange={v => setAdminFlag("safety_meeting_point_ok", !!v)} />{t("safety.everyone_meeting")}</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_destination_ok} onCheckedChange={v => setAdminFlag("safety_destination_ok", !!v)} />{t("safety.everyone_destination")}</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={event.safety_return_ok} onCheckedChange={v => setAdminFlag("safety_return_ok", !!v)} />{t("safety.everyone_back")}</label>
             </div>
             {event.status !== "completed" && (
-              <Button onClick={completeTrip} className="mt-4 w-full"><CheckCircle2 className="w-4 h-4 mr-1" />Mark trip completed</Button>
+              <Button onClick={completeTrip} className="mt-4 w-full"><CheckCircle2 className="w-4 h-4 mr-1" />{t("safety.mark_completed")}</Button>
             )}
-            {event.status === "completed" && <div className="mt-4 text-sm text-summit font-semibold">Trip completed ✓</div>}
+            {event.status === "completed" && <div className="mt-4 text-sm text-summit font-semibold">{t("safety.completed")}</div>}
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-5">
-            <h3 className="font-display font-bold mb-3">Crew check-ins ({(allCheckins ?? []).length})</h3>
-            {(allCheckins ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No check-ins yet.</p> : (
+            <h3 className="font-display font-bold mb-3">{t("safety.crew_checkins", { n: (allCheckins ?? []).length })}</h3>
+            {(allCheckins ?? []).length === 0 ? <p className="text-sm text-muted-foreground">{t("safety.no_checkins")}</p> : (
               <div className="space-y-2">
                 {(allCheckins as (Checkin & { profile?: { full_name: string | null; username: string | null; profile_picture_url: string | null } })[]).map(c => (
                   <div key={c.id} className="flex items-center gap-3 text-sm">
                     <UserAvatar url={c.profile?.profile_picture_url} name={c.profile?.full_name ?? c.profile?.username} size="sm" />
-                    <div className="flex-1 min-w-0 truncate">{c.profile?.username ? `@${c.profile.username}` : (c.profile?.full_name ?? "Member")}</div>
+                    <div className="flex-1 min-w-0 truncate">{c.profile?.username ? `@${c.profile.username}` : (c.profile?.full_name ?? t("common.member"))}</div>
                     <div className="flex gap-1 text-[10px]">
-                      <Pill on={c.meeting_point_checked_in}>Meet</Pill>
-                      <Pill on={c.destination_checked_in}>Resort</Pill>
-                      <Pill on={c.return_checked_in}>Back</Pill>
+                      <Pill on={c.meeting_point_checked_in}>{t("safety.pill_meet")}</Pill>
+                      <Pill on={c.destination_checked_in}>{t("safety.pill_resort")}</Pill>
+                      <Pill on={c.return_checked_in}>{t("safety.pill_back")}</Pill>
                     </div>
                   </div>
                 ))}

@@ -8,6 +8,7 @@ import { Send, Trash2, MessagesSquare } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/community")({ component: Community });
@@ -24,6 +25,7 @@ const MAX = 500;
 
 function Community() {
   const { user, isAdmin, loading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [text, setText] = useState("");
@@ -157,7 +159,7 @@ function Community() {
     setProfileOpen(true);
   };
 
-  if (loading) return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading) return <div className="max-w-3xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   if (!user) return null;
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
@@ -165,9 +167,9 @@ function Community() {
     const date = new Date(d);
     const now = new Date();
     const diff = (now.getTime() - date.getTime()) / 60000;
-    if (diff < 1) return "just now";
-    if (diff < 60) return `${Math.floor(diff)}m ago`;
-    if (diff < 60 * 24) return `${Math.floor(diff / 60)}h ago`;
+    if (diff < 1) return t("community.time_now");
+    if (diff < 60) return t("community.time_min_ago", { n: Math.floor(diff) });
+    if (diff < 60 * 24) return t("community.time_hour_ago", { n: Math.floor(diff / 60) });
     return date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   };
 
@@ -179,9 +181,11 @@ function Community() {
           <MessagesSquare className="w-[19px] h-[19px]" />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="font-display text-[22px] leading-[1.1] tracking-[-0.04em]">Community</div>
+          <div className="font-display text-[22px] leading-[1.1] tracking-[-0.04em]">
+            {t("nav.community")}
+          </div>
           <div className="mt-[3px] text-[11px] text-muted-foreground">
-            {riderCount ?? "—"} rider · {onlineCount} online
+            {t("community.stats", { riders: riderCount ?? "—", online: onlineCount })}
           </div>
         </div>
         <span className="shrink-0 inline-flex items-center gap-[6px] px-2.5 py-[5px] rounded-full bg-secondary text-[10px] font-bold tracking-[0.1em] whitespace-nowrap">
@@ -193,19 +197,21 @@ function Community() {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-0 py-4 flex flex-col gap-4">
         {!messages ? (
-          <div className="text-muted-foreground text-sm text-center py-12">Loading messages…</div>
+          <div className="text-muted-foreground text-sm text-center py-12">
+            {t("community.loading_messages")}
+          </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-ice grid place-items-center text-ice-foreground">
               <MessagesSquare className="w-7 h-7" />
             </div>
-            <p className="mt-4 font-display font-bold text-lg">No messages yet</p>
-            <p className="text-sm text-muted-foreground">Be the first to say hi to the crew.</p>
+            <p className="mt-4 font-display font-bold text-lg">{t("community.empty_title")}</p>
+            <p className="text-sm text-muted-foreground">{t("community.empty_body")}</p>
           </div>
         ) : (
           messages.map((m) => {
             const p = profileMap.get(m.user_id);
-            const name = p?.username ? `@${p.username}` : (p?.full_name ?? "Member");
+            const name = p?.username ? `@${p.username}` : (p?.full_name ?? t("common.member"));
             const canDelete = isAdmin || m.user_id === user.id;
             const completed = completedCounts?.[m.user_id] ?? 0;
             const isMine = m.user_id === user.id;
@@ -226,7 +232,7 @@ function Community() {
                     )}
                   >
                     {isMine ? (
-                      <span className="text-[13px] font-semibold">Tu</span>
+                      <span className="text-[13px] font-semibold">{t("community.you")}</span>
                     ) : (
                       <button
                         onClick={() => openProfile(m.user_id)}
@@ -244,7 +250,7 @@ function Community() {
                           "text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive",
                           !isMine && "ml-auto",
                         )}
-                        aria-label="Delete"
+                        aria-label={t("common.delete")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -280,20 +286,20 @@ function Community() {
                 send();
               }
             }}
-            placeholder="Scrivi qualcosa alla crew…"
+            placeholder={t("community.composer_placeholder")}
             className="h-[46px] flex-1 min-w-0 rounded-[16px] border border-border bg-[oklch(0.24_0.028_290)] px-[15px] text-base md:text-[13.5px] placeholder:text-muted-foreground focus:outline-none focus:border-nakama-pink"
           />
           <button
             onClick={send}
             disabled={sending || !text.trim()}
-            aria-label="Send"
+            aria-label={t("common.send")}
             className="h-[46px] w-[46px] shrink-0 rounded-[16px] bg-gradient-to-br from-[oklch(0.45_0.19_5)] to-[oklch(0.36_0.15_355)] text-white grid place-items-center shadow-[0_8px_22px_-10px_oklch(0.40_0.17_5)] disabled:opacity-50 transition"
           >
             <Send className="w-[18px] h-[18px]" />
           </button>
         </div>
         <div className="mt-[9px] flex justify-between text-[11px] text-muted-foreground">
-          <span>Sii gentile. Nobody gets left behind.</span>
+          <span>{t("community.footer_note")}</span>
           <span>
             {text.length}/{MAX}
           </span>

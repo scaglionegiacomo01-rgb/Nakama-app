@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 type Event = {
   id: string; title: string; meeting_point: string; departure_time: string | null;
@@ -30,27 +31,36 @@ type Checkin = {
   marked_by_admin: boolean;
 };
 
-const STATUS_META: Record<Checkin["status"], { label: string; cls: string }> = {
-  not_checked_in: { label: "Not checked in", cls: "bg-secondary text-foreground" },
-  arrived_meeting_point: { label: "At meeting point", cls: "bg-ice text-ice-foreground" },
-  arrived_destination: { label: "At the resort", cls: "bg-primary text-primary-foreground" },
-  returned: { label: "Back safely", cls: "bg-summit text-primary-foreground" },
-  absent: { label: "Absent", cls: "bg-destructive text-destructive-foreground" },
-  cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground" },
-};
-
-function StatusBadge({ s }: { s: Checkin["status"] }) {
-  const m = STATUS_META[s];
-  return <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${m.cls}`}>{m.label}</span>;
-}
-
 function fmtTime(iso: string | null) {
   if (!iso) return "";
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
+const STATUS_KEY: Record<Checkin["status"], string> = {
+  not_checked_in: "checkin.status_not_checked_in",
+  arrived_meeting_point: "checkin.status_at_meeting_point",
+  arrived_destination: "checkin.status_at_resort",
+  returned: "checkin.status_back_safely",
+  absent: "checkin.status_absent",
+  cancelled: "checkin.status_cancelled",
+};
+const STATUS_CLS: Record<Checkin["status"], string> = {
+  not_checked_in: "bg-secondary text-foreground",
+  arrived_meeting_point: "bg-ice text-ice-foreground",
+  arrived_destination: "bg-primary text-primary-foreground",
+  returned: "bg-summit text-primary-foreground",
+  absent: "bg-destructive text-destructive-foreground",
+  cancelled: "bg-muted text-muted-foreground",
+};
+
+function StatusBadge({ s }: { s: Checkin["status"] }) {
+  const { t } = useI18n();
+  return <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${STATUS_CLS[s]}`}>{t(STATUS_KEY[s])}</span>;
+}
+
 export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; isAdmin: boolean; isParticipant: boolean }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "arrived" | "missing" | "late" | "absent" | "cancelled">("all");
   const [search, setSearch] = useState("");
@@ -90,7 +100,7 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
         profile: profMap.get(r.user_id) as Registration["profile"],
         car_label: (() => {
           const drives = carList.find(c => c.driver_user_id === r.user_id);
-          if (drives) return `Driver · ${drives.departure_area}`;
+          if (drives) return t("checkin.driver_label", { area: drives.departure_area });
           return null;
         })(),
       }));
@@ -136,10 +146,10 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["my-checkin", event.id, user.id] });
     qc.invalidateQueries({ queryKey: ["roll-call", event.id] });
-    if (patch.meeting_point_checked_in) toast.success("Check-in completed. The organizer knows you're here.");
-    else if (patch.destination_checked_in) toast.success("Welcome to the mountain!");
-    else if (patch.return_checked_in) toast.success("Glad you're back safely.");
-    else if (patch.status === "cancelled") toast.success("You let the crew know — thanks.");
+    if (patch.meeting_point_checked_in) toast.success(t("checkin.toast_checkin_done"));
+    else if (patch.destination_checked_in) toast.success(t("checkin.toast_welcome"));
+    else if (patch.return_checked_in) toast.success(t("checkin.toast_glad_back"));
+    else if (patch.status === "cancelled") toast.success(t("checkin.toast_thanks"));
   };
 
   const adminUpdate = async (userId: string, patch: Partial<Checkin>) => {
@@ -154,11 +164,11 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
       ...patch,
     }, { onConflict: "event_id,user_id" });
     if (error) toast.error(error.message);
-    else { toast.success("Updated"); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
+    else { toast.success(t("checkin.toast_updated")); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
   };
 
   const resetCheckin = async (userId: string) => {
-    if (!confirm("Reset this person's check-in?")) return;
+    if (!confirm(t("checkin.confirm_reset"))) return;
     const existing = roll?.checkins.get(userId);
     if (!existing) return;
     const { error } = await supabase.from("trip_checkins")
@@ -168,13 +178,16 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
         status: "not_checked_in",
       }).eq("id", existing.id);
     if (error) toast.error(error.message);
-    else { toast.success("Reset"); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
+    else { toast.success(t("checkin.toast_reset")); qc.invalidateQueries({ queryKey: ["roll-call", event.id] }); }
   };
 
   const sendReminders = async () => {
     const { data, error } = await supabase.rpc("send_checkin_reminders", { _event_id: event.id });
     if (error) toast.error(error.message);
-    else toast.success(`Reminder sent to ${(data as number) ?? 0} ${(data as number) === 1 ? "person" : "people"}`);
+    else {
+      const n = (data as number) ?? 0;
+      toast.success(t(n === 1 ? "checkin.reminder_sent_one" : "checkin.reminder_sent_other", { n }));
+    }
   };
 
   const filtered = useMemo(() => {
@@ -206,7 +219,7 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
         <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-summit/10 border border-primary/30 p-5">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Roll call</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("checkin.roll_call")}</div>
               <h3 className="font-display font-bold text-xl mt-0.5">{event.title}</h3>
               <div className="text-sm text-muted-foreground inline-flex items-center gap-1 mt-1">
                 <MapPin className="w-3.5 h-3.5" />{event.meeting_point}{event.departure_time ? ` · ${event.departure_time}` : ""}
@@ -220,30 +233,30 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
               disabled={!!myCheckin?.meeting_point_checked_in || myCheckin?.status === "cancelled"}
               onClick={() => upsertCheckin({ meeting_point_checked_in: true })}>
               <Flag className="w-4 h-4 mr-1" />
-              {myCheckin?.meeting_point_checked_in ? `At meeting · ${fmtTime(myCheckin.meeting_point_checked_in_at)}` : "I'm here"}
+              {myCheckin?.meeting_point_checked_in ? t("checkin.at_meeting", { time: fmtTime(myCheckin.meeting_point_checked_in_at) }) : t("checkin.im_here")}
             </Button>
             <Button size="lg" variant={myCheckin?.destination_checked_in ? "outline" : "secondary"}
               disabled={!myCheckin?.meeting_point_checked_in || !!myCheckin?.destination_checked_in || myCheckin?.status === "cancelled"}
               onClick={() => upsertCheckin({ destination_checked_in: true })}>
               <Mountain className="w-4 h-4 mr-1" />
-              {myCheckin?.destination_checked_in ? `At resort · ${fmtTime(myCheckin.destination_checked_in_at)}` : "I'm at the resort"}
+              {myCheckin?.destination_checked_in ? t("checkin.at_resort", { time: fmtTime(myCheckin.destination_checked_in_at) }) : t("checkin.im_at_resort")}
             </Button>
             <Button size="lg" variant={myCheckin?.return_checked_in ? "outline" : "secondary"}
               disabled={!myCheckin?.destination_checked_in || !!myCheckin?.return_checked_in || myCheckin?.status === "cancelled"}
               onClick={() => upsertCheckin({ return_checked_in: true })}>
               <CheckCircle2 className="w-4 h-4 mr-1" />
-              {myCheckin?.return_checked_in ? `Back · ${fmtTime(myCheckin.return_checked_in_at)}` : "I'm back"}
+              {myCheckin?.return_checked_in ? t("checkin.back_time", { time: fmtTime(myCheckin.return_checked_in_at) }) : t("checkin.im_back")}
             </Button>
           </div>
 
           {myCheckin?.status !== "cancelled" && (
-            <button onClick={() => { if (confirm("Let the crew know you're not coming anymore?")) upsertCheckin({ status: "cancelled" }); }}
+            <button onClick={() => { if (confirm(t("checkin.confirm_not_coming"))) upsertCheckin({ status: "cancelled" }); }}
               className="mt-3 text-xs text-muted-foreground hover:text-destructive underline">
-              I'm not coming anymore
+              {t("checkin.not_coming")}
             </button>
           )}
           {myCheckin?.status === "cancelled" && (
-            <div className="mt-3 text-xs text-muted-foreground">You marked yourself as not coming. <button className="underline" onClick={() => upsertCheckin({ status: "not_checked_in" })}>Undo</button></div>
+            <div className="mt-3 text-xs text-muted-foreground">{t("checkin.marked_not_coming")} <button className="underline" onClick={() => upsertCheckin({ status: "not_checked_in" })}>{t("checkin.undo")}</button></div>
           )}
         </div>
       )}
@@ -252,41 +265,41 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
       {isAdmin && roll && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <Stat label="Confirmed" value={counts.total} />
-            <Stat label="Checked in" value={counts.checkedIn} tone="ok" />
-            <Stat label="Missing" value={counts.missing} tone={counts.missing > 0 ? "warn" : "ok"} />
-            <Stat label="Late" value={counts.late} tone={counts.late > 0 ? "alert" : "ok"} />
-            <Stat label="Absent" value={counts.absent + counts.cancelled} tone={counts.absent > 0 ? "alert" : "muted"} />
+            <Stat label={t("checkin.stat_confirmed")} value={counts.total} />
+            <Stat label={t("checkin.stat_checked_in")} value={counts.checkedIn} tone="ok" />
+            <Stat label={t("checkin.stat_missing")} value={counts.missing} tone={counts.missing > 0 ? "warn" : "ok"} />
+            <Stat label={t("checkin.stat_late")} value={counts.late} tone={counts.late > 0 ? "alert" : "ok"} />
+            <Stat label={t("checkin.stat_absent")} value={counts.absent + counts.cancelled} tone={counts.absent > 0 ? "alert" : "muted"} />
           </div>
 
           {counts.late > 0 && (
             <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3 text-sm flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
-              <div>{counts.late} {counts.late === 1 ? "person hasn't" : "people haven't"} checked in yet and the meeting time has passed.</div>
+              <div>{t(counts.late === 1 ? "checkin.late_warning_one" : "checkin.late_warning_other", { n: counts.late })}</div>
             </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-[200px]">
               <Search className="w-4 h-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name…" className="h-9" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("checkin.search_placeholder")} className="h-9" />
             </div>
             <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
               <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="arrived">Arrived</SelectItem>
-                <SelectItem value="missing">Missing</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">{t("checkin.filter_all")}</SelectItem>
+                <SelectItem value="arrived">{t("checkin.filter_arrived")}</SelectItem>
+                <SelectItem value="missing">{t("checkin.filter_missing")}</SelectItem>
+                <SelectItem value="late">{t("checkin.filter_late")}</SelectItem>
+                <SelectItem value="absent">{t("checkin.filter_absent")}</SelectItem>
+                <SelectItem value="cancelled">{t("checkin.filter_cancelled")}</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={sendReminders}><Bell className="w-3.5 h-3.5 mr-1" />Send reminder</Button>
+            <Button size="sm" variant="outline" onClick={sendReminders}><Bell className="w-3.5 h-3.5 mr-1" />{t("checkin.send_reminder")}</Button>
           </div>
 
           <div className="space-y-2">
-            {filtered.length === 0 && <p className="text-sm text-muted-foreground">No one matches this filter.</p>}
+            {filtered.length === 0 && <p className="text-sm text-muted-foreground">{t("checkin.no_match")}</p>}
             {filtered.map(r => {
               const c = roll.checkins.get(r.user_id);
               const status: Checkin["status"] = c?.status ?? "not_checked_in";
@@ -298,31 +311,31 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
                     <UserAvatar url={r.profile?.profile_picture_url} name={r.profile?.full_name ?? r.profile?.username} size="md" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className="font-semibold truncate">{r.profile?.full_name ?? r.profile?.username ?? "Member"}</div>
+                        <div className="font-semibold truncate">{r.profile?.full_name ?? r.profile?.username ?? t("common.member")}</div>
                         <StatusBadge s={status} />
-                        {isLate && <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground">Late</span>}
+                        {isLate && <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground">{t("checkin.filter_late")}</span>}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {r.profile?.username && `@${r.profile.username} · `}{r.profile?.phone ?? "no phone"}
+                        {r.profile?.username && `@${r.profile.username} · `}{r.profile?.phone ?? t("checkin.no_phone")}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                         {r.transport_status && <span className="capitalize">{r.transport_status.replaceAll("_", " ")}</span>}
                         {r.car_label && <span>· {r.car_label}</span>}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1 text-[10px]">
-                        <Pill on={!!c?.meeting_point_checked_in} label="Meeting" time={c?.meeting_point_checked_in_at} />
-                        <Pill on={!!c?.destination_checked_in} label="Resort" time={c?.destination_checked_in_at} />
-                        <Pill on={!!c?.return_checked_in} label="Back" time={c?.return_checked_in_at} />
+                        <Pill on={!!c?.meeting_point_checked_in} label={t("checkin.pill_meeting")} time={c?.meeting_point_checked_in_at} />
+                        <Pill on={!!c?.destination_checked_in} label={t("checkin.pill_resort")} time={c?.destination_checked_in_at} />
+                        <Pill on={!!c?.return_checked_in} label={t("checkin.pill_back")} time={c?.return_checked_in_at} />
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { meeting_point_checked_in: true })}>Mark arrived</Button>
-                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { destination_checked_in: true })}>Mark at resort</Button>
-                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { return_checked_in: true })}>Mark back</Button>
-                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { status: "absent" })}>Absent</Button>
-                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { status: "cancelled" })}>Cancelled</Button>
-                    <Button size="sm" variant="ghost" onClick={() => resetCheckin(r.user_id)}><RotateCcw className="w-3.5 h-3.5 mr-1" />Reset</Button>
+                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { meeting_point_checked_in: true })}>{t("checkin.mark_arrived")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { destination_checked_in: true })}>{t("checkin.mark_at_resort")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { return_checked_in: true })}>{t("checkin.mark_back")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { status: "absent" })}>{t("checkin.absent")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => adminUpdate(r.user_id, { status: "cancelled" })}>{t("checkin.cancelled")}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => resetCheckin(r.user_id)}><RotateCcw className="w-3.5 h-3.5 mr-1" />{t("checkin.reset")}</Button>
                   </div>
                 </div>
               );
@@ -333,7 +346,7 @@ export function CheckinPanel({ event, isAdmin, isParticipant }: { event: Event; 
 
       {!isParticipant && !isAdmin && (
         <div className="rounded-2xl bg-card border border-border p-5 text-sm text-muted-foreground">
-          Join this trip to access the roll call.
+          {t("checkin.join_to_access")}
         </div>
       )}
     </div>

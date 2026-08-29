@@ -2,19 +2,12 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Calendar, MapPin, Users, Mountain } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { EventTag } from "@/components/EventTag";
-import { getCardTags } from "@/lib/event-tags";
+import { getCardTags, eventTypeLabel } from "@/lib/event-tags";
 import { useI18n } from "@/lib/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
-
-export const typeLabel: Record<string, string> = {
-  snowboard: "Snowboard",
-  mountain_walk: "Mountain walk",
-  skate: "Skate",
-  surf: "Surf",
-};
 
 const HIDDEN_MOBILE_TAGS = new Set<string>([
   "Packed Lunch",
@@ -33,7 +26,7 @@ export function EventCard({
   spotsLeft?: number;
   myRegStatus?: string;
 }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const rawTags = (event as unknown as { tags?: string[] }).tags ?? [];
@@ -67,7 +60,7 @@ export function EventCard({
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="flex items-center gap-2.5 text-xs flex-wrap">
         <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary-foreground/90 font-semibold tracking-wide uppercase text-[10px] border border-primary/30">
-          {typeLabel[event.type] ?? event.type}
+          {eventTypeLabel(event.type, t)}
         </span>
         <span className="px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium capitalize">
           {event.difficulty}
@@ -99,20 +92,20 @@ export function EventCard({
         </div>
         <div className="flex items-center gap-2.5 text-muted-foreground">
           <Mountain className="w-3.5 h-3.5" />
-          Meet: {event.meeting_point} · {event.departure_time ?? "—"}
+          {t("event.meet")}: {event.meeting_point} · {event.departure_time ?? "—"}
         </div>
         <div className="flex items-center gap-2.5 text-muted-foreground">
           <Users className="w-3.5 h-3.5" />
-          Max {event.max_participants}
-          {spotsLeft != null && ` · ${spotsLeft} spots left`}
+          {t("event.max")} {event.max_participants}
+          {spotsLeft != null && ` · ${t("event.spots_left", { n: spotsLeft })}`}
         </div>
       </div>
       <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-3">
         <span className="text-base font-display font-bold tracking-tight">
-          {event.price_estimate ? `~${event.price_estimate}€` : "Free"}
+          {event.price_estimate ? `~${event.price_estimate}€` : t("event.free")}
         </span>
         <span className="hidden md:inline text-xs text-accent font-semibold uppercase tracking-wider group-hover:translate-x-0.5 transition-transform">
-          View details →
+          {t("event.view_details")} →
         </span>
         <button
           onClick={handleCta}

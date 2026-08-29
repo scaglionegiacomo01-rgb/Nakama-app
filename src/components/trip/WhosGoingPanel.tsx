@@ -5,12 +5,13 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
 import { Car, MapPin } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
-const TRANSPORT_LABEL: Record<string, string> = {
-  have_car_will_drive: "Driving",
-  have_car_no_drive: "Has car",
-  no_car_can_drive: "Can drive others' car",
-  no_car_need_seat: "Needs seat",
+const TRANSPORT_LABEL_KEY: Record<string, string> = {
+  have_car_will_drive: "tripwho.transport_driving",
+  have_car_no_drive: "tripwho.transport_has_car",
+  no_car_can_drive: "tripwho.transport_can_drive_others",
+  no_car_need_seat: "tripwho.transport_needs_seat",
 };
 
 type Row = {
@@ -22,6 +23,7 @@ type Row = {
 };
 
 export function WhosGoingPanel({ eventId, isAdmin }: { eventId: string; isAdmin: boolean }) {
+  const { t } = useI18n();
   const [openId, setOpenId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -61,19 +63,19 @@ export function WhosGoingPanel({ eventId, isAdmin }: { eventId: string; isAdmin:
     <button onClick={() => { setOpenId(r.user_id); setOpen(true); }} className="text-left rounded-xl bg-card border border-border p-3 hover:border-accent transition flex gap-3 items-start w-full">
       <UserAvatar url={r.profile?.profile_picture_url} name={r.profile?.full_name ?? r.profile?.username} size="md" />
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm truncate">{r.profile?.username ? `@${r.profile.username}` : (r.profile?.full_name ?? "Member")}</div>
+        <div className="font-semibold text-sm truncate">{r.profile?.username ? `@${r.profile.username}` : (r.profile?.full_name ?? t("common.member"))}</div>
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           <RankBadge completed={r.completed ?? 0} size="xs" />
           {r.profile?.snowboard_level && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary capitalize">{r.profile.snowboard_level}</span>}
           {isAdmin && r.profile?.snowboard_level === "beginner" && r.ready && (
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${r.ready === "ready" ? "bg-summit text-primary-foreground" : "bg-ice text-ice-foreground"}`}>
-              {r.ready === "ready" ? "Ready" : `Preparing ${r.progress ?? 0}%`}
+              {r.ready === "ready" ? t("tripwho.ready") : t("tripwho.preparing", { pct: r.progress ?? 0 })}
             </span>
           )}
         </div>
         <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2">
           {r.profile?.city && <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{r.profile.city}</span>}
-          {r.transport_status && <span className="inline-flex items-center gap-1"><Car className="w-3 h-3" />{TRANSPORT_LABEL[r.transport_status] ?? r.transport_status}</span>}
+          {r.transport_status && <span className="inline-flex items-center gap-1"><Car className="w-3 h-3" />{TRANSPORT_LABEL_KEY[r.transport_status] ? t(TRANSPORT_LABEL_KEY[r.transport_status]) : r.transport_status}</span>}
         </div>
       </div>
     </button>
@@ -81,9 +83,12 @@ export function WhosGoingPanel({ eventId, isAdmin }: { eventId: string; isAdmin:
 
   return (
     <div>
-      <div className="text-sm text-muted-foreground mb-3">{confirmed.length} confirmed{isAdmin ? ` · ${pending.length} pending` : ""}</div>
+      <div className="text-sm text-muted-foreground mb-3">
+        {t("tripwho.confirmed", { n: confirmed.length })}
+        {isAdmin ? t("tripwho.pending_suffix", { n: pending.length }) : ""}
+      </div>
       {confirmed.length === 0 && pending.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Be the first to join.</p>
+        <p className="text-sm text-muted-foreground">{t("tripwho.be_first")}</p>
       ) : (
         <div className="grid sm:grid-cols-2 gap-2">
           {confirmed.map(r => <Card key={r.user_id} r={r} />)}
@@ -91,7 +96,7 @@ export function WhosGoingPanel({ eventId, isAdmin }: { eventId: string; isAdmin:
       )}
       {isAdmin && pending.length > 0 && (
         <div className="mt-6">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Pending (admin only)</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{t("tripwho.pending_admin_only")}</div>
           <div className="grid sm:grid-cols-2 gap-2">{pending.map(r => <Card key={r.user_id} r={r} />)}</div>
         </div>
       )}

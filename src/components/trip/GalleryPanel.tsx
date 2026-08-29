@@ -20,6 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 type Media = {
   id: string;
@@ -55,6 +56,7 @@ export function GalleryPanel({
   isAdmin: boolean;
 }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -99,17 +101,17 @@ export function GalleryPanel({
     if (ALLOWED_IMG.includes(f.type)) {
       type = "image";
       if (f.size > MAX_IMAGE_MB * 1024 * 1024) {
-        toast.error(`Image must be under ${MAX_IMAGE_MB} MB`);
+        toast.error(t("tripgallery.toast_image_max", { n: MAX_IMAGE_MB }));
         return;
       }
     } else if (ALLOWED_VID.includes(f.type)) {
       type = "video";
       if (f.size > MAX_VIDEO_MB * 1024 * 1024) {
-        toast.error(`Video must be under ${MAX_VIDEO_MB} MB`);
+        toast.error(t("tripgallery.toast_video_max", { n: MAX_VIDEO_MB }));
         return;
       }
     } else {
-      toast.error("Only jpg, png, webp images or mp4, mov, webm videos");
+      toast.error(t("tripgallery.toast_bad_format"));
       return;
     }
     setPending({ file: f, type });
@@ -121,7 +123,7 @@ export function GalleryPanel({
   const upload = async () => {
     if (!user || !pending) return;
     if (!okPermission || !okVisibility) {
-      toast.error("Please confirm the safety checkboxes");
+      toast.error(t("tripgallery.toast_confirm_checkboxes"));
       return;
     }
     setBusy(true);
@@ -143,7 +145,7 @@ export function GalleryPanel({
         status: "approved",
       });
       if (error) throw error;
-      toast.success("Uploaded to the gallery");
+      toast.success(t("tripgallery.toast_uploaded"));
       setPending(null);
       qc.invalidateQueries({ queryKey: ["trip-media", event.id] });
     } catch (err) {
@@ -154,7 +156,7 @@ export function GalleryPanel({
   };
 
   const remove = async (m: Media) => {
-    if (!confirm("Delete this upload?")) return;
+    if (!confirm(t("tripgallery.confirm_delete"))) return;
     if (m.storage_path) await supabase.storage.from("trip-media").remove([m.storage_path]);
     await supabase.from("trip_media").delete().eq("id", m.id);
     qc.invalidateQueries({ queryKey: ["trip-media", event.id] });
@@ -188,10 +190,8 @@ export function GalleryPanel({
     <div>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="font-display font-bold text-xl">Trip gallery</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            A shared album for this official trip. Uploads go public right away.
-          </p>
+          <h2 className="font-display font-bold text-xl">{t("tripgallery.title")}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{t("tripgallery.subtitle")}</p>
         </div>
         {canUpload && (
           <>
@@ -204,16 +204,14 @@ export function GalleryPanel({
             />
             <Button onClick={() => inputRef.current?.click()} size="sm">
               <Upload className="w-4 h-4 mr-1" />
-              Add memory
+              {t("tripgallery.add_memory")}
             </Button>
           </>
         )}
       </div>
 
       {!canUpload && isParticipant === false && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          Only confirmed participants of this trip can upload memories.
-        </p>
+        <p className="mt-3 text-xs text-muted-foreground">{t("tripgallery.participants_only")}</p>
       )}
 
       {visible.length === 0 ? (
@@ -221,10 +219,8 @@ export function GalleryPanel({
           <div className="w-12 h-12 mx-auto rounded-2xl bg-ice grid place-items-center text-ice-foreground">
             <ImageIcon className="w-6 h-6" />
           </div>
-          <p className="mt-3 font-display font-bold">No memories yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Riders on this trip can share their best shots here.
-          </p>
+          <p className="mt-3 font-display font-bold">{t("tripgallery.empty_title")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("tripgallery.empty_body")}</p>
         </div>
       ) : (
         <>
@@ -238,7 +234,7 @@ export function GalleryPanel({
           {mineOrPending.length > 0 && (
             <>
               <h3 className="mt-8 font-display font-bold text-sm uppercase tracking-wider text-muted-foreground">
-                {isAdmin ? "Awaiting moderation / rejected" : "Your uploads"}
+                {isAdmin ? t("tripgallery.awaiting_moderation") : t("tripgallery.your_uploads")}
               </h3>
               <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
                 {mineOrPending.map((m) => (
@@ -259,7 +255,7 @@ export function GalleryPanel({
       <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Share a memory</DialogTitle>
+            <DialogTitle>{t("tripgallery.share_memory")}</DialogTitle>
           </DialogHeader>
           {pending && (
             <div className="space-y-3">
@@ -277,7 +273,7 @@ export function GalleryPanel({
                 />
               )}
               <Input
-                placeholder="Optional caption"
+                placeholder={t("tripgallery.optional_caption")}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 maxLength={200}
@@ -285,8 +281,7 @@ export function GalleryPanel({
               <div className="rounded-xl bg-secondary/40 p-3 text-xs space-y-2">
                 <p className="inline-flex items-start gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
-                  Only upload respectful content from official trips. Do not upload embarrassing,
-                  unsafe or private moments without permission.
+                  {t("tripgallery.content_notice")}
                 </p>
                 <label className="flex items-start gap-2">
                   <Checkbox
@@ -294,8 +289,7 @@ export function GalleryPanel({
                     onCheckedChange={(v) => setOkPermission(!!v)}
                     className="mt-0.5"
                   />
-                  I confirm I have permission to upload this content and that it respects the people
-                  shown.
+                  {t("tripgallery.confirm_permission")}
                 </label>
                 <label className="flex items-start gap-2">
                   <Checkbox
@@ -303,15 +297,15 @@ export function GalleryPanel({
                     onCheckedChange={(v) => setOkVisibility(!!v)}
                     className="mt-0.5"
                   />
-                  I understand this will be visible in the app gallery right away.
+                  {t("tripgallery.confirm_visibility")}
                 </label>
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => setPending(null)} className="flex-1">
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button onClick={upload} disabled={busy} className="flex-1">
-                  {busy ? "Uploading..." : "Upload"}
+                  {busy ? t("tripgallery.uploading") : t("tripgallery.upload")}
                 </Button>
               </div>
             </div>
@@ -323,7 +317,7 @@ export function GalleryPanel({
       <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="sr-only">Memory</DialogTitle>
+            <DialogTitle className="sr-only">{t("tripgallery.memory")}</DialogTitle>
           </DialogHeader>
           {viewer && (
             <div>
@@ -350,7 +344,7 @@ export function GalleryPanel({
                   <div className="font-semibold">
                     {viewer.profile?.username
                       ? `@${viewer.profile.username}`
-                      : (viewer.profile?.full_name ?? "Member")}
+                      : (viewer.profile?.full_name ?? t("common.member"))}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {new Date(viewer.created_at).toLocaleDateString(undefined, {
@@ -374,7 +368,7 @@ export function GalleryPanel({
                     }}
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Approve
+                    {t("tripgallery.approve")}
                   </Button>
                 )}
                 {isAdmin && viewer.status !== "rejected" && (
@@ -387,19 +381,19 @@ export function GalleryPanel({
                     }}
                   >
                     <XCircle className="w-4 h-4 mr-1" />
-                    Reject
+                    {t("tripgallery.reject")}
                   </Button>
                 )}
                 {isAdmin && viewer.status === "approved" && (
                   <Button size="sm" variant="outline" onClick={() => toggleFeatured(viewer)}>
                     <Star className={`w-4 h-4 mr-1 ${viewer.is_featured ? "fill-current" : ""}`} />
-                    {viewer.is_featured ? "Unfeature" : "Feature"}
+                    {viewer.is_featured ? t("tripgallery.unfeature") : t("tripgallery.feature")}
                   </Button>
                 )}
                 {isAdmin && viewer.status === "approved" && viewer.media_type === "image" && (
                   <Button size="sm" variant="outline" onClick={() => setCover(viewer)}>
                     <ImageIcon className="w-4 h-4 mr-1" />
-                    Set as cover
+                    {t("tripgallery.set_as_cover")}
                   </Button>
                 )}
                 {(viewer.user_id === user?.id && viewer.status === "pending") || isAdmin ? (
@@ -412,7 +406,7 @@ export function GalleryPanel({
                     }}
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
+                    {t("tripgallery.delete")}
                   </Button>
                 ) : null}
               </div>
@@ -425,6 +419,7 @@ export function GalleryPanel({
 }
 
 function Tile({ m, onOpen }: { m: Media; onOpen: () => void }) {
+  const { t } = useI18n();
   return (
     <button
       onClick={onOpen}
@@ -452,7 +447,7 @@ function Tile({ m, onOpen }: { m: Media; onOpen: () => void }) {
       )}
       {m.is_trip_cover && (
         <span className="absolute bottom-1 left-1 text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
-          Cover
+          {t("tripgallery.cover")}
         </span>
       )}
       {m.is_featured && (
@@ -463,11 +458,12 @@ function Tile({ m, onOpen }: { m: Media; onOpen: () => void }) {
 }
 
 function StatusBadge({ status, className = "" }: { status: Media["status"]; className?: string }) {
+  const { t } = useI18n();
   const map = {
-    pending: { label: "Pending", icon: Clock, cls: "bg-secondary text-foreground" },
-    approved: { label: "Approved", icon: CheckCircle2, cls: "bg-summit text-primary-foreground" },
+    pending: { label: t("tripgallery.status_pending"), icon: Clock, cls: "bg-secondary text-foreground" },
+    approved: { label: t("tripgallery.status_approved"), icon: CheckCircle2, cls: "bg-summit text-primary-foreground" },
     rejected: {
-      label: "Rejected",
+      label: t("tripgallery.status_rejected"),
       icon: XCircle,
       cls: "bg-destructive text-destructive-foreground",
     },

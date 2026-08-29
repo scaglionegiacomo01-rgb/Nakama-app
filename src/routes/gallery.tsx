@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Camera, ImageIcon, Play } from "lucide-react";
 import { SectionLabel } from "@/components/SectionLabel";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/gallery")({ component: Gallery });
 
@@ -25,6 +26,7 @@ type Media = {
 
 function Gallery() {
   const { user, loading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,7 +89,7 @@ function Gallery() {
     return grouped.filter((g) => set.has(g.event.id));
   }, [grouped, approved, myEventIds]);
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading) return <div className="max-w-5xl mx-auto px-4 py-12">{t("common.loading")}</div>;
 
   const featured = grouped[0];
   const heroThumbs = featured ? featured.media.slice(0, 3) : [];
@@ -96,25 +98,23 @@ function Gallery() {
   return (
     <div className="max-w-3xl mx-auto px-5 pt-6 pb-10 md:pt-10 md:max-w-6xl">
       <div className="inline-flex items-center gap-[7px] text-[10px] font-bold uppercase tracking-[0.22em] text-nakama-coral whitespace-nowrap">
-        <Camera className="w-[13px] h-[13px]" /> Memory archive
+        <Camera className="w-[13px] h-[13px]" /> {t("gallery.eyebrow")}
       </div>
-      <h1 className="mt-2 font-display text-[38px] leading-[1.04] tracking-[-0.045em]">Gallery</h1>
-      <p className="mt-1.5 text-[13.5px] text-muted-foreground">
-        Every official trip, photos and clips curated by the crew.
-      </p>
+      <h1 className="mt-2 font-display text-[38px] leading-[1.04] tracking-[-0.045em]">
+        {t("nav.gallery")}
+      </h1>
+      <p className="mt-1.5 text-[13.5px] text-muted-foreground">{t("gallery.subtitle")}</p>
 
       {!approved || approved.length === 0 ? (
         <div className="mt-8 rounded-[26px] border border-dashed border-border p-10 text-center">
           <div className="w-16 h-16 mx-auto rounded-3xl bg-ice grid place-items-center text-ice-foreground">
             <ImageIcon className="w-7 h-7" />
           </div>
-          <h2 className="mt-4 font-display font-bold text-2xl">Memories are waiting to be made</h2>
-          <p className="mt-2 text-muted-foreground">
-            Join a trip, ride with the group, and come back with moments worth saving.
-          </p>
+          <h2 className="mt-4 font-display font-bold text-2xl">{t("gallery.empty_title")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("gallery.empty_body")}</p>
           <Link to="/trips">
             <Button size="lg" className="mt-5">
-              Explore upcoming trips
+              {t("gallery.explore_trips")}
             </Button>
           </Link>
         </div>
@@ -146,10 +146,13 @@ function Gallery() {
                   }}
                 />
                 <span className="absolute top-[14px] left-[14px] px-2.5 py-[5px] rounded-full bg-nakama-pink text-[9.5px] font-bold uppercase tracking-[0.14em] whitespace-nowrap">
-                  Featured
+                  {t("gallery.featured")}
                 </span>
                 <span className="absolute top-[14px] right-[14px] px-2.5 py-[5px] rounded-full bg-[rgba(11,15,18,.6)] backdrop-blur-md border border-white/15 text-[9.5px] font-bold whitespace-nowrap">
-                  {featured.media.length} {featured.media.length === 1 ? "memory" : "memories"}
+                  {t(
+                    featured.media.length === 1 ? "gallery.memory_one" : "gallery.memory_other",
+                    { n: featured.media.length },
+                  )}
                 </span>
                 <div className="absolute left-[18px] right-[18px] bottom-4">
                   <div className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-nakama-coral whitespace-nowrap">
@@ -203,7 +206,7 @@ function Gallery() {
 
           {/* All albums */}
           <section className="mt-5">
-            <SectionLabel>All albums</SectionLabel>
+            <SectionLabel>{t("gallery.all_albums")}</SectionLabel>
             <div className="mt-2.5 grid grid-cols-2 gap-3">
               {grouped.map((g) => (
                 <AlbumCard key={g.event.id} g={g} />
@@ -214,7 +217,7 @@ function Gallery() {
           {/* My memories */}
           {myMedia.length > 0 && (
             <section className="mt-5">
-              <SectionLabel>My memories</SectionLabel>
+              <SectionLabel>{t("gallery.my_memories")}</SectionLabel>
               <div className="mt-2.5 grid grid-cols-2 gap-3">
                 {myMedia.map((g) => (
                   <AlbumCard key={g.event.id} g={g} />

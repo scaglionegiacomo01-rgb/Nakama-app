@@ -40,7 +40,6 @@ import { EventTag } from "@/components/EventTag";
 import { StatTile } from "@/components/SectionLabel";
 import { UserAvatar } from "@/components/UserAvatar";
 import { photoFor } from "@/lib/photo-for";
-import { SEATS_DISCLAIMER } from "@/lib/levels";
 import { BEGINNER_TAGS } from "@/lib/checklist";
 import { Sparkles } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -159,11 +158,11 @@ function TripDetail() {
   const [assistOpen, setAssistOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab ?? "overview");
 
-  if (isLoading) return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
+  if (isLoading) return <div className="max-w-3xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   if (!event)
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold">Trip not found</h1>
+        <h1 className="text-2xl font-bold">{t("tripdetail.not_found")}</h1>
       </div>
     );
 
@@ -191,7 +190,7 @@ function TripDetail() {
 
   const cancelMyReg = async () => {
     if (!myReg || !user) return;
-    if (!confirm("Cancel your participation in this trip?")) return;
+    if (!confirm(t("tripdetail.confirm_cancel"))) return;
     setBusy(true);
     try {
       const { error } = await supabase
@@ -202,7 +201,7 @@ function TripDetail() {
       // Deactivate carpool side-effects
       await supabase.from("trip_cars").delete().eq("event_id", id).eq("driver_user_id", user.id);
       await supabase.from("seat_seekers").delete().eq("event_id", id).eq("user_id", user.id);
-      toast.success("You cancelled this trip.");
+      toast.success(t("tripdetail.toast_cancelled"));
       qc.invalidateQueries({ queryKey: ["my-reg", id] });
       qc.invalidateQueries({ queryKey: ["event-reg-count", id] });
       qc.invalidateQueries({ queryKey: ["whos-going", id] });
@@ -251,7 +250,7 @@ function TripDetail() {
       // Reactivate existing row (any status) if present; otherwise insert.
       if (myReg) {
         if (isActiveReg) {
-          toast.info("You're already in this trip.");
+          toast.info(t("tripdetail.toast_already_in"));
           setShowForm(false);
           return;
         }
@@ -263,7 +262,7 @@ function TripDetail() {
         // Clean any stale carpool rows from previous attempt
         await supabase.from("trip_cars").delete().eq("event_id", id).eq("driver_user_id", user.id);
         await supabase.from("seat_seekers").delete().eq("event_id", id).eq("user_id", user.id);
-        toast.success("Your request to join this trip has been sent again.");
+        toast.success(t("tripdetail.toast_resent"));
       } else {
         const { error } = await supabase.from("event_registrations").insert(payload);
         if (error) throw error;
@@ -337,13 +336,13 @@ function TripDetail() {
           <div className="flex items-center gap-2">
             <button
               className="nakama-glass w-10 h-10 rounded-full grid place-items-center border border-white/12 text-white"
-              aria-label="Share"
+              aria-label={t("tripdetail.share")}
               onClick={() => {
                 if (navigator.share)
                   navigator.share({ title: event.title, url: window.location.href });
                 else {
                   navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied");
+                  toast.success(t("tripdetail.link_copied"));
                 }
               }}
             >
@@ -351,7 +350,7 @@ function TripDetail() {
             </button>
             <button
               className="nakama-glass w-10 h-10 rounded-full grid place-items-center border border-white/12 text-white"
-              aria-label="Bookmark"
+              aria-label={t("tripdetail.bookmark")}
             >
               <Bookmark className="w-[18px] h-[18px]" />
             </button>
@@ -551,7 +550,7 @@ function TripDetail() {
             </div>
           ) : myReg && myReg.status === "rejected" ? (
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="text-sm text-muted-foreground">Your request was not accepted.</div>
+              <div className="text-sm text-muted-foreground">{t("tripdetail.rejected_msg")}</div>
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -608,7 +607,7 @@ function TripDetail() {
                 <RadioRow value="no_car_can_drive" label={t("join.transport_no_car_can_drive")} />
                 <RadioRow value="no_car_need_seat" label={t("join.transport_no_car_need_seat")} />
               </RadioGroup>
-              <p className="text-[11px] text-muted-foreground mt-2">{SEATS_DISCLAIMER}</p>
+              <p className="text-[11px] text-muted-foreground mt-2">{t("level.seats_disclaimer")}</p>
             </div>
 
             {/* Departure area is the one detail carpooling can't work without,
@@ -619,7 +618,7 @@ function TripDetail() {
                 <Input
                   value={departureArea}
                   onChange={(e) => setDepartureArea(e.target.value)}
-                  placeholder="es. Milano"
+                  placeholder={t("tripdetail.departure_placeholder")}
                 />
               </div>
             )}
@@ -674,7 +673,7 @@ function TripDetail() {
                         <Input
                           value={meetingPoint}
                           onChange={(e) => setMeetingPoint(e.target.value)}
-                          placeholder="es. Stazione Lambrate 6:00"
+                          placeholder={t("tripdetail.meeting_point_placeholder")}
                         />
                       </div>
                       <div>
@@ -746,7 +745,7 @@ function TripDetail() {
       <Dialog open={recapOpen} onOpenChange={setRecapOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="sr-only">Trip recap</DialogTitle>
+            <DialogTitle className="sr-only">{t("tripdetail.recap_title")}</DialogTitle>
           </DialogHeader>
           <div>
             <div className="flex flex-col items-center text-center">
@@ -754,59 +753,55 @@ function TripDetail() {
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <h2 className="mt-3 font-display font-bold text-2xl">
-                Your spot request has been sent
+                {t("tripdetail.recap_sent_title")}
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                See you on the mountain. Please arrive on time and make sure your equipment is
-                ready.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t("tripdetail.recap_sent_body")}</p>
             </div>
             <div className="mt-5 space-y-2">
-              <Row icon={Mountain} label="Trip" value={event.title} />
-              <Row icon={MapPin} label="Destination" value={event.destination} />
+              <Row icon={Mountain} label={t("tripdetail.row_trip")} value={event.title} />
+              <Row icon={MapPin} label={t("tripdetail.row_destination")} value={event.destination} />
               <Row
                 icon={Calendar}
-                label="Date"
+                label={t("tripdetail.row_date")}
                 value={new Date(event.date).toLocaleDateString(undefined, {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
                 })}
               />
-              <Row icon={MapPin} label="Meeting point" value={event.meeting_point} />
-              <Row icon={Clock} label="Departure" value={event.departure_time ?? "TBA"} />
-              <Row icon={Clock} label="Return" value={event.return_time ?? "TBA"} />
-              <Row icon={Car} label="Transport" value={transport.replaceAll("_", " ")} />
+              <Row icon={MapPin} label={t("tripdetail.row_meeting_point")} value={event.meeting_point} />
+              <Row icon={Clock} label={t("tripdetail.row_departure")} value={event.departure_time ?? t("tripdetail.tba")} />
+              <Row icon={Clock} label={t("tripdetail.row_return")} value={event.return_time ?? t("tripdetail.tba")} />
+              <Row icon={Car} label={t("tripdetail.row_transport")} value={transport.replaceAll("_", " ")} />
               <Row
                 icon={Backpack}
-                label="Gear"
+                label={t("tripdetail.row_gear")}
                 value={
                   form.needs_rental
-                    ? "Renting on site"
+                    ? t("tripdetail.gear_renting")
                     : form.has_equipment
-                      ? "Bringing own gear"
+                      ? t("tripdetail.gear_own")
                       : "—"
                 }
               />
               {event.safety_notes && (
-                <Row icon={ShieldCheck} label="Organizer notes" value={event.safety_notes} />
+                <Row icon={ShieldCheck} label={t("tripdetail.row_organizer_notes")} value={event.safety_notes} />
               )}
             </div>
             <div className="mt-4 rounded-xl bg-ice/30 border border-ice p-3 text-xs space-y-1">
-              <p>⏰ Be on time at the meeting point — the crew waits 10 minutes max.</p>
-              <p>🏔️ Mountain weather changes fast. Pack warm layers and water.</p>
-              <p>🎿 Double-check your gear the night before.</p>
+              <p>{t("tripdetail.tip_ontime")}</p>
+              <p>{t("tripdetail.tip_weather")}</p>
+              <p>{t("tripdetail.tip_gear")}</p>
               <p>
-                <Users className="w-3 h-3 inline" /> Nobody gets left behind — check in on the
-                Safety tab.
+                <Users className="w-3 h-3 inline" /> {t("tripdetail.tip_safety")}
               </p>
             </div>
             <div className="mt-4 flex gap-2">
               <Button onClick={() => setRecapOpen(false)} variant="outline" className="flex-1">
-                Close
+                {t("common.close")}
               </Button>
               <Link to="/my-trips" className="flex-1">
-                <Button className="w-full">My trips</Button>
+                <Button className="w-full">{t("nav.my_trips")}</Button>
               </Link>
             </div>
           </div>
@@ -817,21 +812,18 @@ function TripDetail() {
       <Dialog open={assistOpen} onOpenChange={setAssistOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="sr-only">Beginner Assist</DialogTitle>
+            <DialogTitle className="sr-only">{t("tripdetail.assist_title")}</DialogTitle>
           </DialogHeader>
           <div className="text-center">
             <div className="mx-auto w-14 h-14 rounded-2xl bg-ice grid place-items-center text-ice-foreground">
               <Sparkles className="w-7 h-7" />
             </div>
-            <h2 className="mt-3 font-display font-bold text-xl">Ready for the mountain?</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              We prepared a simple checklist to help you get ready for the trip. The community is
-              here to help.
-            </p>
+            <h2 className="mt-3 font-display font-bold text-xl">{t("tripdetail.assist_title")}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t("tripdetail.assist_body")}</p>
           </div>
           <div className="mt-4 flex gap-2">
             <Button variant="ghost" className="flex-1" onClick={() => setAssistOpen(false)}>
-              Maybe later
+              {t("tripdetail.assist_later")}
             </Button>
             <Button
               className="flex-1"
@@ -840,7 +832,7 @@ function TripDetail() {
                 setActiveTab("assist");
               }}
             >
-              Open checklist
+              {t("tripdetail.assist_open")}
             </Button>
           </div>
         </DialogContent>

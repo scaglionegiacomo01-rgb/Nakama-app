@@ -126,7 +126,7 @@ function Profile() {
   const uploadAvatar = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Max 5MB");
+      toast.error(t("profile.toast_max_5mb"));
       return;
     }
     setUploading(true);
@@ -153,7 +153,7 @@ function Profile() {
     }
     setForm({ ...form, profile_picture_url: url });
     qc.invalidateQueries({ queryKey: ["profile"] });
-    toast.success("Profile picture updated");
+    toast.success(t("profile.toast_pic_updated"));
   };
 
   const save = async () => {
@@ -161,7 +161,7 @@ function Profile() {
     const username = ((form.username as string) || "").trim().toLowerCase() || null;
     if (username && !/^[a-z0-9_]{3,20}$/.test(username)) {
       setBusy(false);
-      toast.error("Username must be 3–20 chars, lowercase letters, numbers or underscore");
+      toast.error(t("profile.toast_username_format"));
       return;
     }
     const { error } = await supabase
@@ -191,32 +191,32 @@ function Profile() {
     setBusy(false);
     if (error) {
       if ((error.message || "").includes("profiles_username_key"))
-        toast.error("That username is taken");
+        toast.error(t("profile.toast_username_taken"));
       else if ((error.message || "").includes("profiles_username_format"))
-        toast.error("Invalid username format");
+        toast.error(t("profile.toast_username_invalid"));
       else toast.error(error.message);
     } else {
-      toast.success("Profile updated");
+      toast.success(t("profile.toast_updated"));
       qc.invalidateQueries({ queryKey: ["profile"] });
     }
   };
 
-  if (loading || isLoading) return <div className="max-w-3xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading || isLoading) return <div className="max-w-3xl mx-auto px-4 py-12">{t("common.loading")}</div>;
 
   const f = form as Record<string, string | boolean | number | string[]>;
 
   // ----- Completion calc -----
   const completionFields: Array<{ key: string; label: string; filled: boolean }> = [
-    { key: "full_name", label: "Full name", filled: !!(f.full_name as string)?.trim() },
-    { key: "username", label: "Username", filled: !!(f.username as string)?.trim() },
-    { key: "profile_picture_url", label: "Avatar", filled: !!(f.profile_picture_url as string) },
-    { key: "city", label: "City", filled: !!(f.city as string)?.trim() },
-    { key: "snowboard_level", label: "Snowboard level", filled: !!(f.snowboard_level as string) },
-    { key: "mountain_level", label: "Mountain level", filled: !!(f.mountain_level as string) },
-    { key: "bio", label: "Bio", filled: !!(f.bio as string)?.trim() },
+    { key: "full_name", label: t("profile.field_full_name"), filled: !!(f.full_name as string)?.trim() },
+    { key: "username", label: t("profile.field_username"), filled: !!(f.username as string)?.trim() },
+    { key: "profile_picture_url", label: t("profile.field_avatar"), filled: !!(f.profile_picture_url as string) },
+    { key: "city", label: t("profile.field_city"), filled: !!(f.city as string)?.trim() },
+    { key: "snowboard_level", label: t("profile.field_snowboard_level"), filled: !!(f.snowboard_level as string) },
+    { key: "mountain_level", label: t("profile.field_mountain_level"), filled: !!(f.mountain_level as string) },
+    { key: "bio", label: t("profile.field_bio"), filled: !!(f.bio as string)?.trim() },
     {
       key: "emergency_contact_name",
-      label: "Emergency contact",
+      label: t("profile.field_emergency_contact"),
       filled: !!(f.emergency_contact_name as string)?.trim(),
     },
   ];
@@ -226,9 +226,11 @@ function Profile() {
 
   const brands = (f.favorite_brands as string[]) ?? [];
 
-  const sbLevel = SNOWBOARD_LEVELS.find((l) => l.value === f.snowboard_level)?.title;
-  const mtLevel = MOUNTAIN_LEVELS.find((l) => l.value === f.mountain_level)?.title;
-  const displayName = (f.full_name as string) || (f.username as string) || "Your name";
+  const sbLevelKey = SNOWBOARD_LEVELS.find((l) => l.value === f.snowboard_level)?.titleKey;
+  const mtLevelKey = MOUNTAIN_LEVELS.find((l) => l.value === f.mountain_level)?.titleKey;
+  const sbLevel = sbLevelKey ? t(sbLevelKey) : undefined;
+  const mtLevel = mtLevelKey ? t(mtLevelKey) : undefined;
+  const displayName = (f.full_name as string) || (f.username as string) || t("common.your_name");
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-10 md:pt-10">
@@ -255,7 +257,7 @@ function Profile() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-md hover:scale-105 transition"
-                aria-label="Change avatar"
+                aria-label={t("profile.change_avatar")}
               >
                 <Camera className="w-3.5 h-3.5" />
               </button>
@@ -283,7 +285,7 @@ function Profile() {
                   </span>
                 )}
               </div>
-              {uploading && <div className="mt-1.5 text-xs text-muted-foreground">Uploading…</div>}
+              {uploading && <div className="mt-1.5 text-xs text-muted-foreground">{t("common.uploading")}</div>}
             </div>
           </div>
           <button
@@ -326,7 +328,7 @@ function Profile() {
                   ? `${t("profile.missing")}: ${missing.slice(0, 3).join(", ")}${
                       missing.length > 3 ? "…" : ""
                     }`
-                  : "All set."}
+                  : t("profile.all_set")}
               </div>
             </div>
             <div className="text-2xl font-display font-bold text-primary shrink-0">
@@ -366,13 +368,13 @@ function Profile() {
           {t("profile.riding_identity")}
         </h2>
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <InfoItem label="Snowboard" value={sbLevel ?? "—"} />
-          <InfoItem label="Mountain" value={mtLevel ?? "—"} />
+          <InfoItem label={t("profile.snowboard")} value={sbLevel ?? "—"} />
+          <InfoItem label={t("profile.mountain")} value={mtLevel ?? "—"} />
           <InfoItem
-            label="Own gear"
-            value={f.has_equipment ? "Yes" : f.needs_rental ? "Needs rental" : "—"}
+            label={t("profile.own_gear")}
+            value={f.has_equipment ? t("common.yes") : f.needs_rental ? t("profile.needs_rental") : "—"}
           />
-          <InfoItem label="Brands" value={brands.length > 0 ? `${brands.length}` : "—"} />
+          <InfoItem label={t("profile.brands")} value={brands.length > 0 ? `${brands.length}` : "—"} />
         </div>
         {brands.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -430,41 +432,41 @@ function Profile() {
           <AccordionItem value="contact" className="border-border">
             <AccordionTrigger className="py-3 text-sm">
               <span className="inline-flex items-center gap-2">
-                <Phone className="w-4 h-4" /> Contact
+                <Phone className="w-4 h-4" /> {t("profile.contact")}
               </span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <InfoItem label="Phone" value={(f.phone as string) || "—"} />
-                <InfoItem label="DOB" value={(f.date_of_birth as string) || "—"} />
+                <InfoItem label={t("profile.phone")} value={(f.phone as string) || "—"} />
+                <InfoItem label={t("profile.dob")} value={(f.date_of_birth as string) || "—"} />
               </div>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="emergency" className="border-border">
             <AccordionTrigger className="py-3 text-sm">
               <span className="inline-flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4" /> Emergency contact
+                <ShieldAlert className="w-4 h-4" /> {t("profile.field_emergency_contact")}
               </span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <InfoItem label="Name" value={(f.emergency_contact_name as string) || "—"} />
-                <InfoItem label="Phone" value={(f.emergency_contact_phone as string) || "—"} />
+                <InfoItem label={t("profile.name")} value={(f.emergency_contact_name as string) || "—"} />
+                <InfoItem label={t("profile.phone")} value={(f.emergency_contact_phone as string) || "—"} />
               </div>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="transport" className="border-border border-b-0">
             <AccordionTrigger className="py-3 text-sm">
               <span className="inline-flex items-center gap-2">
-                <Car className="w-4 h-4" /> Transport
+                <Car className="w-4 h-4" /> {t("profile.section_transport")}
               </span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <InfoItem label="Has car" value={f.has_car ? "Yes" : "No"} />
-                <InfoItem label="Willing to drive" value={f.willing_to_drive ? "Yes" : "No"} />
-                <InfoItem label="Seats" value={String(Number(f.car_seats) || 0)} />
-                <InfoItem label="Needs rental" value={f.needs_rental ? "Yes" : "No"} />
+                <InfoItem label={t("profile.has_car")} value={f.has_car ? t("common.yes") : t("common.no")} />
+                <InfoItem label={t("profile.willing_to_drive")} value={f.willing_to_drive ? t("common.yes") : t("common.no")} />
+                <InfoItem label={t("profile.seats")} value={String(Number(f.car_seats) || 0)} />
+                <InfoItem label={t("profile.needs_rental")} value={f.needs_rental ? t("common.yes") : t("common.no")} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -479,7 +481,7 @@ function Profile() {
           onClick={() => setEditMode((v) => !v)}
         >
           <Pencil className="w-4 h-4 mr-2" />
-          {editMode ? "Close edit" : t("profile.edit")}
+          {editMode ? t("profile.close_edit") : t("profile.edit")}
         </Button>
       </div>
 
@@ -517,7 +519,10 @@ function NextRankCard({ completed }: { completed: number }) {
           </div>
           {next && (
             <div className="text-xs text-muted-foreground mt-0.5">
-              {next.min - completed} {next.min - completed === 1 ? "trip" : "trips"} to go
+              {t(
+                next.min - completed === 1 ? "profile.trips_to_go_one" : "profile.trips_to_go_other",
+                { n: next.min - completed },
+              )}
             </div>
           )}
         </div>
@@ -532,7 +537,7 @@ function NextRankCard({ completed }: { completed: number }) {
           />
         </div>
       )}
-      <p className="mt-3 text-sm italic text-muted-foreground">"{rank.description}"</p>
+      <p className="mt-3 text-sm italic text-muted-foreground">"{t(rank.descriptionKey)}"</p>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Car } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
-import { typeLabel } from "@/components/EventCard";
+import { eventTypeLabel } from "@/lib/event-tags";
 import { photoFor } from "@/lib/photo-for";
 import { useI18n } from "@/lib/i18n";
 
@@ -81,7 +81,7 @@ export function TripTicket({
           <div className="flex items-start justify-between gap-3.5">
             <div className="min-w-0">
               <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">
-                {(typeLabel[event.type] ?? event.type).toUpperCase()} · {event.destination}
+                {eventTypeLabel(event.type, t).toUpperCase()} · {event.destination}
               </div>
               <div className="mt-[7px] font-display text-[32px] leading-[1.02] tracking-[-0.045em] whitespace-nowrap truncate">
                 {event.title}
@@ -178,7 +178,7 @@ export function TripTicket({
         <div className="absolute inset-x-4 bottom-3 flex items-end justify-between gap-2">
           <div className="min-w-0">
             <div className="text-nakama-coral text-[9px] font-bold uppercase tracking-[0.14em] whitespace-nowrap">
-              {(typeLabel[event.type] ?? event.type).toUpperCase()} · {event.destination}
+              {eventTypeLabel(event.type, t).toUpperCase()} · {event.destination}
             </div>
             <div className="mt-0.5 font-display text-2xl leading-[1.04] tracking-[-0.04em] text-white whitespace-nowrap">
               {event.title}

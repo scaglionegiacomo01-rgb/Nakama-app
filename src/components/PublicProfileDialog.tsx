@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "./UserAvatar";
 import { RankBadge } from "./RankBadge";
 import { Calendar, Mountain } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 type Row = {
   user_id: string;
@@ -18,6 +19,7 @@ type Row = {
 };
 
 export function PublicProfileDialog({ userId, open, onOpenChange }: { userId: string | null; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { t } = useI18n();
   const { data, isLoading } = useQuery({
     queryKey: ["public-profile", userId],
     enabled: !!userId && open,
@@ -29,15 +31,15 @@ export function PublicProfileDialog({ userId, open, onOpenChange }: { userId: st
     },
   });
 
-  const display = data?.username ? `@${data.username}` : (data?.full_name ?? "Member");
+  const display = data?.username ? `@${data.username}` : (data?.full_name ?? t("common.member"));
   const joined = data ? new Date(data.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle className="sr-only">Member profile</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="sr-only">{t("pubprofile.title")}</DialogTitle></DialogHeader>
         {isLoading || !data ? (
-          <div className="py-8 text-center text-muted-foreground">Loading...</div>
+          <div className="py-8 text-center text-muted-foreground">{t("common.loading")}</div>
         ) : (
           <div>
             <div className="flex flex-col items-center text-center">
@@ -52,20 +54,20 @@ export function PublicProfileDialog({ userId, open, onOpenChange }: { userId: st
             )}
 
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <Stat icon={Mountain} label="Completed trips" value={String(data.completed_trips)} />
-              <Stat icon={Calendar} label="Joined" value={joined} />
+              <Stat icon={Mountain} label={t("pubprofile.completed_trips")} value={String(data.completed_trips)} />
+              <Stat icon={Calendar} label={t("pubprofile.joined")} value={joined} />
             </div>
 
             {data.snowboard_level && (
               <div className="mt-4">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Snowboard level</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("pubprofile.snowboard_level")}</div>
                 <span className="inline-block text-sm px-2.5 py-1 rounded-full bg-ice text-ice-foreground capitalize">{data.snowboard_level}</span>
               </div>
             )}
 
             {data.favorite_brands && data.favorite_brands.length > 0 && (
               <div className="mt-4">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Favorite brands</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">{t("pubprofile.favorite_brands")}</div>
                 <div className="flex flex-wrap gap-1.5">
                   {data.favorite_brands.map(b => (
                     <span key={b} className="text-xs px-2 py-0.5 rounded-full bg-secondary">{b}</span>

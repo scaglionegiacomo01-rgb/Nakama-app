@@ -12,12 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CheckCircle2, Search, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import {
-  SNOWBOARD_LEVELS,
-  MOUNTAIN_LEVELS,
-  HONESTY_DISCLAIMER,
-  SEATS_DISCLAIMER,
-} from "@/lib/levels";
+import { SNOWBOARD_LEVELS, MOUNTAIN_LEVELS } from "@/lib/levels";
 import { BRAND_GROUPS } from "@/lib/brands";
 import { Field, Toggle } from "./ProfileFields";
 
@@ -61,27 +56,27 @@ export function ProfileEditForm({
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid sm:grid-cols-2 gap-4 pb-3">
-              <Field label="Full name">
+              <Field label={t("profedit.full_name")}>
                 <Input
                   value={(f.full_name as string) ?? ""}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                 />
               </Field>
-              <Field label="Username">
+              <Field label={t("profedit.username")}>
                 <Input
                   value={(f.username as string) ?? ""}
-                  placeholder="powderhunter"
+                  placeholder={t("profedit.username_placeholder")}
                   onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
                 />
               </Field>
-              <Field label="Date of birth">
+              <Field label={t("profedit.dob")}>
                 <Input
                   type="date"
                   value={(f.date_of_birth as string) ?? ""}
                   onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
                 />
               </Field>
-              <Field label="City / departure area">
+              <Field label={t("profedit.city")}>
                 <Input
                   value={(f.city as string) ?? ""}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
@@ -98,7 +93,7 @@ export function ProfileEditForm({
           <AccordionContent>
             <div className="space-y-4 pb-3">
               <div>
-                <Label className="mb-1.5 block">Snowboard level</Label>
+                <Label className="mb-1.5 block">{t("profedit.snowboard_level")}</Label>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {SNOWBOARD_LEVELS.map((l) => {
                     const on = f.snowboard_level === l.value;
@@ -113,9 +108,9 @@ export function ProfileEditForm({
                             : "border-border bg-background hover:border-primary/40"
                         }`}
                       >
-                        <div className="font-semibold text-sm">{l.title}</div>
+                        <div className="font-semibold text-sm">{t(l.titleKey)}</div>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {l.description}
+                          {t(l.descriptionKey)}
                         </div>
                       </button>
                     );
@@ -123,7 +118,7 @@ export function ProfileEditForm({
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 block">Mountain experience</Label>
+                <Label className="mb-1.5 block">{t("profedit.mountain_experience")}</Label>
                 <div className="grid sm:grid-cols-3 gap-2">
                   {MOUNTAIN_LEVELS.map((l) => {
                     const on = f.mountain_level === l.value;
@@ -138,16 +133,16 @@ export function ProfileEditForm({
                             : "border-border bg-background hover:border-primary/40"
                         }`}
                       >
-                        <div className="font-semibold text-sm">{l.title}</div>
+                        <div className="font-semibold text-sm">{t(l.titleKey)}</div>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {l.description}
+                          {t(l.descriptionKey)}
                         </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground italic">{HONESTY_DISCLAIMER}</p>
+              <p className="text-xs text-muted-foreground italic">{t("level.honesty_disclaimer")}</p>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -159,21 +154,21 @@ export function ProfileEditForm({
           <AccordionContent>
             <div className="space-y-3 pb-3">
               <Toggle
-                label="I have my own snowboard equipment"
+                label={t("profedit.has_equipment")}
                 checked={!!f.has_equipment}
                 onChange={(v) => setForm({ ...form, has_equipment: v })}
               />
               <Toggle
-                label="I need rental"
+                label={t("profedit.needs_rental")}
                 checked={!!f.needs_rental}
                 onChange={(v) => setForm({ ...form, needs_rental: v })}
               />
               <div>
-                <Label className="mb-1.5 block">Favorite brands</Label>
+                <Label className="mb-1.5 block">{t("profedit.favorite_brands")}</Label>
                 <div className="flex flex-wrap gap-1.5 mb-3 min-h-[2rem]">
                   {brands.length === 0 ? (
                     <span className="text-xs text-muted-foreground italic">
-                      No brands selected yet
+                      {t("profedit.no_brands")}
                     </span>
                   ) : (
                     brands.map((b) => (
@@ -193,7 +188,7 @@ export function ProfileEditForm({
                   <PopoverTrigger asChild>
                     <Button type="button" variant="outline" size="sm">
                       <Search className="w-3.5 h-3.5 mr-1" />
-                      Browse brands
+                      {t("profedit.browse_brands")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-0" align="start">
@@ -201,7 +196,7 @@ export function ProfileEditForm({
                       <Input
                         value={brandSearch}
                         onChange={(e) => setBrandSearch(e.target.value)}
-                        placeholder="Search brand…"
+                        placeholder={t("profedit.search_brand")}
                         className="h-8"
                       />
                     </div>
@@ -253,17 +248,17 @@ export function ProfileEditForm({
           <AccordionContent>
             <div className="space-y-3 pb-3">
               <Toggle
-                label="I have a car"
+                label={t("profedit.has_car")}
                 checked={!!f.has_car}
                 onChange={(v) => setForm({ ...form, has_car: v })}
               />
               <Toggle
-                label="I'm willing to drive"
+                label={t("profedit.willing_to_drive")}
                 checked={!!f.willing_to_drive}
                 onChange={(v) => setForm({ ...form, willing_to_drive: v })}
               />
               {f.has_car && (
-                <Field label="Available seats (excl. driver)">
+                <Field label={t("profedit.seats_excl_driver")}>
                   <Input
                     type="number"
                     min={0}
@@ -272,7 +267,7 @@ export function ProfileEditForm({
                   />
                 </Field>
               )}
-              <p className="text-xs text-muted-foreground italic">{SEATS_DISCLAIMER}</p>
+              <p className="text-xs text-muted-foreground italic">{t("level.seats_disclaimer")}</p>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -283,13 +278,13 @@ export function ProfileEditForm({
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid sm:grid-cols-2 gap-4 pb-3">
-              <Field label="Phone">
+              <Field label={t("profedit.phone")}>
                 <Input
                   value={(f.phone as string) ?? ""}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </Field>
-              <Field label="Emergency contact name">
+              <Field label={t("profedit.emergency_name")}>
                 <Input
                   value={(f.emergency_contact_name as string) ?? ""}
                   onChange={(e) =>
@@ -300,7 +295,7 @@ export function ProfileEditForm({
                   }
                 />
               </Field>
-              <Field label="Emergency contact phone">
+              <Field label={t("profedit.emergency_phone")}>
                 <Input
                   value={(f.emergency_contact_phone as string) ?? ""}
                   onChange={(e) =>
@@ -321,20 +316,20 @@ export function ProfileEditForm({
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-3 pb-3">
-              <Field label="Short bio (public)">
+              <Field label={t("profedit.bio_label")}>
                 <Textarea
                   value={(f.bio as string) ?? ""}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  placeholder="Tell the crew a bit about you"
+                  placeholder={t("profedit.bio_placeholder")}
                 />
               </Field>
               <Toggle
-                label="I accept the liability disclaimer"
+                label={t("profedit.accept_liability")}
                 checked={!!f.accepted_liability}
                 onChange={(v) => setForm({ ...form, accepted_liability: v })}
               />
               <Toggle
-                label="I accept the community rules"
+                label={t("profedit.accept_rules")}
                 checked={!!f.accepted_rules}
                 onChange={(v) => setForm({ ...form, accepted_rules: v })}
               />

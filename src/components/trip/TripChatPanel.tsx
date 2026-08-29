@@ -8,6 +8,7 @@ import { Trash2, Send } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 type Msg = { id: string; user_id: string; message: string; created_at: string;
   profile?: { full_name: string | null; username: string | null; profile_picture_url: string | null };
@@ -15,6 +16,7 @@ type Msg = { id: string; user_id: string; message: string; created_at: string;
 
 export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; canPost: boolean; isAdmin: boolean }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
     if (!user) return;
     const m = text.trim();
     if (!m) return;
-    if (m.length > 500) { toast.error("500 chars max"); return; }
+    if (m.length > 500) { toast.error(t("tripchat.toast_too_long")); return; }
     const { error } = await supabase.from("trip_chat_messages").insert({ event_id: eventId, user_id: user.id, message: m });
     if (error) { toast.error(error.message); return; }
     setText("");
@@ -64,13 +66,13 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
   };
 
   if (!canPost && !isAdmin) {
-    return <div className="rounded-2xl bg-card border border-border p-6 text-center text-sm text-muted-foreground">Join this trip to access the group chat.</div>;
+    return <div className="rounded-2xl bg-card border border-border p-6 text-center text-sm text-muted-foreground">{t("tripchat.join_to_access")}</div>;
   }
 
   return (
     <div className="flex flex-col h-[60vh] rounded-2xl border border-border bg-card overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {(messages ?? []).length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No messages yet. Say hi 👋</p>}
+        {(messages ?? []).length === 0 && <p className="text-center text-sm text-muted-foreground py-8">{t("tripchat.empty")}</p>}
         {(messages ?? []).map(m => {
           const mine = m.user_id === user?.id;
           return (
@@ -78,7 +80,7 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
               <UserAvatar url={m.profile?.profile_picture_url} name={m.profile?.full_name ?? m.profile?.username} size="sm" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-semibold">{m.profile?.username ? `@${m.profile.username}` : (m.profile?.full_name ?? "Member")}</span>
+                  <span className="text-xs font-semibold">{m.profile?.username ? `@${m.profile.username}` : (m.profile?.full_name ?? t("common.member"))}</span>
                   <RankBadge completed={m.completed ?? 0} size="xs" />
                   <span className="text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString(undefined,{ hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}</span>
                   {(mine || isAdmin) && (
@@ -93,7 +95,7 @@ export function TripChatPanel({ eventId, canPost, isAdmin }: { eventId: string; 
         <div ref={endRef} />
       </div>
       <div className="border-t border-border p-3 flex gap-2 items-end">
-        <Textarea value={text} onChange={e => setText(e.target.value)} placeholder="Message the crew..." rows={1} maxLength={500} className="resize-none min-h-[40px]" />
+        <Textarea value={text} onChange={e => setText(e.target.value)} placeholder={t("tripchat.placeholder")} rows={1} maxLength={500} className="resize-none min-h-[40px]" />
         <div className="flex flex-col items-end gap-1">
           <Button onClick={send} disabled={!text.trim()} size="sm"><Send className="w-4 h-4" /></Button>
           <span className="text-[10px] text-muted-foreground">{text.length}/500</span>

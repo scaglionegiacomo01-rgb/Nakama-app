@@ -8,6 +8,8 @@ import { MapPin, Mountain, Heart, Trophy, Compass, Snowflake } from "lucide-reac
 import { SectionLabel } from "@/components/SectionLabel";
 import { photoFor } from "@/lib/photo-for";
 import { PassportMap, type PassportMapPlace } from "@/components/PassportMap";
+import { eventTypeLabel } from "@/lib/event-tags";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/passport")({ component: Passport });
 
@@ -33,15 +35,9 @@ type Trip = {
   } | null;
 };
 
-const typeLabels: Record<string, string> = {
-  snowboard: "Snowboard",
-  mountain_walk: "Mountain walk",
-  skate: "Skate",
-  surf: "Surf",
-};
-
 function Passport() {
   const { user, loading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -171,7 +167,8 @@ function Passport() {
       }));
   }, [stats]);
 
-  if (loading || isLoading) return <div className="max-w-4xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading || isLoading)
+    return <div className="max-w-4xl mx-auto px-4 py-12">{t("common.loading")}</div>;
 
   if (!trips || trips.length === 0) {
     return (
@@ -180,14 +177,12 @@ function Passport() {
           <Snowflake className="w-9 h-9 text-ice-foreground" />
         </div>
         <h1 className="mt-6 font-display text-[32px] leading-[1.05] tracking-[-0.045em]">
-          Your passport is still empty
+          {t("passport.empty_title")}
         </h1>
-        <p className="mt-3 text-muted-foreground">
-          Join your first trip and start collecting places, memories and mountain days.
-        </p>
+        <p className="mt-3 text-muted-foreground">{t("passport.empty_body")}</p>
         <Link to="/trips">
           <Button size="lg" className="mt-6">
-            Explore upcoming trips
+            {t("gallery.explore_trips")}
           </Button>
         </Link>
       </div>
@@ -209,18 +204,18 @@ function Passport() {
         />
         <div className="relative p-[18px] md:p-8 text-primary-foreground">
           <div className="inline-flex items-center gap-[7px] text-[9.5px] font-bold uppercase tracking-[0.22em] opacity-85 whitespace-nowrap">
-            <Compass className="w-[13px] h-[13px]" /> Mountain Passport
+            <Compass className="w-[13px] h-[13px]" /> {t("passport.hero_eyebrow")}
           </div>
           <h1 className="mt-[9px] font-display text-[30px] md:text-[40px] leading-[1.0] tracking-[-0.045em]">
-            Your mountain
+            {t("passport.hero_title_1")}
             <br />
-            story
+            {t("passport.hero_title_2")}
           </h1>
           <div className="mt-4 grid grid-cols-4 gap-2 md:max-w-md">
-            <GlassTile label="TRIPS" value={s.total} />
-            <GlassTile label="PLACES" value={s.uniqueDests} />
-            <GlassTile label="SNOW" value={s.typeCounts.snowboard} />
-            <GlassTile label="WALK" value={s.typeCounts.mountain_walk} />
+            <GlassTile label={t("passport.tile_trips")} value={s.total} />
+            <GlassTile label={t("passport.tile_places")} value={s.uniqueDests} />
+            <GlassTile label={t("passport.tile_snow")} value={s.typeCounts.snowboard} />
+            <GlassTile label={t("passport.tile_walk")} value={s.typeCounts.mountain_walk} />
           </div>
         </div>
       </div>
@@ -229,7 +224,9 @@ function Passport() {
       {s.seasons.length > 0 && (
         <section className="mt-5">
           <SectionLabel>
-            {s.seasons.length > 1 ? "Seasons" : `Season ${s.seasons[0].label}`}
+            {s.seasons.length > 1
+              ? t("passport.seasons")
+              : t("passport.season_n", { label: s.seasons[0].label })}
           </SectionLabel>
           <div className="mt-2.5 flex flex-col gap-2.5">
             {s.seasons.map((season) => (
@@ -243,11 +240,11 @@ function Passport() {
                   </div>
                 )}
                 <div className={`grid grid-cols-3 gap-2.5 ${s.seasons.length > 1 ? "mt-2" : ""}`}>
-                  <SeasonStat value={season.count} label="Trips" />
-                  <SeasonStat value={season.places} label="Places" />
+                  <SeasonStat value={season.count} label={t("passport.season_trips")} />
+                  <SeasonStat value={season.places} label={t("passport.season_places")} />
                   <SeasonStat
-                    value={typeLabels[season.topType] ?? season.topType}
-                    label="Top vibe"
+                    value={eventTypeLabel(season.topType, t)}
+                    label={t("passport.season_top_vibe")}
                     isText
                   />
                 </div>
@@ -259,7 +256,7 @@ function Passport() {
 
       {/* Visited places */}
       <section className="mt-5">
-        <SectionLabel>Visited places</SectionLabel>
+        <SectionLabel>{t("passport.visited_places")}</SectionLabel>
         <div className="mt-2.5 flex flex-col gap-2.5">
           {s.places.map((p) => {
             const { src, look } = photoFor(p.name);
@@ -289,13 +286,13 @@ function Passport() {
                     </div>
                     <div className="mt-1 text-[11.5px] text-muted-foreground truncate">
                       {p.count > 1
-                        ? `${p.count} visits · last ${fmt(p.last)}`
-                        : `1 visit · ${typeLabels[p.types[0]] ?? p.types[0]}`}
+                        ? t("passport.visits_last", { n: p.count, date: fmt(p.last) })
+                        : t("passport.visit_one", { type: eventTypeLabel(p.types[0], t) })}
                     </div>
                   </div>
                   {isHeart && (
                     <span className="shrink-0 inline-flex items-center gap-[5px] px-2.5 py-[5px] rounded-full bg-primary text-[9.5px] font-bold uppercase tracking-[0.12em] whitespace-nowrap">
-                      <Heart className="w-[11px] h-[11px]" /> Heart spot
+                      <Heart className="w-[11px] h-[11px]" /> {t("passport.heart_spot")}
                     </span>
                   )}
                 </div>
@@ -307,14 +304,13 @@ function Passport() {
 
       {/* Map */}
       <section className="mt-5">
-        <SectionLabel>Passport map</SectionLabel>
+        <SectionLabel>{t("passport.map_title")}</SectionLabel>
         <div className="mt-2.5">
           {mapPlaces.length > 0 ? (
             <PassportMap places={mapPlaces} heightClassName="h-[160px] sm:h-[220px]" />
           ) : (
             <div className="rounded-[20px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-4 text-sm text-muted-foreground">
-              No location data yet for your visited places — new trips will show up here as pins on
-              the map once their coordinates are set.
+              {t("passport.map_empty")}
             </div>
           )}
         </div>
@@ -322,13 +318,13 @@ function Passport() {
 
       {/* Trip history */}
       <section className="mt-5">
-        <SectionLabel>Trip history</SectionLabel>
+        <SectionLabel>{t("passport.history_title")}</SectionLabel>
         <div className="mt-2.5 flex flex-col gap-2.5">
-          {trips.map((t) => {
-            const e = t.events!;
+          {trips.map((trip) => {
+            const e = trip.events!;
             return (
               <div
-                key={t.id}
+                key={trip.id}
                 className="rounded-[20px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-4"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -341,7 +337,7 @@ function Passport() {
                   </Link>
                   <span className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground inline-flex items-center gap-1">
                     <Trophy className="w-3 h-3" />
-                    Completed
+                    {t("passport.completed")}
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground inline-flex items-center gap-1 mt-1">
@@ -349,10 +345,12 @@ function Passport() {
                   {e.destination}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">{fmt(e.date)}</div>
-                {t.notes && <div className="mt-2 text-sm italic text-muted-foreground">"{t.notes}"</div>}
+                {trip.notes && (
+                  <div className="mt-2 text-sm italic text-muted-foreground">"{trip.notes}"</div>
+                )}
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-secondary capitalize">
-                    {typeLabels[e.type] ?? e.type}
+                    {eventTypeLabel(e.type, t)}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-ice text-ice-foreground capitalize">
                     {e.difficulty}
@@ -369,6 +367,7 @@ function Passport() {
 }
 
 function TripMemoryPreview({ eventId }: { eventId: string }) {
+  const { t } = useI18n();
   const { data: media } = useQuery({
     queryKey: ["passport-memory", eventId],
     queryFn: async () => {
@@ -394,7 +393,7 @@ function TripMemoryPreview({ eventId }: { eventId: string }) {
       <div className="mt-3 h-20 rounded-xl bg-gradient-to-br from-ice/30 to-secondary border border-dashed border-border grid place-items-center text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <Mountain className="w-3.5 h-3.5" />
-          No memories yet
+          {t("passport.no_memories")}
         </span>
       </div>
     );
@@ -423,7 +422,7 @@ function TripMemoryPreview({ eventId }: { eventId: string }) {
         params={{ id: eventId }}
         className="text-xs text-accent hover:underline"
       >
-        View memories →
+        {t("passport.view_memories")}
       </Link>
     </div>
   );

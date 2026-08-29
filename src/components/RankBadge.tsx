@@ -1,7 +1,8 @@
-import { getRank, RANKS } from "@/lib/ranks";
+import { getRank, RANKS, rangeLabel } from "@/lib/ranks";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "@tanstack/react-router";
+import { useI18n } from "@/lib/i18n";
 
 export function RankBadge({
   completed,
@@ -14,6 +15,7 @@ export function RankBadge({
   className?: string;
   interactive?: boolean;
 }) {
+  const { t } = useI18n();
   const r = getRank(completed);
   const sizes = {
     xs: "text-[10px] px-1.5 py-0.5",
@@ -42,7 +44,7 @@ export function RankBadge({
           type="button"
           onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center"
-          aria-label={`Rank: ${r.title}`}
+          aria-label={t("ranks.aria_rank", { title: r.title })}
         >
           {pill}
         </button>
@@ -53,13 +55,13 @@ export function RankBadge({
           <div>
             <div className="font-display font-bold">{r.title}</div>
             <div className="text-[11px] text-muted-foreground">
-              {next ? `${r.min}–${next.min - 1} trips` : `${r.min}+ trips`}
+              {rangeLabel(RANKS[idx], idx, t)}
             </div>
           </div>
         </div>
-        <p className="text-sm italic text-muted-foreground mt-2">"{r.description}"</p>
+        <p className="text-sm italic text-muted-foreground mt-2">"{t(r.descriptionKey)}"</p>
         <div className="mt-3 text-xs text-foreground">
-          Currently <span className="font-semibold">{completed}</span> completed {completed === 1 ? "trip" : "trips"}.
+          {t(completed === 1 ? "ranks.currently_completed_one" : "ranks.currently_completed_other", { n: completed })}
         </div>
         {next && (
           <>
@@ -67,11 +69,11 @@ export function RankBadge({
               <div className="h-full bg-gradient-to-r from-primary to-summit" style={{ width: `${progress}%` }} />
             </div>
             <div className="mt-1.5 text-[11px] text-muted-foreground">
-              {remaining} more until <span className="font-medium text-foreground">{next.title}</span>
+              {t("ranks.until_next", { n: remaining, tripWord: t(remaining === 1 ? "ranks.trip" : "ranks.trips"), title: next.title })}
             </div>
           </>
         )}
-        <Link to="/ranks" className="mt-3 inline-block text-xs text-accent hover:underline">See all ranks →</Link>
+        <Link to="/ranks" className="mt-3 inline-block text-xs text-accent hover:underline">{t("ranks.see_all")} →</Link>
       </PopoverContent>
     </Popover>
   );
