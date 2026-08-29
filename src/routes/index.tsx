@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy, ChevronRight } from "lucide-react";
+import { Trophy, ChevronRight, Send, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-mountain.jpg";
 import { PhotoCard } from "@/components/PhotoCard";
 import { TripTicket } from "@/components/TripTicket";
 import { SectionLabel } from "@/components/SectionLabel";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { getRank } from "@/lib/ranks";
@@ -206,11 +208,15 @@ function Dashboard() {
     },
   });
 
-  const completedCount = (myRegs ?? []).filter(
+  const completedTrips = (myRegs ?? []).filter(
     (r) => r.events && r.status === "confirmed" && r.events.status === "completed",
-  ).length;
+  );
+  const completedCount = completedTrips.length;
   const rank = getRank(completedCount);
   const remaining = rank.next ? Math.max(0, rank.next - completedCount) : null;
+  const completedPlaces = new Set(
+    completedTrips.map((r) => r.events!.destination.split(",")[0].trim()),
+  );
 
   const fullName = profile?.full_name?.trim();
   const greetingName =
@@ -227,93 +233,370 @@ function Dashboard() {
   const rail = upcomingPublic?.filter((e) => e.id !== nextTrip?.events?.id).slice(0, 3) ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6 pb-10">
-      <SectionLabel tone="coral">
-        {todayLabel} · {t("home.season")}
-      </SectionLabel>
-      <h1 className="nk-rise mt-2 font-display text-[36px] leading-[1.02] tracking-[-0.045em]">
-        {t("home.welcome")}
-        {greetingName ? `,` : ""}
-        {greetingName && <br />}
-        {greetingName}.
-      </h1>
+    <>
+      <div className="lg:hidden max-w-3xl mx-auto px-5 pt-6 pb-10">
+        <SectionLabel tone="coral">
+          {todayLabel} · {t("home.season")}
+        </SectionLabel>
+        <h1 className="nk-rise mt-2 font-display text-[36px] leading-[1.02] tracking-[-0.045em]">
+          {t("home.welcome")}
+          {greetingName ? `,` : ""}
+          {greetingName && <br />}
+          {greetingName}.
+        </h1>
 
-      {/* NEXT TRIP — the ticket */}
-      <div className="nk-rise-2 mt-6">
-        {nextTrip && nextTrip.events ? (
-          <TripTicket
-            event={nextTrip.events}
-            statusLabel={t(`status.${nextTrip.status}`).toUpperCase()}
-            spotsLeft={
-              nextTripCrew
-                ? Math.max(0, nextTrip.events.max_participants - nextTripCrew.total)
-                : undefined
-            }
-            crew={nextTripCrew?.avatars ?? []}
-            crewExtra={
-              nextTripCrew ? Math.max(0, nextTripCrew.total - nextTripCrew.avatars.length) : 0
-            }
-          />
-        ) : (
-          <div className="rounded-[26px] border border-dashed border-border bg-card p-6 text-center">
-            <p className="text-muted-foreground">{t("home.no_planned")}</p>
-            <Link to="/trips">
-              <Button className="mt-4">{t("home.find_next")}</Button>
-            </Link>
+        {/* NEXT TRIP — the ticket */}
+        <div className="nk-rise-2 mt-6">
+          {nextTrip && nextTrip.events ? (
+            <TripTicket
+              event={nextTrip.events}
+              statusLabel={t(`status.${nextTrip.status}`).toUpperCase()}
+              spotsLeft={
+                nextTripCrew
+                  ? Math.max(0, nextTrip.events.max_participants - nextTripCrew.total)
+                  : undefined
+              }
+              crew={nextTripCrew?.avatars ?? []}
+              crewExtra={
+                nextTripCrew ? Math.max(0, nextTripCrew.total - nextTripCrew.avatars.length) : 0
+              }
+            />
+          ) : (
+            <div className="rounded-[26px] border border-dashed border-border bg-card p-6 text-center">
+              <p className="text-muted-foreground">{t("home.no_planned")}</p>
+              <Link to="/trips">
+                <Button className="mt-4">{t("home.find_next")}</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* IN ARRIVO — horizontal rail */}
+        {rail.length > 0 && (
+          <div className="nk-rise-3 mt-8">
+            <SectionLabel action={{ label: t("home.see_all"), to: "/trips" }}>
+              {t("home.upcoming_for_you")}
+            </SectionLabel>
+            <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5">
+              {rail.map((e) => (
+                <PhotoCard key={e.id} event={e} height={100} className="w-[168px] shrink-0" />
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* IN ARRIVO — horizontal rail */}
-      {rail.length > 0 && (
-        <div className="nk-rise-3 mt-8">
-          <SectionLabel action={{ label: t("home.see_all"), to: "/trips" }}>
-            {t("home.upcoming_for_you")}
-          </SectionLabel>
-          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5">
-            {rail.map((e) => (
-              <PhotoCard key={e.id} event={e} height={100} className="w-[168px] shrink-0" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* RANK STRIP */}
-      <Link to="/passport" className="block nk-rise-3 mt-6">
-        <div className="rounded-[20px] bg-card border border-[oklch(0.34_0.032_290/0.5)] px-4 py-3.5 flex items-center gap-3.5">
-          <div className="text-[42px] leading-none shrink-0">{rank.emoji}</div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="font-display text-base leading-tight whitespace-nowrap truncate">
-                {rank.title}
-              </div>
-              {rank.next !== null && (
-                <div className="text-xs text-muted-foreground shrink-0">
-                  {completedCount}/{rank.next}
+        {/* RANK STRIP */}
+        <Link to="/passport" className="block nk-rise-3 mt-6">
+          <div className="rounded-[20px] bg-card border border-[oklch(0.34_0.032_290/0.5)] px-4 py-3.5 flex items-center gap-3.5">
+            <div className="text-[42px] leading-none shrink-0">{rank.emoji}</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-display text-base leading-tight whitespace-nowrap truncate">
+                  {rank.title}
                 </div>
+                {rank.next !== null && (
+                  <div className="text-xs text-muted-foreground shrink-0">
+                    {completedCount}/{rank.next}
+                  </div>
+                )}
+              </div>
+              {rank.next !== null && remaining !== null && rank.nextTitle ? (
+                <>
+                  <div className="mt-1.5 h-[5px] rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] to-[oklch(0.62_0.24_350)]"
+                      style={{
+                        width: `${Math.min(100, Math.round(((completedCount - rank.min) / (rank.next - rank.min)) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1.5 text-xs text-muted-foreground">
+                    {t("home.rank_next_in", { n: remaining, title: rank.nextTitle })}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-1 text-xs text-muted-foreground">{t("home.rank_maxed")}</div>
               )}
             </div>
-            {rank.next !== null && remaining !== null && rank.nextTitle ? (
-              <>
-                <div className="mt-1.5 h-[5px] rounded-full bg-secondary overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] to-[oklch(0.62_0.24_350)]"
-                    style={{
-                      width: `${Math.min(100, Math.round(((completedCount - rank.min) / (rank.next - rank.min)) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <div className="mt-1.5 text-xs text-muted-foreground">
-                  {t("home.rank_next_in", { n: remaining, title: rank.nextTitle })}
-                </div>
-              </>
+            <Trophy className="w-4 h-4 text-muted-foreground shrink-0" />
+          </div>
+        </Link>
+      </div>
+
+      {/* ---- Desktop (lg+) ---- */}
+      <div className="hidden lg:block max-w-6xl mx-auto px-8 pt-8 pb-10">
+        <SectionLabel tone="coral">
+          {todayLabel} · {t("home.season")}
+        </SectionLabel>
+        <h1 className="mt-2 font-display text-[46px] leading-[1.0] tracking-[-0.05em]">
+          {t("home.welcome")}
+          {greetingName ? `, ${greetingName}.` : "."}
+        </h1>
+
+        <div className="mt-[22px] flex gap-[26px] items-start">
+          <div className="flex-1 min-w-0">
+            {nextTrip && nextTrip.events ? (
+              <TripTicket
+                orientation="horizontal"
+                event={nextTrip.events}
+                statusLabel={t(`status.${nextTrip.status}`).toUpperCase()}
+                spotsLeft={
+                  nextTripCrew
+                    ? Math.max(0, nextTrip.events.max_participants - nextTripCrew.total)
+                    : undefined
+                }
+                crew={nextTripCrew?.avatars ?? []}
+                crewExtra={
+                  nextTripCrew ? Math.max(0, nextTripCrew.total - nextTripCrew.avatars.length) : 0
+                }
+                priceEstimate={
+                  (nextTrip.events as unknown as { price_estimate?: number | null }).price_estimate
+                }
+              />
             ) : (
-              <div className="mt-1 text-xs text-muted-foreground">{t("home.rank_maxed")}</div>
+              <div className="rounded-[26px] border border-dashed border-border bg-card p-8 text-center">
+                <p className="text-muted-foreground">{t("home.no_planned")}</p>
+                <Link to="/trips">
+                  <Button className="mt-4">{t("home.find_next")}</Button>
+                </Link>
+              </div>
+            )}
+
+            {rail.length > 0 && (
+              <div className="mt-[26px]">
+                <SectionLabel action={{ label: t("home.see_all"), to: "/trips" }}>
+                  {t("home.upcoming_for_you")}
+                </SectionLabel>
+                <div className="mt-3.5 grid grid-cols-3 gap-4">
+                  {rail.map((e) => (
+                    <PhotoCard key={e.id} event={e} height={186} />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-          <Trophy className="w-4 h-4 text-muted-foreground shrink-0" />
+
+          <div className="w-[296px] shrink-0 flex flex-col gap-4">
+            <RankWidget rank={rank} completedCount={completedCount} remaining={remaining} />
+            <CommunityWidget />
+            <PassportWidget
+              stamped={completedPlaces.size}
+              total={Math.max(4, completedPlaces.size)}
+            />
+          </div>
         </div>
-      </Link>
+      </div>
+    </>
+  );
+}
+
+/* ---------------- Desktop widgets ---------------- */
+
+function RankWidget({
+  rank,
+  completedCount,
+  remaining,
+}: {
+  rank: ReturnType<typeof getRank>;
+  completedCount: number;
+  remaining: number | null;
+}) {
+  const { t } = useI18n();
+  return (
+    <Link
+      to="/passport"
+      className="block rounded-[22px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-[18px]"
+    >
+      <div className="flex items-baseline justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground whitespace-nowrap">
+          {t("ranks.your_rank")}
+        </span>
+        {rank.next !== null && (
+          <span className="text-[11.5px] text-muted-foreground">
+            {completedCount}/{rank.next}
+          </span>
+        )}
+      </div>
+      <div className="mt-3 flex items-center gap-[13px]">
+        <span className="w-[46px] h-[46px] rounded-[15px] bg-secondary grid place-items-center text-[21px] shrink-0">
+          {rank.emoji}
+        </span>
+        <div className="min-w-0">
+          <div className="font-display text-[19px] leading-[1.15] tracking-[-0.035em] whitespace-nowrap truncate">
+            {rank.title}
+          </div>
+          <div className="mt-0.5 text-[11.5px] text-muted-foreground">
+            {t("home.rank_completed_n", { n: completedCount })}
+          </div>
+        </div>
+      </div>
+      {rank.next !== null && remaining !== null && rank.nextTitle ? (
+        <>
+          <div className="mt-3.5 h-[6px] rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[oklch(0.40_0.17_5)] to-[oklch(0.62_0.24_350)]"
+              style={{
+                width: `${Math.min(100, Math.round(((completedCount - rank.min) / (rank.next - rank.min)) * 100))}%`,
+              }}
+            />
+          </div>
+          <div className="mt-2 text-[11.5px] text-muted-foreground">
+            {t("home.rank_next_in", { n: remaining, title: rank.nextTitle })}
+          </div>
+        </>
+      ) : (
+        <div className="mt-2 text-[11.5px] text-muted-foreground">{t("home.rank_maxed")}</div>
+      )}
+    </Link>
+  );
+}
+
+type WidgetMsg = { id: string; user_id: string; message: string };
+type WidgetProfile = {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  profile_picture_url: string | null;
+};
+
+function CommunityWidget() {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  const [text, setText] = useState("");
+
+  const { data: messages } = useQuery({
+    queryKey: ["community-widget-messages"],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("community_messages")
+        .select("id, user_id, message")
+        .order("created_at", { ascending: false })
+        .limit(2);
+      return ((data ?? []) as unknown as WidgetMsg[]).reverse();
+    },
+  });
+
+  const userIds = messages?.map((m) => m.user_id) ?? [];
+  const { data: profiles } = useQuery({
+    queryKey: ["community-widget-profiles", userIds.join(",")],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, username, profile_picture_url")
+        .in("user_id", userIds);
+      return (data ?? []) as unknown as WidgetProfile[];
+    },
+  });
+  const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+  const send = async () => {
+    const msg = text.trim();
+    if (!msg || !user) return;
+    setText("");
+    await supabase.from("community_messages").insert({ user_id: user.id, message: msg });
+  };
+
+  return (
+    <div className="rounded-[22px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-[18px]">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground whitespace-nowrap">
+          {t("nav.community")}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.1em] text-nakama-coral whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-nakama-coral nk-pulse" />
+          LIVE
+        </span>
+      </div>
+      <div className="mt-3.5 flex flex-col gap-3.5">
+        {(messages ?? []).length === 0 ? (
+          <p className="text-[12px] text-muted-foreground">{t("home.community_empty")}</p>
+        ) : (
+          messages!.map((m) => {
+            const p = profileMap.get(m.user_id);
+            const name = p?.username ? `@${p.username}` : (p?.full_name ?? "Member");
+            return (
+              <div key={m.id} className="flex gap-2.5">
+                <UserAvatar
+                  url={p?.profile_picture_url}
+                  name={p?.full_name ?? p?.username}
+                  className="h-8 w-8 text-[11px] shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="text-[12.5px] font-semibold truncate">{name}</div>
+                  <div className="mt-0.5 text-[12px] leading-[1.4] text-muted-foreground line-clamp-2">
+                    {m.message}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send();
+        }}
+        className="mt-[15px] h-10 rounded-[13px] bg-secondary/60 border border-border flex items-center gap-2 px-3.5"
+      >
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t("home.write_to_crew")}
+          className="flex-1 min-w-0 bg-transparent text-[12.5px] focus:outline-none placeholder:text-muted-foreground"
+        />
+        <button
+          type="submit"
+          aria-label="Send"
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <Send className="w-4 h-4" />
+        </button>
+      </form>
     </div>
+  );
+}
+
+const STAMP_EMOJI = ["🏂", "❄️", "🏔️", "🎿", "🏕️", "🥾"];
+
+function PassportWidget({ stamped, total }: { stamped: number; total: number }) {
+  const { t } = useI18n();
+  const slots = Array.from({ length: 4 });
+  return (
+    <Link
+      to="/passport"
+      className="block rounded-[22px] border border-[oklch(0.34_0.032_290/0.55)] bg-card p-[18px]"
+    >
+      <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground whitespace-nowrap">
+        {t("nav.passport")}
+      </span>
+      <div className="mt-[13px] grid grid-cols-4 gap-[9px]">
+        {slots.map((_, i) =>
+          i < stamped ? (
+            <div
+              key={i}
+              className="aspect-square rounded-full grid place-items-center text-[15px] border border-[oklch(0.62_0.24_350/0.45)]"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.40 0.17 5), oklch(0.30 0.12 350))",
+              }}
+            >
+              {STAMP_EMOJI[i % STAMP_EMOJI.length]}
+            </div>
+          ) : (
+            <div
+              key={i}
+              className="aspect-square rounded-full bg-secondary border border-dashed border-border grid place-items-center text-muted-foreground"
+            >
+              {i === stamped && <Plus className="w-[15px] h-[15px]" />}
+            </div>
+          ),
+        )}
+      </div>
+      <div className="mt-3 text-[11.5px] text-muted-foreground">
+        {t("home.stamps_caption", { stamped, total, season: t("home.season") })}
+      </div>
+    </Link>
   );
 }

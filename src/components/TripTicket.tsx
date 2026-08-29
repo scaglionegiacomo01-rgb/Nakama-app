@@ -26,12 +26,16 @@ export function TripTicket({
   spotsLeft,
   crew = [],
   crewExtra = 0,
+  orientation = "vertical",
+  priceEstimate,
 }: {
   event: TicketEvent;
   statusLabel: string;
   spotsLeft?: number;
   crew?: { url: string | null; name: string | null }[];
   crewExtra?: number;
+  orientation?: "vertical" | "horizontal";
+  priceEstimate?: number | null;
 }) {
   const { t, lang } = useI18n();
   const { src, look } = photoFor(event.destination);
@@ -48,6 +52,100 @@ export function TripTicket({
       : lang === "it"
         ? `TRA ${days} GIORN${days === 1 ? "O" : "I"}`
         : `IN ${days} DAY${days === 1 ? "" : "S"}`;
+
+  if (orientation === "horizontal") {
+    const crewTotal = crew.length + crewExtra;
+    return (
+      <div className="rounded-[26px] bg-card overflow-hidden border border-[oklch(0.34_0.032_290/0.6)] shadow-[0_20px_50px_-24px_oklch(0.40_0.17_5/0.6)] flex">
+        <div className="relative w-[290px] shrink-0">
+          <img
+            src={src}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: look.pos, transform: `scale(${look.scale})` }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, oklch(0.40 0.17 5 / .3), oklch(0.20 0.022 288 / .55))",
+            }}
+          />
+          <span className="nakama-glass absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] text-white border border-white/16 whitespace-nowrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-nakama-coral nk-pulse" />
+            {countdown}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0 p-[22px_24px]">
+          <div className="flex items-start justify-between gap-3.5">
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">
+                {(typeLabel[event.type] ?? event.type).toUpperCase()} · {event.destination}
+              </div>
+              <div className="mt-[7px] font-display text-[32px] leading-[1.02] tracking-[-0.045em] whitespace-nowrap truncate">
+                {event.title}
+              </div>
+            </div>
+            <span className="shrink-0 px-2.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-[0.14em] whitespace-nowrap">
+              {statusLabel}
+            </span>
+          </div>
+          <div className="mt-5 grid grid-cols-4 gap-3.5">
+            <TicketField label={t("home.departure")} value={event.departure_time ?? "—"} />
+            <TicketField label={t("home.meeting_point")} value={event.meeting_point ?? "—"} />
+            <TicketField
+              label={t("home.seats")}
+              value={spotsLeft != null ? String(spotsLeft) : "—"}
+              tone="coral"
+            />
+            <TicketField
+              label={t("home.estimate")}
+              value={priceEstimate != null ? `~${priceEstimate}€` : "—"}
+            />
+          </div>
+          <div className="mt-[22px] flex flex-wrap items-center gap-x-3.5 gap-y-3">
+            {crew.length > 0 && (
+              <div className="flex items-center shrink-0" title={t("home.crew_here", { n: crewTotal })}>
+                {crew.slice(0, 4).map((c, i) => (
+                  <UserAvatar
+                    key={i}
+                    url={c.url}
+                    name={c.name}
+                    size="sm"
+                    className="ring-2 ring-card"
+                    style={{ marginLeft: i === 0 ? 0 : -10 }}
+                  />
+                ))}
+                {crewExtra > 0 && (
+                  <span
+                    className="w-[30px] h-[30px] rounded-full ring-2 ring-card bg-secondary grid place-items-center text-[9.5px] font-bold"
+                    style={{ marginLeft: -10 }}
+                  >
+                    +{crewExtra}
+                  </span>
+                )}
+              </div>
+            )}
+            <div className="flex-1 min-w-[20px]" />
+            <Link
+              to="/trips/$id"
+              params={{ id: event.id }}
+              search={{ tab: "carpool" }}
+              className="h-11 px-3.5 rounded-[14px] border border-border bg-secondary inline-flex items-center gap-2 text-[13.5px] font-semibold shrink-0"
+            >
+              <Car className="w-[17px] h-[17px]" strokeWidth={1.75} />
+              Carpool
+            </Link>
+            <Link to="/trips/$id" params={{ id: event.id }} className="shrink-0">
+              <span className="nk-sheen relative overflow-hidden flex items-center justify-center h-11 px-[22px] rounded-[14px] bg-gradient-to-br from-[oklch(0.45_0.19_5)] to-[oklch(0.36_0.15_355)] text-white font-semibold text-[14px] whitespace-nowrap shadow-[0_10px_26px_-12px_oklch(0.40_0.17_5/0.9)]">
+                {t("home.open_trip")}
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[26px] bg-card overflow-hidden shadow-[0_20px_50px_-22px_oklch(0.40_0.17_5/0.55)]">
