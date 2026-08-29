@@ -33,7 +33,22 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
-export function photoFor(destination: string | null | undefined): { src: string; look: PhotoLook } {
+const CUSTOM_COVER_LOOK: PhotoLook = {
+  pos: "50% 50%",
+  tint: "oklch(0.40 0.17 5 / 0.22)",
+  scale: 1.0,
+};
+
+/**
+ * `coverImageUrl` is an organizer-uploaded photo for this specific trip
+ * (set from the admin trip form) — when present it always wins over the
+ * destination-based stock fallback below.
+ */
+export function photoFor(
+  destination: string | null | undefined,
+  coverImageUrl?: string | null,
+): { src: string; look: PhotoLook } {
+  if (coverImageUrl) return { src: coverImageUrl, look: CUSTOM_COVER_LOOK };
   const key = (destination ?? "").toLowerCase().split(/[,\s]+/)[0];
   const h = hash(key || "nakama");
   const set = PHOTO_MAP[key];

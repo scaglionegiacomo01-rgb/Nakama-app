@@ -307,7 +307,7 @@ function TripDetail() {
     }
   };
 
-  const { src: heroSrc, look: heroLook } = photoFor(event.destination);
+  const { src: heroSrc, look: heroLook } = photoFor(event.destination, event.cover_image_url);
   const crewExtra = crew ? Math.max(0, crew.total - crew.members.length) : 0;
 
   return (

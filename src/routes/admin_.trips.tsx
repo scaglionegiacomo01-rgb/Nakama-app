@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -20,10 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { EVENT_TAGS } from "@/lib/event-tags";
 import { EventTag } from "@/components/EventTag";
+import { photoFor } from "@/lib/photo-for";
 
 export const Route = createFileRoute("/admin_/trips")({ component: AdminTripsPage });
 
@@ -62,6 +63,7 @@ export type EventInput = {
   resort_name: string;
   latitude: number | null;
   longitude: number | null;
+  cover_image_url: string | null;
 };
 const blankEvent: EventInput = {
   title: "",
@@ -86,11 +88,34 @@ const blankEvent: EventInput = {
   resort_name: "",
   latitude: null,
   longitude: null,
+  cover_image_url: null,
 };
 
 function TripsSection({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<{ id?: string; form: EventInput } | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
+
+  const uploadCover = async (file: File) => {
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Max 8MB");
+      return;
+    }
+    setUploadingCover(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `covers/${userId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("trip-media")
+      .upload(path, file, { contentType: file.type });
+    setUploadingCover(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("trip-media").getPublicUrl(path);
+    setEditing((cur) => cur && { ...cur, form: { ...cur.form, cover_image_url: pub.publicUrl } });
+  };
 
   const handlePlaceSelected = (place: PlaceResult) => {
     setEditing(
@@ -239,6 +264,71 @@ function TripsSection({ userId }: { userId: string }) {
                   }
                 />
               </F>
+              <div>
+                <Label className="mb-1.5 block text-xs">Cover photo</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-secondary border border-border">
+                    <img
+                      src={editing.form.cover_image_url || photoFor(editing.form.destination).src}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    {!editing.form.cover_image_url && (
+                      <span className="absolute inset-0 grid place-items-center bg-black/40 text-[9px] font-semibold text-white text-center px-1">
+                        Default photo
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={uploadingCover}
+                      onClick={() => coverFileRef.current?.click()}
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1.5" />
+                      {uploadingCover
+                        ? "Uploading…"
+                        : editing.form.cover_image_url
+                          ? "Change photo"
+                          : "Upload photo"}
+                    </Button>
+                    {editing.form.cover_image_url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground"
+                        onClick={() =>
+                          setEditing({
+                            ...editing,
+                            form: { ...editing.form, cover_image_url: null },
+                          })
+                        }
+                      >
+                        <X className="w-3.5 h-3.5 mr-1.5" />
+                        Remove — use default
+                      </Button>
+                    )}
+                  </div>
+                  <input
+                    ref={coverFileRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadCover(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Shown on the trip card, ticket and detail page. Leave empty to use an automatic
+                  photo based on the destination.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <F label="Date">
                   <Input

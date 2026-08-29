@@ -27,7 +27,7 @@ export function PhotoCard({
   className?: string;
 }) {
   const { lang } = useI18n();
-  const { src, look } = photoFor(event.destination);
+  const { src, look } = photoFor(event.destination, event.cover_image_url);
   const tags = (event as unknown as { tags?: string[] }).tags ?? [];
   const hotTag = tags.find((t) => HOT_TAGS.has(t));
   const dateLabel = new Date(event.date)
@@ -70,7 +70,9 @@ export function PhotoCard({
           <span
             className={cn(
               "px-2.5 py-1 rounded-full text-[9.5px] font-bold uppercase tracking-[0.14em] whitespace-nowrap",
-              hotTag ? "bg-nakama-pink text-white" : "bg-black/30 text-white border border-white/25",
+              hotTag
+                ? "bg-nakama-pink text-white"
+                : "bg-black/30 text-white border border-white/25",
             )}
           >
             {hotTag ?? typeLabel[event.type] ?? event.type}
@@ -104,7 +106,9 @@ export function PhotoCard({
             <div className="text-[12px] text-white/80 flex items-center gap-2 flex-wrap min-w-0">
               {event.departure_time && <span>{event.departure_time}</span>}
               {event.price_estimate != null && (
-                <span className="font-display text-[15px] text-white">~{event.price_estimate}€</span>
+                <span className="font-display text-[15px] text-white">
+                  ~{event.price_estimate}€
+                </span>
               )}
             </div>
             <span className="w-9 h-9 rounded-full bg-primary grid place-items-center shrink-0">

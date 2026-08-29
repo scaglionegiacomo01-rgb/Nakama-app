@@ -13,6 +13,7 @@ type TicketEvent = {
   type: string;
   meeting_point?: string | null;
   departure_time?: string | null;
+  cover_image_url?: string | null;
 };
 
 /**
@@ -38,7 +39,7 @@ export function TripTicket({
   priceEstimate?: number | null;
 }) {
   const { t, lang } = useI18n();
-  const { src, look } = photoFor(event.destination);
+  const { src, look } = photoFor(event.destination, event.cover_image_url);
 
   const days = Math.ceil(
     (new Date(event.date + "T00:00:00").getTime() - new Date(new Date().toDateString()).getTime()) /
@@ -105,7 +106,10 @@ export function TripTicket({
           </div>
           <div className="mt-[22px] flex flex-wrap items-center gap-x-3.5 gap-y-3">
             {crew.length > 0 && (
-              <div className="flex items-center shrink-0" title={t("home.crew_here", { n: crewTotal })}>
+              <div
+                className="flex items-center shrink-0"
+                title={t("home.crew_here", { n: crewTotal })}
+              >
                 {crew.slice(0, 4).map((c, i) => (
                   <UserAvatar
                     key={i}

@@ -121,6 +121,8 @@ type DashTrip = {
     meeting_point: string | null;
     departure_time: string | null;
     max_participants: number;
+    price_estimate: number | null;
+    cover_image_url: string | null;
   } | null;
 };
 
@@ -148,7 +150,7 @@ function Dashboard() {
       const { data } = await supabase
         .from("event_registrations")
         .select(
-          "id, status, events(id, title, destination, date, type, status, meeting_point, departure_time, max_participants)",
+          "id, status, events(id, title, destination, date, type, status, meeting_point, departure_time, max_participants, price_estimate, cover_image_url)",
         )
         .eq("user_id", user!.id);
       return (data ?? []) as unknown as DashTrip[];
@@ -349,9 +351,7 @@ function Dashboard() {
                 crewExtra={
                   nextTripCrew ? Math.max(0, nextTripCrew.total - nextTripCrew.avatars.length) : 0
                 }
-                priceEstimate={
-                  (nextTrip.events as unknown as { price_estimate?: number | null }).price_estimate
-                }
+                priceEstimate={nextTrip.events.price_estimate}
               />
             ) : (
               <div className="rounded-[26px] border border-dashed border-border bg-card p-8 text-center">
