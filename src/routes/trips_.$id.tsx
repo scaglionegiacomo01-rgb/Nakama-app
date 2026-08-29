@@ -517,11 +517,10 @@ function TripDetail() {
         </Tabs>
       </div>
 
-      {/* Sticky join bar */}
-      <div
-        className="nakama-glass fixed inset-x-0 z-50 border-t border-white/10 p-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-0"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-      >
+      {/* Sticky join bar — docked directly against the floating bottom nav on
+          mobile (no gap), with its own safe-area clearance only on desktop,
+          where it sits flush against the real screen edge instead. */}
+      <div className="nakama-glass fixed inset-x-0 z-50 border-t border-white/10 pt-3 px-3 pb-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-0 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <div className="max-w-4xl mx-auto">
           {isActiveReg ? (
             <div className="flex items-center justify-between gap-3">
