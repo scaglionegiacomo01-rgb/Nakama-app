@@ -515,7 +515,7 @@ function CommunityWidget() {
         ) : (
           messages!.map((m) => {
             const p = profileMap.get(m.user_id);
-            const name = p?.username ? `@${p.username}` : (p?.full_name ?? "Member");
+            const name = p?.username ? `@${p.username}` : (p?.full_name ?? t("common.member"));
             return (
               <div key={m.id} className="flex gap-2.5">
                 <UserAvatar
@@ -549,7 +549,7 @@ function CommunityWidget() {
         />
         <button
           type="submit"
-          aria-label="Send"
+          aria-label={t("common.send")}
           className="shrink-0 text-muted-foreground hover:text-foreground"
         >
           <Send className="w-4 h-4" />

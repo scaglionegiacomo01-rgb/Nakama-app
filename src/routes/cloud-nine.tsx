@@ -124,7 +124,7 @@ function CloudNinePage() {
           <button
             type="button"
             onClick={() => window.history.back()}
-            aria-label="Back"
+            aria-label={lang === "it" ? "Indietro" : "Back"}
             className="nakama-glass w-[38px] h-[38px] rounded-full grid place-items-center border border-white/16 text-white"
           >
             <ArrowLeft className="w-[19px] h-[19px]" />

@@ -10,21 +10,41 @@ import {
 
 import appCss from "../styles.css?url";
 
+// These two fall back in place of RootComponent itself (not inside its
+// <Outlet />), so they can't rely on I18nProvider being mounted — detect the
+// language the same way i18n.tsx does, independently.
+function detectFallbackLang(): "en" | "it" {
+  if (typeof window === "undefined") return "en";
+  try {
+    const stored = window.localStorage.getItem("lang");
+    if (stored === "en" || stored === "it") return stored;
+  } catch {
+    /* ignore */
+  }
+  const nav = (window.navigator.language || "en").toLowerCase();
+  return nav.startsWith("it") ? "it" : "en";
+}
+
 function NotFoundComponent() {
+  const it = detectFallbackLang() === "it";
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
+          {it ? "Pagina non trovata" : "Page not found"}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          {it
+            ? "La pagina che cerchi non esiste o è stata spostata."
+            : "The page you're looking for doesn't exist or has been moved."}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {it ? "Torna alla home" : "Go home"}
           </Link>
         </div>
       </div>
@@ -35,15 +55,18 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const it = detectFallbackLang() === "it";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {it ? "Questa pagina non si è caricata" : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {it
+            ? "Qualcosa è andato storto da parte nostra. Puoi provare ad aggiornare o tornare alla home."
+            : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -53,13 +76,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            {it ? "Riprova" : "Try again"}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            {it ? "Torna alla home" : "Go home"}
           </a>
         </div>
       </div>

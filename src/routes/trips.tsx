@@ -499,7 +499,11 @@ function RegCard({
   });
   const statusLabel = t(`status.${reg.status}`);
 
-  const carpoolLabel = reg.offers_car_seats ? "Driver" : reg.needs_ride ? "Needs ride" : null;
+  const carpoolLabel = reg.offers_car_seats
+    ? t("admin.driver_fallback")
+    : reg.needs_ride
+      ? t("admin.needs_ride")
+      : null;
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const isTripDay = ev.date === todayStr;
