@@ -25,15 +25,17 @@ import { toast } from "sonner";
 import { EVENT_TAGS } from "@/lib/event-tags";
 import { EventTag } from "@/components/EventTag";
 import { photoFor } from "@/lib/photo-for";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin_/trips")({ component: AdminTripsPage });
 
 function AdminTripsPage() {
   const { ready, loading, userId } = useAdminGuard();
+  const { t } = useI18n();
   if (loading || !ready || !userId)
-    return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+    return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   return (
-    <AdminShell title="Trips" description="Create and manage every trip on the calendar.">
+    <AdminShell title={t("admin.nav_trips")} description={t("admin.trips_desc")}>
       <TripsSection userId={userId} />
     </AdminShell>
   );
@@ -92,6 +94,7 @@ const blankEvent: EventInput = {
 };
 
 function TripsSection({ userId }: { userId: string }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<{ id?: string; form: EventInput } | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -99,7 +102,7 @@ function TripsSection({ userId }: { userId: string }) {
 
   const uploadCover = async (file: File) => {
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("Max 8MB");
+      toast.error(t("admin.toast_max_8mb"));
       return;
     }
     setUploadingCover(true);
@@ -148,7 +151,7 @@ function TripsSection({ userId }: { userId: string }) {
       : await supabase.from("events").insert(payload);
     if (error) toast.error(error.message);
     else {
-      toast.success(id ? "Trip updated" : "Trip created");
+      toast.success(id ? t("admin.toast_trip_updated") : t("admin.toast_trip_created"));
       setEditing(null);
       qc.invalidateQueries({ queryKey: ["admin-events-all"] });
     }
@@ -157,16 +160,16 @@ function TripsSection({ userId }: { userId: string }) {
     const { error } = await supabase.from("events").update({ status }).eq("id", id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Status updated");
+      toast.success(t("admin.toast_status_updated"));
       qc.invalidateQueries({ queryKey: ["admin-events-all"] });
     }
   };
   const remove = async (id: string) => {
-    if (!confirm("Delete this trip? This cannot be undone.")) return;
+    if (!confirm(t("admin.confirm_delete_trip"))) return;
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Deleted");
+      toast.success(t("admin.toast_deleted"));
       qc.invalidateQueries({ queryKey: ["admin-events-all"] });
     }
   };
@@ -174,10 +177,10 @@ function TripsSection({ userId }: { userId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-xl font-bold">All trips ({events?.length ?? 0})</h2>
+        <h2 className="text-xl font-bold">{t("admin.all_trips", { n: events?.length ?? 0 })}</h2>
         <Button onClick={() => setEditing({ form: blankEvent })}>
           <Plus className="w-4 h-4 mr-1" />
-          New trip
+          {t("admin.new_trip")}
         </Button>
       </div>
 
@@ -218,7 +221,7 @@ function TripsSection({ userId }: { userId: string }) {
                 <Link to="/admin/events/$id" params={{ id: e.id }}>
                   <Button size="sm" variant="outline">
                     <Users className="w-4 h-4 mr-1" />
-                    Details
+                    {t("admin.details")}
                   </Button>
                 </Link>
                 <Button
@@ -245,18 +248,18 @@ function TripsSection({ userId }: { userId: string }) {
           </div>
         ))}
         {events && events.length === 0 && (
-          <p className="text-muted-foreground">No trips yet. Create the first one.</p>
+          <p className="text-muted-foreground">{t("admin.no_trips_yet")}</p>
         )}
       </div>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Edit trip" : "New trip"}</DialogTitle>
+            <DialogTitle>{editing?.id ? t("admin.edit_trip") : t("admin.new_trip")}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
-              <F label="Title">
+              <F label={t("admin.field_title")}>
                 <Input
                   value={editing.form.title}
                   onChange={(e) =>
@@ -265,7 +268,7 @@ function TripsSection({ userId }: { userId: string }) {
                 />
               </F>
               <div>
-                <Label className="mb-1.5 block text-xs">Cover photo</Label>
+                <Label className="mb-1.5 block text-xs">{t("admin.field_cover_photo")}</Label>
                 <div className="flex items-center gap-3">
                   <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-secondary border border-border">
                     <img
@@ -275,7 +278,7 @@ function TripsSection({ userId }: { userId: string }) {
                     />
                     {!editing.form.cover_image_url && (
                       <span className="absolute inset-0 grid place-items-center bg-black/40 text-[9px] font-semibold text-white text-center px-1">
-                        Default photo
+                        {t("admin.default_photo")}
                       </span>
                     )}
                   </div>
@@ -289,10 +292,10 @@ function TripsSection({ userId }: { userId: string }) {
                     >
                       <Camera className="w-3.5 h-3.5 mr-1.5" />
                       {uploadingCover
-                        ? "Uploading…"
+                        ? t("common.uploading")
                         : editing.form.cover_image_url
-                          ? "Change photo"
-                          : "Upload photo"}
+                          ? t("admin.change_photo")
+                          : t("admin.upload_photo")}
                     </Button>
                     {editing.form.cover_image_url && (
                       <Button
@@ -308,7 +311,7 @@ function TripsSection({ userId }: { userId: string }) {
                         }
                       >
                         <X className="w-3.5 h-3.5 mr-1.5" />
-                        Remove — use default
+                        {t("admin.remove_use_default")}
                       </Button>
                     )}
                   </div>
@@ -324,13 +327,10 @@ function TripsSection({ userId }: { userId: string }) {
                     }}
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Shown on the trip card, ticket and detail page. Leave empty to use an automatic
-                  photo based on the destination.
-                </p>
+                <p className="mt-1.5 text-xs text-muted-foreground">{t("admin.cover_photo_hint")}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <F label="Date">
+                <F label={t("admin.field_date")}>
                   <Input
                     type="date"
                     value={editing.form.date}
@@ -339,7 +339,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Meeting point">
+                <F label={t("admin.field_meeting_point")}>
                   <Input
                     value={editing.form.meeting_point}
                     onChange={(e) =>
@@ -350,7 +350,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Organizer name">
+                <F label={t("admin.field_organizer_name")}>
                   <Input
                     value={editing.form.organizer_name}
                     onChange={(e) =>
@@ -361,7 +361,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Departure time">
+                <F label={t("admin.field_departure_time")}>
                   <Input
                     value={editing.form.departure_time}
                     onChange={(e) =>
@@ -372,7 +372,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Return time">
+                <F label={t("admin.field_return_time")}>
                   <Input
                     value={editing.form.return_time}
                     onChange={(e) =>
@@ -383,7 +383,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Max participants">
+                <F label={t("admin.field_max_participants")}>
                   <Input
                     type="number"
                     value={editing.form.max_participants}
@@ -395,7 +395,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Price estimate (€)">
+                <F label={t("admin.field_price_estimate")}>
                   <Input
                     type="number"
                     value={editing.form.price_estimate}
@@ -407,7 +407,7 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </F>
-                <F label="Type">
+                <F label={t("admin.field_type")}>
                   <Select
                     value={editing.form.type}
                     onValueChange={(v: EventInput["type"]) =>
@@ -426,7 +426,7 @@ function TripsSection({ userId }: { userId: string }) {
                     </SelectContent>
                   </Select>
                 </F>
-                <F label="Difficulty">
+                <F label={t("admin.field_difficulty")}>
                   <Select
                     value={editing.form.difficulty}
                     onValueChange={(v: EventInput["difficulty"]) =>
@@ -437,15 +437,15 @@ function TripsSection({ userId }: { userId: string }) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(["easy", "moderate", "hard", "expert"] as const).map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {(["easy", "moderate", "hard", "expert"] as const).map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </F>
-                <F label="Status">
+                <F label={t("admin.field_status")}>
                   <Select
                     value={editing.form.status}
                     onValueChange={(v: EventInput["status"]) =>
@@ -456,9 +456,9 @@ function TripsSection({ userId }: { userId: string }) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(["draft", "published", "cancelled", "completed"] as const).map((t) => (
-                        <SelectItem key={t} value={t} className="capitalize">
-                          {t}
+                      {(["draft", "published", "cancelled", "completed"] as const).map((s) => (
+                        <SelectItem key={s} value={s} className="capitalize">
+                          {s}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -466,7 +466,7 @@ function TripsSection({ userId }: { userId: string }) {
                 </F>
               </div>
               <div>
-                <Label className="mb-1.5 block text-xs">Location</Label>
+                <Label className="mb-1.5 block text-xs">{t("admin.field_location")}</Label>
                 <LocationSearchField
                   value={editing.form.destination}
                   onChange={(text) =>
@@ -492,11 +492,9 @@ function TripsSection({ userId }: { userId: string }) {
                     }
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Search a place to drop the pin — powers the marker on members' Passport map.
-                </p>
+                <p className="mt-1.5 text-xs text-muted-foreground">{t("admin.location_hint")}</p>
               </div>
-              <F label="Lunch plan">
+              <F label={t("admin.field_lunch_plan")}>
                 <Input
                   value={editing.form.lunch_plan}
                   onChange={(e) =>
@@ -514,9 +512,9 @@ function TripsSection({ userId }: { userId: string }) {
                     setEditing({ ...editing, form: { ...editing.form, rental_available: !!v } })
                   }
                 />
-                Rental available on site
+                {t("admin.rental_on_site")}
               </label>
-              <F label="Required equipment">
+              <F label={t("admin.field_required_equipment")}>
                 <Textarea
                   value={editing.form.required_equipment}
                   onChange={(e) =>
@@ -527,7 +525,7 @@ function TripsSection({ userId }: { userId: string }) {
                   }
                 />
               </F>
-              <F label="Description">
+              <F label={t("admin.field_description")}>
                 <Textarea
                   rows={4}
                   value={editing.form.description}
@@ -539,7 +537,7 @@ function TripsSection({ userId }: { userId: string }) {
                   }
                 />
               </F>
-              <F label="Safety notes">
+              <F label={t("admin.field_safety_notes")}>
                 <Textarea
                   value={editing.form.safety_notes}
                   onChange={(e) =>
@@ -551,35 +549,35 @@ function TripsSection({ userId }: { userId: string }) {
                 />
               </F>
               <div>
-                <Label className="mb-1.5 block text-xs">Tags</Label>
+                <Label className="mb-1.5 block text-xs">{t("admin.field_tags")}</Label>
                 <div className="flex flex-wrap gap-1.5">
-                  {EVENT_TAGS.map((t) => {
-                    const on = editing.form.tags.includes(t);
+                  {EVENT_TAGS.map((tg) => {
+                    const on = editing.form.tags.includes(tg);
                     return (
                       <button
                         type="button"
-                        key={t}
+                        key={tg}
                         onClick={() =>
                           setEditing({
                             ...editing,
                             form: {
                               ...editing.form,
                               tags: on
-                                ? editing.form.tags.filter((x) => x !== t)
-                                : [...editing.form.tags, t],
+                                ? editing.form.tags.filter((x) => x !== tg)
+                                : [...editing.form.tags, tg],
                             },
                           })
                         }
                         className={`transition ${on ? "ring-2 ring-primary rounded-full" : "opacity-60 hover:opacity-100"}`}
                       >
-                        <EventTag tag={t} />
+                        <EventTag tag={tg} />
                       </button>
                     );
                   })}
                 </div>
               </div>
               <Button onClick={save} className="w-full">
-                Save trip
+                {t("admin.save_trip")}
               </Button>
             </div>
           )}

@@ -2,16 +2,23 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/lib/i18n";
 
 export const STATUSES = ["pending", "confirmed", "waitlisted", "rejected", "cancelled"] as const;
-export const CHECKIN_LABELS: Record<string, string> = {
-  not_checked_in: "Not checked in",
-  arrived_meeting_point: "At meeting point",
-  arrived_destination: "At resort",
-  returned: "Back safely",
-  absent: "Absent",
-  cancelled: "Cancelled",
+
+const CHECKIN_LABEL_KEY: Record<string, string> = {
+  not_checked_in: "checkin.status_not_checked_in",
+  arrived_meeting_point: "checkin.status_at_meeting_point",
+  arrived_destination: "checkin.status_at_resort",
+  returned: "checkin.status_back_safely",
+  absent: "checkin.status_absent",
+  cancelled: "checkin.status_cancelled",
 };
+
+export function checkinLabel(status: string, t: (key: string) => string): string {
+  const key = CHECKIN_LABEL_KEY[status];
+  return key ? t(key) : status;
+}
 
 export function toCSV(rows: Record<string, unknown>[], headers: string[]) {
   const head = headers.join(",");
@@ -32,13 +39,14 @@ export function useTripList() {
   });
 }
 
-export function TripPicker({ value, onChange, label = "Select trip" }: { value: string | null; onChange: (v: string) => void; label?: string }) {
+export function TripPicker({ value, onChange, label }: { value: string | null; onChange: (v: string) => void; label?: string }) {
+  const { t } = useI18n();
   const { data } = useTripList();
   return (
     <div>
-      <Label className="mb-1.5 block text-xs">{label}</Label>
+      <Label className="mb-1.5 block text-xs">{label ?? t("admin.select_trip")}</Label>
       <Select value={value ?? undefined} onValueChange={onChange}>
-        <SelectTrigger className="w-full md:w-96"><SelectValue placeholder="Pick a trip…" /></SelectTrigger>
+        <SelectTrigger className="w-full md:w-96"><SelectValue placeholder={t("admin.pick_a_trip_placeholder")} /></SelectTrigger>
         <SelectContent>{(data ?? []).map(e => (
           <SelectItem key={e.id} value={e.id}>{e.title} — {new Date(e.date).toLocaleDateString()} <span className="text-muted-foreground">({e.status})</span></SelectItem>
         ))}</SelectContent>

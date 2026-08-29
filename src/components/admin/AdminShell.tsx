@@ -15,17 +15,18 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 const NAV = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard },
-  { to: "/admin/trips", label: "Trips", icon: CalendarDays },
-  { to: "/admin/registrations", label: "Registrations", icon: Users },
-  { to: "/admin/carpool", label: "Carpool", icon: Car },
-  { to: "/admin/rollcall", label: "Roll call", icon: ClipboardCheck },
-  { to: "/admin/gallery", label: "Gallery", icon: Camera },
-  { to: "/admin/users", label: "Users", icon: UserCog },
-  { to: "/admin/notifications", label: "Notifications", icon: Bell },
-  { to: "/admin/exports", label: "Exports", icon: Download },
+  { to: "/admin", labelKey: "admin.nav_overview", icon: LayoutDashboard },
+  { to: "/admin/trips", labelKey: "admin.nav_trips", icon: CalendarDays },
+  { to: "/admin/registrations", labelKey: "admin.nav_registrations", icon: Users },
+  { to: "/admin/carpool", labelKey: "admin.nav_carpool", icon: Car },
+  { to: "/admin/rollcall", labelKey: "admin.nav_rollcall", icon: ClipboardCheck },
+  { to: "/admin/gallery", labelKey: "admin.nav_gallery", icon: Camera },
+  { to: "/admin/users", labelKey: "admin.nav_users", icon: UserCog },
+  { to: "/admin/notifications", labelKey: "admin.nav_notifications", icon: Bell },
+  { to: "/admin/exports", labelKey: "admin.nav_exports", icon: Download },
 ] as const;
 
 function isNavActive(pathname: string, to: string) {
@@ -35,6 +36,7 @@ function isNavActive(pathname: string, to: string) {
 // Desktop rail: plain <Link>, no portal, no custom onClick composition — the
 // simplest possible thing that can navigate.
 function DesktopNav({ pathname }: { pathname: string }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-1">
       {NAV.map((item) => {
@@ -51,7 +53,7 @@ function DesktopNav({ pathname }: { pathname: string }) {
             )}
           >
             <item.icon className="w-4 h-4 shrink-0" />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </Link>
         );
       })}
@@ -79,6 +81,7 @@ function MobileNav({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
@@ -95,11 +98,11 @@ function MobileNav({
       <div className="absolute inset-0 bg-black/70" onClick={onClose} aria-hidden="true" />
       <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-border bg-background shadow-2xl">
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
-          <span className="text-xl font-display font-semibold">Admin</span>
+          <span className="text-xl font-display font-semibold">{t("nav.admin")}</span>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("admin.close_menu")}
             className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
             <X className="w-5 h-5" />
@@ -123,7 +126,7 @@ function MobileNav({
                 <span className="w-9 h-9 rounded-xl bg-secondary grid place-items-center shrink-0">
                   <item.icon className="w-[18px] h-[18px]" />
                 </span>
-                {item.label}
+                {t(item.labelKey)}
               </a>
             );
           })}
@@ -146,6 +149,7 @@ export function AdminShell({
 }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-5 md:py-8">
@@ -153,7 +157,7 @@ export function AdminShell({
       <div className="md:hidden flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
           <ShieldCheck className="w-3.5 h-3.5" />
-          Admin
+          {t("nav.admin")}
         </div>
         <button
           type="button"
@@ -161,7 +165,7 @@ export function AdminShell({
           className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-secondary transition-colors"
         >
           <Menu className="w-4 h-4" />
-          Menu
+          {t("admin.menu")}
         </button>
         <MobileNav
           pathname={location.pathname}
@@ -175,7 +179,7 @@ export function AdminShell({
         <div className="hidden md:flex md:flex-col w-56 shrink-0 rounded-2xl border border-sidebar-border bg-sidebar text-sidebar-foreground overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-[0.2em] text-sidebar-foreground/70 border-b border-sidebar-border">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Admin
+            {t("nav.admin")}
           </div>
           <div className="p-2">
             <DesktopNav pathname={location.pathname} />

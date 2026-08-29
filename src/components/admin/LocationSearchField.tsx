@@ -8,6 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { useI18n } from "@/lib/i18n";
 
 export type PlaceResult = { label: string; sublabel: string; lat: number; lng: number };
 
@@ -40,6 +41,7 @@ export function LocationSearchField({
   onChange: (text: string) => void;
   onSelect: (place: PlaceResult) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,7 +81,7 @@ export function LocationSearchField({
               setOpen(true);
             }}
             onFocus={() => value.trim().length >= 3 && setOpen(true)}
-            placeholder="Search a place… (e.g. Livigno)"
+            placeholder={t("admin.search_place_placeholder")}
             className="flex h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
           />
         </div>
@@ -92,13 +94,13 @@ export function LocationSearchField({
         <Command shouldFilter={false}>
           <CommandList>
             {loading && (
-              <div className="py-4 text-center text-sm text-muted-foreground">Searching…</div>
+              <div className="py-4 text-center text-sm text-muted-foreground">{t("common.searching")}</div>
             )}
             {!loading && value.trim().length > 0 && value.trim().length < 3 && (
-              <div className="py-4 text-center text-xs text-muted-foreground">Keep typing…</div>
+              <div className="py-4 text-center text-xs text-muted-foreground">{t("common.keep_typing")}</div>
             )}
             {!loading && value.trim().length >= 3 && results.length === 0 && (
-              <CommandEmpty>No places found.</CommandEmpty>
+              <CommandEmpty>{t("admin.no_places_found")}</CommandEmpty>
             )}
             <CommandGroup>
               {results.map((r, i) => (

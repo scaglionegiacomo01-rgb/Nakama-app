@@ -5,21 +5,24 @@ import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin")({ component: AdminOverviewPage });
 
 function AdminOverviewPage() {
   const { ready, loading } = useAdminGuard();
-  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+  const { t } = useI18n();
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
 
   return (
-    <AdminShell title="Overview" description="Everything that needs a look, at a glance.">
+    <AdminShell title={t("admin.nav_overview")} description={t("admin.overview_desc")}>
       <OverviewSection />
     </AdminShell>
   );
 }
 
 function OverviewSection() {
+  const { t } = useI18n();
   const today = new Date().toISOString().slice(0, 10);
   const { data: stats } = useQuery({
     queryKey: ["admin-overview-stats"],
@@ -105,30 +108,30 @@ function OverviewSection() {
   const alerts = [
     stats?.regPending
       ? {
-          label: "Pending registrations",
+          label: t("admin.alert_pending_regs"),
           value: stats.regPending,
           to: "/admin/registrations" as const,
         }
       : null,
     stats?.mediaPending
       ? {
-          label: "Gallery uploads to review",
+          label: t("admin.alert_gallery_review"),
           value: stats.mediaPending,
           to: "/admin/gallery" as const,
         }
       : null,
     stats?.seatPending
-      ? { label: "Seat requests waiting", value: stats.seatPending, to: "/admin/carpool" as const }
+      ? { label: t("admin.alert_seat_requests"), value: stats.seatPending, to: "/admin/carpool" as const }
       : null,
     stats?.missing
       ? {
-          label: "Missing check-ins (next 48h)",
+          label: t("admin.alert_missing_checkins"),
           value: stats.missing,
           to: "/admin/rollcall" as const,
         }
       : null,
     stats?.notifs
-      ? { label: "Unread notifications", value: stats.notifs, to: "/admin/notifications" as const }
+      ? { label: t("admin.alert_unread_notifs"), value: stats.notifs, to: "/admin/notifications" as const }
       : null,
   ].filter(
     (
@@ -148,7 +151,7 @@ function OverviewSection() {
   return (
     <div>
       {!stats ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : alerts.length > 0 ? (
         <div className="space-y-2">
           {alerts.map((a) => (
@@ -167,31 +170,31 @@ function OverviewSection() {
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-          Nothing needs your attention right now.
+          {t("admin.nothing_needs_attention")}
         </div>
       )}
 
       <h2 className="mt-5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Dashboard
+        {t("admin.dashboard")}
       </h2>
       <div className="mt-2 grid grid-cols-3 gap-2">
-        <Stat label="Users" value={stats?.users} />
-        <Stat label="Published trips" value={stats?.published} />
-        <Stat label="Upcoming trips" value={stats?.upcoming} />
-        <Stat label="Confirmed participants" value={stats?.regConfirmed} />
-        <Stat label="Pending registrations" value={stats?.regPending} warn={!!stats?.regPending} />
+        <Stat label={t("admin.stat_users")} value={stats?.users} />
+        <Stat label={t("admin.stat_published_trips")} value={stats?.published} />
+        <Stat label={t("admin.stat_upcoming_trips")} value={stats?.upcoming} />
+        <Stat label={t("admin.stat_confirmed_participants")} value={stats?.regConfirmed} />
+        <Stat label={t("admin.stat_pending_registrations")} value={stats?.regPending} warn={!!stats?.regPending} />
         <Stat
-          label="Pending gallery uploads"
+          label={t("admin.stat_pending_gallery")}
           value={stats?.mediaPending}
           warn={!!stats?.mediaPending}
         />
         <Stat
-          label="Pending seat requests"
+          label={t("admin.stat_pending_seats")}
           value={stats?.seatPending}
           warn={!!stats?.seatPending}
         />
-        <Stat label="Missing check-ins (48h)" value={stats?.missing} warn={!!stats?.missing} />
-        <Stat label="Unread notifications" value={stats?.notifs} warn={!!stats?.notifs} />
+        <Stat label={t("admin.stat_missing_checkins_48h")} value={stats?.missing} warn={!!stats?.missing} />
+        <Stat label={t("admin.stat_unread_notifs")} value={stats?.notifs} warn={!!stats?.notifs} />
       </div>
     </div>
   );

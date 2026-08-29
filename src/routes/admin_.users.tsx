@@ -10,20 +10,23 @@ import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin_/users")({ component: AdminUsersPage });
 
 function AdminUsersPage() {
   const { ready, loading } = useAdminGuard();
-  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+  const { t } = useI18n();
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   return (
-    <AdminShell title="Users" description="Search members and manage admin access.">
+    <AdminShell title={t("admin.nav_users")} description={t("admin.users_desc")}>
       <UsersSection />
     </AdminShell>
   );
 }
 
 function UsersSection() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -57,20 +60,20 @@ function UsersSection() {
 
   const promote = async (uid: string) => {
     const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-    if (error) toast.error(error.message); else { toast.success("Promoted to admin"); qc.invalidateQueries({ queryKey: ["admin-users"] }); }
+    if (error) toast.error(error.message); else { toast.success(t("admin.toast_promoted")); qc.invalidateQueries({ queryKey: ["admin-users"] }); }
   };
   const demote = async (uid: string) => {
-    if (adminCount <= 1) return toast.error("Cannot demote the last admin");
-    if (!confirm("Remove admin role from this user?")) return;
+    if (adminCount <= 1) return toast.error(t("admin.toast_cannot_demote_last"));
+    if (!confirm(t("admin.confirm_demote"))) return;
     const { error } = await supabase.from("user_roles").delete().eq("user_id", uid).eq("role", "admin");
-    if (error) toast.error(error.message); else { toast.success("Admin role removed"); qc.invalidateQueries({ queryKey: ["admin-users"] }); }
+    if (error) toast.error(error.message); else { toast.success(t("admin.toast_demoted")); qc.invalidateQueries({ queryKey: ["admin-users"] }); }
   };
 
   return (
     <div>
       <div className="flex items-center gap-2 flex-wrap">
-        <Input placeholder="Search by name, username, email…" value={search} onChange={e => setSearch(e.target.value)} className="md:w-96" />
-        <span className="text-xs text-muted-foreground">{filtered.length} users · {adminCount} admins</span>
+        <Input placeholder={t("admin.search_users_placeholder")} value={search} onChange={e => setSearch(e.target.value)} className="md:w-96" />
+        <span className="text-xs text-muted-foreground">{t("admin.n_users_n_admins", { users: filtered.length, admins: adminCount })}</span>
       </div>
       <div className="mt-4 space-y-2">
         {filtered.map(u => (
@@ -80,19 +83,19 @@ function UsersSection() {
                 onClick={() => { setProfileUserId(u.user_id); setProfileOpen(true); }} />
               <div className="min-w-0">
                 <button onClick={() => { setProfileUserId(u.user_id); setProfileOpen(true); }} className="font-semibold text-sm hover:underline text-left">
-                  {(u.full_name && u.full_name.trim()) || u.username || "Member"} {u.is_admin && <span className="ml-1 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary text-primary-foreground">Admin</span>}
+                  {(u.full_name && u.full_name.trim()) || u.username || t("common.member")} {u.is_admin && <span className="ml-1 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary text-primary-foreground">{t("nav.admin")}</span>}
                 </button>
-                <div className="text-xs text-muted-foreground">{u.email} · {u.phone ?? "no phone"} · {u.snowboard_level ?? "level n/a"} · {u.completed_trips} trips</div>
+                <div className="text-xs text-muted-foreground">{u.email} · {u.phone ?? t("admin.no_phone")} · {u.snowboard_level ?? t("admin.level_na")} · {t("admin.n_trips", { n: u.completed_trips })}</div>
               </div>
             </div>
             <div className="flex gap-1">
               {u.is_admin
-                ? <Button size="sm" variant="ghost" onClick={() => demote(u.user_id)}>Demote</Button>
-                : <Button size="sm" variant="outline" onClick={() => promote(u.user_id)}><ShieldCheck className="w-4 h-4 mr-1" />Make admin</Button>}
+                ? <Button size="sm" variant="ghost" onClick={() => demote(u.user_id)}>{t("admin.demote")}</Button>
+                : <Button size="sm" variant="outline" onClick={() => promote(u.user_id)}><ShieldCheck className="w-4 h-4 mr-1" />{t("admin.make_admin")}</Button>}
             </div>
           </div>
         ))}
-        {filtered.length === 0 && <p className="text-muted-foreground">No users match.</p>}
+        {filtered.length === 0 && <p className="text-muted-foreground">{t("admin.no_users_match")}</p>}
       </div>
       <PublicProfileDialog userId={profileUserId} open={profileOpen} onOpenChange={setProfileOpen} />
     </div>

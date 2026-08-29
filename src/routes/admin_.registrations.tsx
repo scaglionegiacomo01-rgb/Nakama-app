@@ -13,20 +13,23 @@ import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PublicProfileDialog } from "@/components/PublicProfileDialog";
 import { STATUSES, TripPicker, toCSV, download } from "@/lib/admin-shared";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin_/registrations")({ component: AdminRegistrationsPage });
 
 function AdminRegistrationsPage() {
   const { ready, loading } = useAdminGuard();
-  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+  const { t } = useI18n();
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   return (
-    <AdminShell title="Registrations" description="Review and confirm who's coming on each trip.">
+    <AdminShell title={t("admin.nav_registrations")} description={t("admin.registrations_desc")}>
       <RegistrationsSection />
     </AdminShell>
   );
 }
 
 function RegistrationsSection() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [tripId, setTripId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -52,9 +55,9 @@ function RegistrationsSection() {
     const { error } = await supabase.from("event_registrations").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     if (isConfirmTransition) {
-      toast.success("Participant confirmed. Email system is not configured yet — set up Lovable Emails to send confirmation emails.");
+      toast.success(t("admin.toast_confirmed_email_note"));
     } else {
-      toast.success("Updated");
+      toast.success(t("admin.toast_updated"));
     }
     qc.invalidateQueries({ queryKey: ["admin-regs-section"] });
   };
@@ -64,7 +67,7 @@ function RegistrationsSection() {
       .update({ confirmation_email_sent: false, confirmation_email_sent_at: null, confirmation_email_error: null })
       .eq("id", id);
     if (error) toast.error(error.message);
-    else toast.success("Marked for resend. Email will be sent once Lovable Emails is configured.");
+    else toast.success(t("admin.toast_resend_marked"));
     qc.invalidateQueries({ queryKey: ["admin-regs-section"] });
   };
   const exportCsv = () => {
@@ -83,21 +86,21 @@ function RegistrationsSection() {
       <div className="flex flex-wrap gap-3 items-end">
         <TripPicker value={tripId} onChange={setTripId} />
         <div>
-          <Label className="mb-1.5 block text-xs">Filter</Label>
+          <Label className="mb-1.5 block text-xs">{t("admin.filter")}</Label>
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+              <SelectItem value="all">{t("admin.filter_all")}</SelectItem>
+              {STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{t(`status.${s}`)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" onClick={exportCsv} disabled={!regs?.length}><Download className="w-4 h-4 mr-1" />Export CSV</Button>
+        <Button variant="outline" onClick={exportCsv} disabled={!regs?.length}><Download className="w-4 h-4 mr-1" />{t("admin.export_csv")}</Button>
       </div>
 
       <div className="mt-4 space-y-3">
-        {!tripId && <p className="text-muted-foreground">Pick a trip to view registrations.</p>}
-        {tripId && regs?.length === 0 && <p className="text-muted-foreground">No registrations match.</p>}
+        {!tripId && <p className="text-muted-foreground">{t("admin.pick_trip_to_view_regs")}</p>}
+        {tripId && regs?.length === 0 && <p className="text-muted-foreground">{t("admin.no_regs_match")}</p>}
         {regs?.map(r => (
           <div key={r.id} className="rounded-2xl bg-card border border-border p-4">
             <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -108,12 +111,12 @@ function RegistrationsSection() {
                   <button onClick={() => { setProfileUserId(r.user_id); setProfileOpen(true); }} className="font-semibold hover:underline text-left">
                     {r.profile?.full_name || (r.profile as { username?: string } | undefined)?.username || "—"}
                   </button>
-                  <div className="text-xs text-muted-foreground">{r.profile?.email} · {r.profile?.phone || "no phone"} · {r.profile?.snowboard_level ?? "level n/a"}</div>
+                  <div className="text-xs text-muted-foreground">{r.profile?.email} · {r.profile?.phone || t("admin.no_phone")} · {r.profile?.snowboard_level ?? t("admin.level_na")}</div>
                   <div className="mt-1 text-xs flex flex-wrap gap-1">
-                    {r.needs_ride && <span className="px-1.5 py-0.5 rounded bg-secondary">Needs ride</span>}
-                    {r.offers_car_seats && <span className="px-1.5 py-0.5 rounded bg-secondary">Offers {r.available_car_seats}</span>}
-                    {r.needs_rental && <span className="px-1.5 py-0.5 rounded bg-secondary">Rental</span>}
-                    {r.has_equipment && <span className="px-1.5 py-0.5 rounded bg-secondary">Has gear</span>}
+                    {r.needs_ride && <span className="px-1.5 py-0.5 rounded bg-secondary">{t("admin.needs_ride")}</span>}
+                    {r.offers_car_seats && <span className="px-1.5 py-0.5 rounded bg-secondary">{t("admin.offers_n_seats", { n: r.available_car_seats ?? 0 })}</span>}
+                    {r.needs_rental && <span className="px-1.5 py-0.5 rounded bg-secondary">{t("admin.rental")}</span>}
+                    {r.has_equipment && <span className="px-1.5 py-0.5 rounded bg-secondary">{t("admin.has_gear")}</span>}
                     {r.transport_status && <span className="px-1.5 py-0.5 rounded bg-secondary">{r.transport_status}</span>}
                   </div>
                   {r.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{r.notes}"</div>}
@@ -122,11 +125,11 @@ function RegistrationsSection() {
               <div className="flex flex-col gap-1.5 items-end">
                 <Select value={r.status} onValueChange={(v: Database["public"]["Enums"]["registration_status"]) => update(r.id, v)}>
                   <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{t(`status.${s}`)}</SelectItem>)}</SelectContent>
                 </Select>
                 {r.status === "confirmed" && (
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => resendConfirmation(r.id)}>
-                    Resend confirmation
+                    {t("admin.resend_confirmation")}
                   </Button>
                 )}
               </div>

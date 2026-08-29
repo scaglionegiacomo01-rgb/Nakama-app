@@ -9,20 +9,23 @@ import { AlertTriangle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { TripPicker, Stat } from "@/lib/admin-shared";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin_/carpool")({ component: AdminCarpoolPage });
 
 function AdminCarpoolPage() {
   const { ready, loading } = useAdminGuard();
-  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+  const { t } = useI18n();
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
   return (
-    <AdminShell title="Carpool" description="Match drivers with passengers looking for a seat.">
+    <AdminShell title={t("admin.nav_carpool")} description={t("admin.carpool_desc")}>
       <CarpoolSection />
     </AdminShell>
   );
 }
 
 function CarpoolSection() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [tripId, setTripId] = useState<string | null>(null);
 
@@ -58,7 +61,7 @@ function CarpoolSection() {
     if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["admin-carpool"] });
   };
   const removeCar = async (id: string) => {
-    if (!confirm("Remove this car?")) return;
+    if (!confirm(t("admin.confirm_remove_car"))) return;
     const { error } = await supabase.from("trip_cars").delete().eq("id", id);
     if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["admin-carpool"] });
   };
@@ -70,21 +73,21 @@ function CarpoolSection() {
   return (
     <div>
       <TripPicker value={tripId} onChange={setTripId} />
-      {!tripId && <p className="mt-4 text-muted-foreground">Pick a trip to manage carpooling.</p>}
+      {!tripId && <p className="mt-4 text-muted-foreground">{t("admin.pick_trip_to_manage_carpool")}</p>}
       {tripId && (
         <>
           <div className="mt-4 grid grid-cols-3 gap-3">
-            <Stat label="Available seats" value={totalSeats} />
-            <Stat label="Assigned" value={assignedCount} />
-            <Stat label="Still need seats" value={stillSeeking} warn={stillSeeking > Math.max(0, totalSeats - assignedCount)} />
+            <Stat label={t("admin.stat_available_seats")} value={totalSeats} />
+            <Stat label={t("admin.stat_assigned")} value={assignedCount} />
+            <Stat label={t("admin.stat_still_need_seats")} value={stillSeeking} warn={stillSeeking > Math.max(0, totalSeats - assignedCount)} />
           </div>
           {stillSeeking > Math.max(0, totalSeats - assignedCount) && (
             <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive" />Not enough free car seats for everyone who needs one — remember to leave space for gear and luggage.
+              <AlertTriangle className="w-4 h-4 text-destructive" />{t("admin.not_enough_seats_warning")}
             </div>
           )}
 
-          <h3 className="mt-6 text-lg font-bold">Drivers ({data?.cars.length ?? 0})</h3>
+          <h3 className="mt-6 text-lg font-bold">{t("admin.drivers_n", { n: data?.cars.length ?? 0 })}</h3>
           <div className="mt-2 space-y-3">
             {(data?.cars ?? []).map(c => {
               const p = findP(c.driver_user_id);
@@ -96,9 +99,9 @@ function CarpoolSection() {
                     <div className="flex gap-3">
                       <UserAvatar url={p?.profile_picture_url ?? undefined} name={p?.full_name ?? undefined} size="md" />
                       <div>
-                        <div className="font-semibold">{p?.full_name ?? p?.username ?? "Driver"}</div>
-                        <div className="text-xs text-muted-foreground">{c.departure_area} → {c.meeting_point ?? "meeting point"}</div>
-                        <div className="text-xs mt-0.5">Seats: <b>{c.available_seats}</b> · Assigned: <b>{accepted.length}</b></div>
+                        <div className="font-semibold">{p?.full_name ?? p?.username ?? t("admin.driver_fallback")}</div>
+                        <div className="text-xs text-muted-foreground">{c.departure_area} → {c.meeting_point ?? t("admin.meeting_point_fallback")}</div>
+                        <div className="text-xs mt-0.5">{t("admin.seats_colon")} <b>{c.available_seats}</b> · {t("admin.assigned_colon")} <b>{accepted.length}</b></div>
                         {c.notes && <div className="text-xs italic text-muted-foreground mt-1">"{c.notes}"</div>}
                       </div>
                     </div>
@@ -112,8 +115,8 @@ function CarpoolSection() {
                           <div key={r.id} className="flex items-center justify-between gap-2 text-sm rounded-lg px-2 py-1.5 bg-secondary/50">
                             <span>{pp?.full_name ?? pp?.username} · <span className="capitalize text-muted-foreground">{r.status}</span></span>
                             <div className="flex gap-1">
-                              {r.status !== "accepted" && <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setReqStatus(r.id, "accepted")}>Assign</Button>}
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setReqStatus(r.id, "rejected")}>Remove</Button>
+                              {r.status !== "accepted" && <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setReqStatus(r.id, "accepted")}>{t("admin.assign")}</Button>}
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setReqStatus(r.id, "rejected")}>{t("admin.remove")}</Button>
                             </div>
                           </div>
                         );
@@ -123,10 +126,10 @@ function CarpoolSection() {
                 </div>
               );
             })}
-            {data?.cars.length === 0 && <p className="text-sm text-muted-foreground">No drivers offering rides yet.</p>}
+            {data?.cars.length === 0 && <p className="text-sm text-muted-foreground">{t("admin.no_drivers_yet")}</p>}
           </div>
 
-          <h3 className="mt-6 text-lg font-bold">Passengers looking for a seat ({data?.seekers.length ?? 0})</h3>
+          <h3 className="mt-6 text-lg font-bold">{t("admin.passengers_seeking_n", { n: data?.seekers.length ?? 0 })}</h3>
           <div className="mt-2 space-y-2">
             {(data?.seekers ?? []).map(s => {
               const p = findP(s.user_id);
@@ -136,7 +139,7 @@ function CarpoolSection() {
                     <UserAvatar url={p?.profile_picture_url ?? undefined} name={p?.full_name ?? undefined} size="sm" />
                     <div className="min-w-0">
                       <div className="font-semibold text-sm">{p?.full_name ?? p?.username}</div>
-                      <div className="text-xs text-muted-foreground">{s.departure_area} {s.can_reach_meeting_point ? "· can reach meeting point" : ""}</div>
+                      <div className="text-xs text-muted-foreground">{s.departure_area} {s.can_reach_meeting_point ? `· ${t("admin.can_reach_meeting_point")}` : ""}</div>
                       {s.notes && <div className="text-xs italic text-muted-foreground">"{s.notes}"</div>}
                     </div>
                   </div>
@@ -144,7 +147,7 @@ function CarpoolSection() {
                 </div>
               );
             })}
-            {data?.seekers.length === 0 && <p className="text-sm text-muted-foreground">Nobody is waiting for a seat.</p>}
+            {data?.seekers.length === 0 && <p className="text-sm text-muted-foreground">{t("admin.nobody_waiting_seat")}</p>}
           </div>
         </>
       )}

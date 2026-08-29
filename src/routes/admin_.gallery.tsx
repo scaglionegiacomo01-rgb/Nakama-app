@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Trash2, Star, ImageIcon, Play } from "lucide-react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin_/gallery")({ component: AdminGallery });
 
@@ -22,6 +23,7 @@ type Media = {
 
 function AdminGallery() {
   const { ready, loading } = useAdminGuard();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
 
@@ -49,7 +51,7 @@ function AdminGallery() {
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
   const remove = async (m: Media) => {
-    if (!confirm("Delete this upload?")) return;
+    if (!confirm(t("tripgallery.confirm_delete"))) return;
     if (m.storage_path) await supabase.storage.from("trip-media").remove([m.storage_path]);
     await supabase.from("trip_media").delete().eq("id", m.id);
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
@@ -64,13 +66,19 @@ function AdminGallery() {
     qc.invalidateQueries({ queryKey: ["admin-gallery"] });
   };
 
-  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
+  if (loading || !ready) return <div className="max-w-6xl mx-auto px-4 py-12">{t("common.loading")}</div>;
+
+  const TAB_LABEL_KEY = {
+    pending: "tripgallery.status_pending",
+    approved: "tripgallery.status_approved",
+    rejected: "tripgallery.status_rejected",
+  } as const;
 
   return (
-    <AdminShell title="Gallery moderation" description="Approve, reject, feature or set cover for every member upload.">
+    <AdminShell title={t("admin.nav_gallery")} description={t("admin.gallery_desc")}>
       <div className="flex gap-2">
-        {(["pending", "approved", "rejected"] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-3 py-1.5 rounded-full text-sm capitalize ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{t}</button>
+        {(["pending", "approved", "rejected"] as const).map(tb => (
+          <button key={tb} onClick={() => setTab(tb)} className={`px-3 py-1.5 rounded-full text-sm capitalize ${tab === tb ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{t(TAB_LABEL_KEY[tb])}</button>
         ))}
       </div>
 
@@ -86,14 +94,14 @@ function AdminGallery() {
                   <div className="absolute inset-0 grid place-items-center bg-black/30"><Play className="w-8 h-8 text-white" /></div>
                 </>
               )}
-              {m.is_trip_cover && <span className="absolute bottom-1 left-1 text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">Cover</span>}
+              {m.is_trip_cover && <span className="absolute bottom-1 left-1 text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">{t("tripgallery.cover")}</span>}
               {m.is_featured && <Star className="absolute top-1 right-1 w-4 h-4 fill-yellow-300 text-yellow-300" />}
             </div>
             <div className="p-3 space-y-2">
               <div className="flex items-center gap-2">
                 <UserAvatar url={m.profile?.profile_picture_url} name={m.profile?.full_name ?? m.profile?.username} size="sm" />
                 <div className="text-xs min-w-0">
-                  <div className="font-semibold truncate">{m.profile?.username ? `@${m.profile.username}` : (m.profile?.full_name ?? "Member")}</div>
+                  <div className="font-semibold truncate">{m.profile?.username ? `@${m.profile.username}` : (m.profile?.full_name ?? t("common.member"))}</div>
                   <div className="text-muted-foreground">{new Date(m.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</div>
                 </div>
               </div>
@@ -104,16 +112,16 @@ function AdminGallery() {
               )}
               {m.caption && <p className="text-xs text-muted-foreground line-clamp-2">{m.caption}</p>}
               <div className="flex flex-wrap gap-1">
-                {tab !== "approved" && <Button size="sm" onClick={() => moderate(m, "approved")} className="h-7 px-2 text-xs"><CheckCircle2 className="w-3 h-3 mr-1" />Approve</Button>}
-                {tab !== "rejected" && <Button size="sm" variant="outline" onClick={() => moderate(m, "rejected")} className="h-7 px-2 text-xs"><XCircle className="w-3 h-3 mr-1" />Reject</Button>}
-                {tab === "approved" && <Button size="sm" variant="outline" onClick={() => toggleFeatured(m)} className="h-7 px-2 text-xs"><Star className="w-3 h-3 mr-1" />{m.is_featured ? "Unfeature" : "Feature"}</Button>}
-                {tab === "approved" && m.media_type === "image" && <Button size="sm" variant="outline" onClick={() => setCover(m)} className="h-7 px-2 text-xs"><ImageIcon className="w-3 h-3 mr-1" />Cover</Button>}
+                {tab !== "approved" && <Button size="sm" onClick={() => moderate(m, "approved")} className="h-7 px-2 text-xs"><CheckCircle2 className="w-3 h-3 mr-1" />{t("tripgallery.approve")}</Button>}
+                {tab !== "rejected" && <Button size="sm" variant="outline" onClick={() => moderate(m, "rejected")} className="h-7 px-2 text-xs"><XCircle className="w-3 h-3 mr-1" />{t("tripgallery.reject")}</Button>}
+                {tab === "approved" && <Button size="sm" variant="outline" onClick={() => toggleFeatured(m)} className="h-7 px-2 text-xs"><Star className="w-3 h-3 mr-1" />{m.is_featured ? t("tripgallery.unfeature") : t("tripgallery.feature")}</Button>}
+                {tab === "approved" && m.media_type === "image" && <Button size="sm" variant="outline" onClick={() => setCover(m)} className="h-7 px-2 text-xs"><ImageIcon className="w-3 h-3 mr-1" />{t("tripgallery.cover")}</Button>}
                 <Button size="sm" variant="ghost" onClick={() => remove(m)} className="h-7 px-2 text-xs"><Trash2 className="w-3 h-3" /></Button>
               </div>
             </div>
           </div>
         ))}
-        {(media ?? []).length === 0 && <p className="text-muted-foreground col-span-full">Nothing to show in "{tab}".</p>}
+        {(media ?? []).length === 0 && <p className="text-muted-foreground col-span-full">{t("admin.gallery_empty_tab", { tab: t(TAB_LABEL_KEY[tab]) })}</p>}
       </div>
     </AdminShell>
   );
