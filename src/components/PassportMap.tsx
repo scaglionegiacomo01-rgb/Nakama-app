@@ -41,19 +41,20 @@ export function PassportMap({
         leafletModule) as typeof import("leaflet");
       if (cancelled || !containerRef.current) return;
 
-      map = L.map(containerRef.current, { scrollWheelZoom: false });
+      map = L.map(containerRef.current, { scrollWheelZoom: false, attributionControl: false });
+      L.control.attribution({ prefix: false }).addTo(map);
 
-      // Esri's World Street Map tiles: free, no API key required, and a
-      // colorful, legible basemap (unlike CARTO's basemaps, which now
-      // require a key and render as an "API key required" placeholder).
-      L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-        {
-          attribution:
-            'Tiles &copy; <a href="https://www.esri.com" target="_blank" rel="noreferrer">Esri</a> — Esri, DeLorme, NAVTEQ',
-          maxZoom: 19,
-        },
-      ).addTo(map);
+      // OpenTopoMap: free, no API key required, and a colorful, illustrated
+      // terrain style (green/brown shading, contour lines) that fits a
+      // mountain app better than a flat street map — and unlike CARTO's
+      // basemaps, which now require a key and render as an "API key
+      // required" placeholder.
+      L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        attribution:
+          'Map data: &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors, <a href="https://opentopomap.org" target="_blank" rel="noreferrer">OpenTopoMap</a> (CC-BY-SA)',
+        subdomains: "abc",
+        maxZoom: 17,
+      }).addTo(map);
 
       const icon = L.divIcon({
         className: "nakama-pin",
