@@ -94,7 +94,11 @@ export function LocationPickerMap({
   }, [value?.lat, value?.lng]);
 
   return (
-    <div>
+    // `isolate` confines Leaflet's internal panes/controls (which use
+    // z-index up to 800) to this element's own stacking context, so they
+    // can never paint over the app's fixed header/bottom nav (z-40)
+    // elsewhere on the page while scrolling.
+    <div className="isolate">
       <div
         ref={containerRef}
         className="h-[240px] sm:h-[320px] w-full rounded-2xl overflow-hidden border border-border"

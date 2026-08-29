@@ -91,7 +91,11 @@ export function PassportMap({
   if (places.length === 0) return null;
 
   return (
-    <div className="relative">
+    // `isolate` confines Leaflet's internal panes/controls (which use
+    // z-index up to 800) to this element's own stacking context, so they
+    // can never paint over the app's fixed header/bottom nav (z-40)
+    // elsewhere on the page while scrolling.
+    <div className="relative isolate">
       <div
         ref={containerRef}
         className={`nakama-passport-map ${heightClassName} w-full rounded-2xl overflow-hidden border border-border`}
